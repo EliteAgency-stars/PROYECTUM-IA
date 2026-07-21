@@ -81,6 +81,11 @@
     cursor: pointer;
     transition: opacity 0.2s, transform 0.1s;
   }
+  button.secundario {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text);
+  }
   button:hover { opacity: 0.92; }
   button:active { transform: scale(0.98); }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -94,11 +99,52 @@
   .msg.error { background: rgba(255,107,107,0.12); color: var(--error); display: block; }
   .msg.success { background: rgba(74,222,128,0.12); color: var(--success); display: block; }
   .required { color: var(--error); }
+  .spinner {
+    width: 34px;
+    height: 34px;
+    margin: 12px auto 0;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.12);
+    border-top-color: var(--accent);
+    animation: girar 0.8s linear infinite;
+  }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  .icono-check {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 16px;
+    border-radius: 50%;
+    background: rgba(74,222,128,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+  }
 </style>
 </head>
 <body>
 
-<div class="card" id="loginCard">
+<!-- Pantalla de verificación inicial -->
+<div class="card" id="checkingCard">
+  <div class="header">
+    <h1>PROYECTUM IA</h1>
+    <p>Verificando tu acceso...</p>
+  </div>
+  <div class="spinner"></div>
+</div>
+
+<!-- Pantalla "ya registrado" -->
+<div class="card" id="alreadyCard" style="display:none;">
+  <div class="icono-check">✅</div>
+  <div class="header">
+    <h1>¡Ya nos contaste de ti!</h1>
+    <p>No puedes llenar este formulario dos veces. Si quieres, puedes editar tus objetivos y tus datos.</p>
+  </div>
+  <button id="btnEditar">Editar mis objetivos y datos</button>
+</div>
+
+<!-- Pantalla de login (usuario nuevo) -->
+<div class="card" id="loginCard" style="display:none;">
   <div class="header">
     <h1>PROYECTUM IA</h1>
     <p>Ingresa tu usuario para acceder al formulario</p>
@@ -114,10 +160,11 @@
   </form>
 </div>
 
+<!-- Formulario (registro nuevo o edición) -->
 <div class="card" id="formCard" style="display:none;">
   <div class="header">
     <h1>PROYECTUM IA</h1>
-    <p>Cuéntanos un poco de ti para personalizar tu experiencia</p>
+    <p id="formSubtitle">Cuéntanos un poco de ti para personalizar tu experiencia</p>
   </div>
 
   <form id="proyectumForm">
@@ -141,45 +188,32 @@
     <input type="text" id="contenido" required placeholder="Ej: Videos, reels, artículos, infografías...">
 
     <button type="submit" id="submitBtn">Enviar registro</button>
+    <button type="button" id="btnCancelarEdicion" class="secundario" style="display:none;">Cancelar</button>
     <div class="msg" id="msgBox"></div>
   </form>
 </div>
 
 <script>
-  let usuarioActual = '';
-
-  const loginForm = document.getElementById('loginForm');
-  const loginMsgBox = document.getElementById('loginMsgBox');
-  const loginCard = document.getElementById('loginCard');
-  const formCard = document.getElementById('formCard');
-
-  loginForm.addEventListener('submit', function (e) {
-    e.preventDefault();
-    const usuario = document.getElementById('usuarioInput').value.trim();
-
-    if (!/_IA$/i.test(usuario)) {
-      loginMsgBox.textContent = '⚠️ Tu usuario debe terminar en "_IA" (Ej: nombre_IA)';
-      loginMsgBox.className = 'msg error';
-      return;
-    }
-
-    usuarioActual = usuario;
-    loginCard.style.display = 'none';
-    formCard.style.display = 'block';
-  });
-</script>
-
-<script>
   // Pega aquí la URL de tu implementación de Apps Script (termina en /exec)
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwV-711CWELuwU2xYyfuWThl4uzOpAbqmuWv8JkgO-qd5GPtrc19TWCwku5ftjrFKo-_Q/exec';
 
-  const form = document.getElementById('proyectumForm');
-  const msgBox = document.getElementById('msgBox');
-  const submitBtn = document.getElementById('submitBtn');
+  let usuarioActual = '';
+  let ipActual = '';
+  let modo = 'nuevo'; // 'nuevo' | 'editar'
 
-  function showMsg(text, type) {
-    msgBox.textContent = text;
-    msgBox.className = 'msg ' + type;
+  const checkingCard = document.getElementById('checkingCard');
+  const alreadyCard = document.getElementById('alreadyCard');
+  const loginCard = document.getElementById('loginCard');
+  const formCard = document.getElementById('formCard');
+  const formSubtitle = document.getElementById('formSubtitle');
+  const submitBtn = document.getElementById('submitBtn');
+  const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
+  const msgBox = document.getElementById('msgBox');
+  const loginMsgBox = document.getElementById('loginMsgBox');
+
+  function showMsg(box, text, type) {
+    box.textContent = text;
+    box.className = 'msg ' + type;
   }
 
   async function getIP() {
@@ -192,15 +226,92 @@
     }
   }
 
+  function mostrarSolo(card) {
+    [checkingCard, alreadyCard, loginCard, formCard].forEach(c => c.style.display = 'none');
+    card.style.display = 'block';
+  }
+
+  // --- Verificación inicial por IP ---
+  async function init() {
+    ipActual = await getIP();
+
+    if (ipActual === 'IP no disponible') {
+      // Si no se puede determinar la IP, dejamos pasar al flujo normal
+      mostrarSolo(loginCard);
+      return;
+    }
+
+    try {
+      const res = await fetch(SCRIPT_URL + '?action=check&ip=' + encodeURIComponent(ipActual));
+      const result = await res.json();
+
+      if (result.ok && result.exists) {
+        window.__datosExistentes = result.data;
+        mostrarSolo(alreadyCard);
+      } else {
+        mostrarSolo(loginCard);
+      }
+    } catch (err) {
+      // Si falla la verificación, dejamos pasar al flujo normal
+      mostrarSolo(loginCard);
+    }
+  }
+  init();
+
+  // --- Botón "Editar mis objetivos y datos" ---
+  btnEditar.addEventListener('click', function () {
+    const d = window.__datosExistentes || {};
+    modo = 'editar';
+    usuarioActual = d.usuario || '';
+
+    document.getElementById('nombre').value = d.nombre || '';
+    document.getElementById('negocio').value = d.negocio || '';
+    document.getElementById('contacto').value = d.contacto || '';
+    document.getElementById('meta').value = d.meta || '';
+    document.getElementById('empresa').value = d.empresa || '';
+    document.getElementById('contenido').value = d.contenido || '';
+
+    formSubtitle.textContent = 'Actualiza tus objetivos y tus datos';
+    submitBtn.textContent = 'Actualizar registro';
+    btnCancelarEdicion.style.display = 'block';
+
+    mostrarSolo(formCard);
+  });
+
+  btnCancelarEdicion.addEventListener('click', function () {
+    mostrarSolo(alreadyCard);
+  });
+
+  // --- Login (solo para registro nuevo) ---
+  const loginForm = document.getElementById('loginForm');
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const usuario = document.getElementById('usuarioInput').value.trim();
+
+    if (!/_IA$/i.test(usuario)) {
+      showMsg(loginMsgBox, '⚠️ Tu usuario debe terminar en "_IA" (Ej: nombre_IA)', 'error');
+      return;
+    }
+
+    modo = 'nuevo';
+    usuarioActual = usuario;
+    formSubtitle.textContent = 'Cuéntanos un poco de ti para personalizar tu experiencia';
+    submitBtn.textContent = 'Enviar registro';
+    btnCancelarEdicion.style.display = 'none';
+    mostrarSolo(formCard);
+  });
+
+  // --- Envío del formulario (registro nuevo o actualización) ---
+  const form = document.getElementById('proyectumForm');
+
   form.addEventListener('submit', async function (e) {
     e.preventDefault();
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Enviando...';
+    submitBtn.textContent = modo === 'editar' ? 'Actualizando...' : 'Enviando...';
     msgBox.style.display = 'none';
 
-    const ip = await getIP();
-
     const payload = {
+      action: modo === 'editar' ? 'update' : 'register',
       usuario: usuarioActual,
       nombre: document.getElementById('nombre').value,
       negocio: document.getElementById('negocio').value,
@@ -208,7 +319,7 @@
       meta: document.getElementById('meta').value,
       empresa: document.getElementById('empresa').value,
       contenido: document.getElementById('contenido').value,
-      ip: ip
+      ip: ipActual
     };
 
     try {
@@ -220,17 +331,16 @@
       const result = await res.json();
 
       if (result.ok) {
-        showMsg('✅ ' + result.message, 'success');
-        form.reset();
+        showMsg(msgBox, '✅ ' + result.message, 'success');
         form.style.display = 'none';
       } else {
-        showMsg('⚠️ ' + result.error, 'error');
+        showMsg(msgBox, '⚠️ ' + result.error, 'error');
       }
     } catch (err) {
-      showMsg('⚠️ Error al enviar. Intenta de nuevo.', 'error');
+      showMsg(msgBox, '⚠️ Error al enviar. Intenta de nuevo.', 'error');
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Enviar registro';
+      submitBtn.textContent = modo === 'editar' ? 'Actualizar registro' : 'Enviar registro';
     }
   });
 </script>
