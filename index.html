@@ -152,8 +152,8 @@
 
   <form id="loginForm">
     <label>Usuario <span class="required">*</span></label>
-    <input type="text" id="usuarioInput" required placeholder="Ej: Incognitxx_IA">
-    <div class="hint">⚠️ Tu usuario debe terminar en "_IA" (Ej: nombre_IA)</div>
+    <input type="text" id="usuarioInput" required placeholder="Ej: Incognitxx-IA">
+    <div class="hint">⚠️ Tu usuario debe terminar en "-IA" (Ej: nombre-IA)</div>
 
     <button type="submit">Ingresar</button>
     <div class="msg" id="loginMsgBox"></div>
@@ -288,8 +288,8 @@
     e.preventDefault();
     const usuario = document.getElementById('usuarioInput').value.trim();
 
-    if (!/_IA$/i.test(usuario)) {
-      showMsg(loginMsgBox, '⚠️ Tu usuario debe terminar en "_IA" (Ej: nombre_IA)', 'error');
+    if (!/-IA$/i.test(usuario)) {
+      showMsg(loginMsgBox, '⚠️ Tu usuario debe terminar en "-IA" (Ej: nombre-IA)', 'error');
       return;
     }
 
