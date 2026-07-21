@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PROYECTUM IA - Formulario de Registro</title>
+<style>
+  :root {
+    --bg: #0b0f19;
+    --card: #131a2b;
+    --accent: #6c8bff;
+    --accent2: #8f6cff;
+    --text: #eef1f8;
+    --muted: #8a93a8;
+    --error: #ff6b6b;
+    --success: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at top, #1a2138, #0b0f19 60%);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%;
+    max-width: 520px;
+    background: var(--card);
+    border-radius: 18px;
+    padding: 32px 28px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .header { text-align: center; margin-bottom: 24px; }
+  .header h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .header p { margin: 0; color: var(--muted); font-size: 14px; }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin: 16px 0 6px;
+  }
+  input, textarea, select {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: #0e1424;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
+  }
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+  textarea { resize: vertical; min-height: 70px; }
+  .hint { font-size: 12px; color: var(--accent); margin-top: 4px; }
+  button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  button:hover { opacity: 0.92; }
+  button:active { transform: scale(0.98); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .msg {
+    margin-top: 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    display: none;
+  }
+  .msg.error { background: rgba(255,107,107,0.12); color: var(--error); display: block; }
+  .msg.success { background: rgba(74,222,128,0.12); color: var(--success); display: block; }
+  .required { color: var(--error); }
+</style>
+</head>
+<body>
+
+<div class="card" id="loginCard">
+  <div class="header">
+    <h1>PROYECTUM IA</h1>
+    <p>Ingresa tu usuario para acceder al formulario</p>
+  </div>
+
+  <form id="loginForm">
+    <label>Usuario <span class="required">*</span></label>
+    <input type="text" id="usuarioInput" required placeholder="Ej: Incognitxx_IA">
+    <div class="hint">⚠️ Tu usuario debe terminar en "_IA" (Ej: nombre_IA)</div>
+
+    <button type="submit">Ingresar</button>
+    <div class="msg" id="loginMsgBox"></div>
+  </form>
+</div>
+
+<div class="card" id="formCard" style="display:none;">
+  <div class="header">
+    <h1>PROYECTUM IA</h1>
+    <p>Cuéntanos un poco de ti para personalizar tu experiencia</p>
+  </div>
+
+  <form id="proyectumForm">
+    <label>Nombre completo <span class="required">*</span></label>
+    <input type="text" id="nombre" required placeholder="Tu nombre">
+
+    <label>¿A qué te dedicas? <span class="required">*</span></label>
+    <input type="text" id="negocio" required placeholder="Ej: Marketing digital, comercio, estudiante...">
+
+    <label>Número de contacto <span class="required">*</span></label>
+    <input type="tel" id="contacto" required placeholder="Ej: 3001234567">
+    <div class="hint">⚠️ Debe ser el mismo número que usas en Telegram</div>
+
+    <label>¿Qué quieres lograr con PROYECTUM IA? <span class="required">*</span></label>
+    <textarea id="meta" required placeholder="Cuéntanos tu objetivo..."></textarea>
+
+    <label>Nombre de tu empresa o emprendimiento</label>
+    <input type="text" id="empresa" placeholder="(Opcional si aún no tienes uno)">
+
+    <label>¿Qué tipo de contenido te gusta? <span class="required">*</span></label>
+    <input type="text" id="contenido" required placeholder="Ej: Videos, reels, artículos, infografías...">
+
+    <button type="submit" id="submitBtn">Enviar registro</button>
+    <div class="msg" id="msgBox"></div>
+  </form>
+</div>
+
+<script>
+  let usuarioActual = '';
+
+  const loginForm = document.getElementById('loginForm');
+  const loginMsgBox = document.getElementById('loginMsgBox');
+  const loginCard = document.getElementById('loginCard');
+  const formCard = document.getElementById('formCard');
+
+  loginForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    const usuario = document.getElementById('usuarioInput').value.trim();
+
+    if (!/_IA$/i.test(usuario)) {
+      loginMsgBox.textContent = '⚠️ Tu usuario debe terminar en "_IA" (Ej: nombre_IA)';
+      loginMsgBox.className = 'msg error';
+      return;
+    }
+
+    usuarioActual = usuario;
+    loginCard.style.display = 'none';
+    formCard.style.display = 'block';
+  });
+</script>
+
+<script>
+  // Pega aquí la URL de tu implementación de Apps Script (termina en /exec)
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwV-711CWELuwU2xYyfuWThl4uzOpAbqmuWv8JkgO-qd5GPtrc19TWCwku5ftjrFKo-_Q/exec';
+
+  const form = document.getElementById('proyectumForm');
+  const msgBox = document.getElementById('msgBox');
+  const submitBtn = document.getElementById('submitBtn');
+
+  function showMsg(text, type) {
+    msgBox.textContent = text;
+    msgBox.className = 'msg ' + type;
+  }
+
+  async function getIP() {
+    try {
+      const res = await fetch('https://api.ipify.org?format=json');
+      const data = await res.json();
+      return data.ip;
+    } catch (err) {
+      return 'IP no disponible';
+    }
+  }
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Enviando...';
+    msgBox.style.display = 'none';
+
+    const ip = await getIP();
+
+    const payload = {
+      usuario: usuarioActual,
+      nombre: document.getElementById('nombre').value,
+      negocio: document.getElementById('negocio').value,
+      contacto: document.getElementById('contacto').value,
+      meta: document.getElementById('meta').value,
+      empresa: document.getElementById('empresa').value,
+      contenido: document.getElementById('contenido').value,
+      ip: ip
+    };
+
+    try {
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const result = await res.json();
+
+      if (result.ok) {
+        showMsg('✅ ' + result.message, 'success');
+        form.reset();
+        form.style.display = 'none';
+      } else {
+        showMsg('⚠️ ' + result.error, 'error');
+      }
+    } catch (err) {
+      showMsg('⚠️ Error al enviar. Intenta de nuevo.', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Enviar registro';
+    }
+  });
+</script>
+
+</body>
+</html>
