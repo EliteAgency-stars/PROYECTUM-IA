@@ -68,6 +68,7 @@
   }
   textarea { resize: vertical; min-height: 70px; }
   .hint { font-size: 12px; color: var(--accent); margin-top: 4px; }
+  .hint a { color: var(--accent2); text-decoration: underline; }
   button {
     width: 100%;
     margin-top: 24px;
@@ -86,6 +87,24 @@
     border: 1px solid rgba(255,255,255,0.15);
     color: var(--text);
   }
+  a.button-link {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  a.button-link:hover { opacity: 0.92; }
+  a.button-link:active { transform: scale(0.98); }
   button:hover { opacity: 0.92; }
   button:active { transform: scale(0.98); }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -153,7 +172,7 @@
   <form id="loginForm">
     <label>Usuario <span class="required">*</span></label>
     <input type="text" id="usuarioInput" required placeholder="Ej: Incognitxx-IA">
-    <div class="hint">⚠️ Tu usuario debe terminar en "-IA" (Ej: nombre-IA)</div>
+    <div class="hint">⚠️ Tu usuario debe terminar en "-IA" (Ej: nombre-IA). Recuerda que este usuario te lo dimos en el chat <a href="https://t.me/ProyectumIA_bot" target="_blank" rel="noopener">https://t.me/ProyectumIA_bot</a></div>
 
     <button type="submit">Ingresar</button>
     <div class="msg" id="loginMsgBox"></div>
@@ -193,9 +212,20 @@
   </form>
 </div>
 
+<!-- Pantalla de éxito: registro/actualización completados -->
+<div class="card" id="successCard" style="display:none;">
+  <div class="icono-check">🎉</div>
+  <div class="header">
+    <h1 id="successTitle">¡Listo!</h1>
+    <p id="successText">Ya puedes empezar a usar tus módulos y IA.</p>
+  </div>
+  <a class="button-link" id="btnIrChat" href="https://t.me/ProyectumIA_bot" target="_blank" rel="noopener">Ir al chat de PROYECTUM IA</a>
+</div>
+
 <script>
   // Pega aquí la URL de tu implementación de Apps Script (termina en /exec)
   const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwV-711CWELuwU2xYyfuWThl4uzOpAbqmuWv8JkgO-qd5GPtrc19TWCwku5ftjrFKo-_Q/exec';
+  const TELEGRAM_CHAT_URL = 'https://t.me/ProyectumIA_bot';
 
   let usuarioActual = '';
   let ipActual = '';
@@ -205,6 +235,9 @@
   const alreadyCard = document.getElementById('alreadyCard');
   const loginCard = document.getElementById('loginCard');
   const formCard = document.getElementById('formCard');
+  const successCard = document.getElementById('successCard');
+  const successTitle = document.getElementById('successTitle');
+  const successText = document.getElementById('successText');
   const formSubtitle = document.getElementById('formSubtitle');
   const submitBtn = document.getElementById('submitBtn');
   const btnCancelarEdicion = document.getElementById('btnCancelarEdicion');
@@ -227,7 +260,7 @@
   }
 
   function mostrarSolo(card) {
-    [checkingCard, alreadyCard, loginCard, formCard].forEach(c => c.style.display = 'none');
+    [checkingCard, alreadyCard, loginCard, formCard, successCard].forEach(c => c.style.display = 'none');
     card.style.display = 'block';
   }
 
@@ -289,7 +322,7 @@
     const usuario = document.getElementById('usuarioInput').value.trim();
 
     if (!/-IA$/i.test(usuario)) {
-      showMsg(loginMsgBox, '⚠️ Tu usuario debe terminar en "-IA" (Ej: nombre-IA)', 'error');
+      showMsg(loginMsgBox, '⚠️ Tu usuario debe terminar en "-IA" (Ej: nombre-IA). Recuerda que este usuario te lo dimos en el chat ' + TELEGRAM_CHAT_URL, 'error');
       return;
     }
 
@@ -331,14 +364,17 @@
       const result = await res.json();
 
       if (result.ok) {
-        showMsg(msgBox, '✅ ' + result.message, 'success');
-        form.style.display = 'none';
+        // Pantalla final con botón hacia el chat de Telegram
+        successTitle.textContent = modo === 'editar' ? '¡Datos actualizados!' : '¡Registro exitoso!';
+        successText.textContent = 'Ya puedes empezar a usar tus módulos y IA.';
+        mostrarSolo(successCard);
       } else {
         showMsg(msgBox, '⚠️ ' + result.error, 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = modo === 'editar' ? 'Actualizar registro' : 'Enviar registro';
       }
     } catch (err) {
       showMsg(msgBox, '⚠️ Error al enviar. Intenta de nuevo.', 'error');
-    } finally {
       submitBtn.disabled = false;
       submitBtn.textContent = modo === 'editar' ? 'Actualizar registro' : 'Enviar registro';
     }
