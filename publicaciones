@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Comunidad — PROYECTUM IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#04141a; --bg-alt:#071f27; --panel:#0a2933;
+  --primary:#22FDF9; --primary-dim:#22fdf933; --secondary:#035266; --gold:#ffc94a;
+  --text:#eafffd; --text-dim:#8fb6bb; --line:#134753; --radius:18px;
+  --ff-display:'Space Grotesk', sans-serif; --ff-body:'Inter', sans-serif; --ff-mono:'IBM Plex Mono', monospace;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ff-body);line-height:1.55;}
+img{max-width:100%;display:block;}
+a{color:inherit;text-decoration:none;}
+button,input,textarea{font-family:inherit;}
+h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
+.grad-text{background:linear-gradient(90deg,var(--primary),#8ffcf9 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px;}
+
+/* Nav */
+.site-nav{position:sticky;top:0;z-index:50;background:#04141ae6;backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 20px;}
+.site-nav .row{max-width:1180px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.nav-brand{display:flex;align-items:center;gap:8px;font-family:var(--ff-display);font-weight:700;font-size:1rem;}
+.nav-brand .dot{width:9px;height:9px;border-radius:2px;background:var(--gold);transform:rotate(45deg);}
+.nav-links{display:flex;gap:4px;flex-wrap:wrap;}
+.nav-links a{font-family:var(--ff-mono);font-size:.76rem;color:var(--text-dim);padding:8px 12px;border-radius:100px;}
+.nav-links a:hover{color:var(--text);background:var(--panel);}
+.nav-links a.active{color:var(--primary);background:var(--primary-dim);}
+.admin-pill{
+  font-family:var(--ff-mono);font-size:.72rem;border:none;cursor:pointer;border-radius:10px;padding:9px 14px;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.admin-pill.out{background:var(--panel);border:1px solid var(--line);color:var(--text-dim);}
+.admin-pill.out:hover{color:var(--text);border-color:var(--primary);}
+.admin-pill.in{background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;font-weight:600;}
+
+/* Header */
+.page-head{padding:48px 0 30px;text-align:center;}
+.eyebrow{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);}
+.page-head h1{font-size:clamp(1.6rem,3.4vw,2.3rem);margin-top:10px;}
+.page-head p{color:var(--text-dim);margin-top:12px;}
+
+/* Composer */
+.composer{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;margin:0 0 32px;display:none;
+}
+.composer.open{display:block;}
+.composer .m-tag{font-family:var(--ff-mono);font-size:.68rem;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;}
+.composer input[type=text]{
+  width:100%;background:var(--bg-alt);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;color:var(--text);font-size:1rem;font-family:var(--ff-display);font-weight:600;margin-top:12px;
+}
+.composer textarea{
+  width:100%;background:var(--bg-alt);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;color:var(--text);font-size:.92rem;margin-top:10px;resize:vertical;min-height:110px;
+}
+.composer input:focus,.composer textarea:focus{outline:none;border-color:var(--primary);}
+.char-count{font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);text-align:right;margin-top:4px;}
+.char-count.warn{color:var(--gold);}
+.slug-preview{font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);margin-top:8px;word-break:break-all;}
+.slug-preview strong{color:var(--primary);}
+.composer-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:16px;flex-wrap:wrap;}
+.img-picker{display:flex;align-items:center;gap:10px;}
+.img-picker label{
+  font-family:var(--ff-mono);font-size:.74rem;color:var(--text-dim);border:1px dashed var(--line);
+  padding:9px 14px;border-radius:10px;cursor:pointer;
+}
+.img-picker label:hover{border-color:var(--primary);color:var(--text);}
+.img-picker input{display:none;}
+.img-preview{width:44px;height:44px;border-radius:8px;object-fit:cover;display:none;border:1px solid var(--line);}
+.publish-btn{
+  font-family:var(--ff-display);font-weight:600;font-size:.9rem;border:none;cursor:pointer;
+  background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;padding:11px 22px;border-radius:10px;
+}
+.publish-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Feed */
+.feed{display:flex;flex-direction:column;gap:18px;padding-bottom:70px;}
+.post-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;scroll-margin-top:90px;}
+.post-card.highlight{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary);}
+.post-card img.post-img{width:100%;aspect-ratio:16/9;object-fit:cover;}
+.post-body{padding:20px 22px 22px;}
+.post-meta{display:flex;justify-content:space-between;align-items:center;gap:10px;}
+.post-date{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);}
+.post-card h2{font-size:1.08rem;margin-top:10px;color:var(--text);}
+.post-content{color:var(--text-dim);font-size:.9rem;margin-top:10px;white-space:pre-wrap;}
+.post-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px;}
+.copy-link{
+  font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);background:var(--bg-alt);
+  border:1px solid var(--line);padding:7px 11px;border-radius:100px;cursor:pointer;
+}
+.copy-link:hover{color:var(--primary);border-color:var(--primary);}
+.delete-btn{
+  font-family:var(--ff-mono);font-size:.68rem;color:#ff8a8a;background:transparent;
+  border:1px solid #4a2020;padding:7px 11px;border-radius:100px;cursor:pointer;
+}
+.delete-btn:hover{background:#2a0e0e;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-dim);}
+.empty-state svg{width:34px;height:34px;color:var(--text-dim);margin-bottom:12px;}
+
+/* Login overlay */
+.login-overlay{position:fixed;inset:0;z-index:200;background:#020c10ee;display:none;align-items:center;justify-content:center;padding:20px;}
+.login-overlay.open{display:flex;}
+.login-box{width:100%;max-width:380px;background:var(--bg-alt);border:1px solid var(--line);border-radius:20px;padding:28px 24px;position:relative;}
+.login-box .close-btn{position:absolute;top:14px;right:14px;background:var(--panel);border:1px solid var(--line);color:var(--text-dim);width:28px;height:28px;border-radius:9px;cursor:pointer;}
+.login-box h2{font-size:1.2rem;margin-top:6px;}
+.login-field{margin-top:16px;}
+.login-field label{display:block;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);margin-bottom:6px;}
+.login-field input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);}
+.login-field input:focus{outline:none;border-color:var(--primary);}
+.login-submit{width:100%;margin-top:18px;font-family:var(--ff-display);font-weight:600;background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;border:none;padding:13px;border-radius:10px;cursor:pointer;}
+.login-error{color:#ff8a8a;font-family:var(--ff-mono);font-size:.72rem;margin-top:10px;display:none;}
+
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);
+  background:var(--panel);border:1px solid var(--primary);color:var(--text);
+  font-family:var(--ff-mono);font-size:.78rem;padding:11px 16px;border-radius:12px;
+  opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:300;
+}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+</style>
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="row">
+    <a href="/" class="nav-brand"><span class="dot"></span> PROYECTUM <span class="grad-text">IA</span></a>
+    <div class="nav-links">
+      <a href="/plataforma">Plataforma</a>
+      <a href="/publicaciones" class="active">Comunidad</a>
+      <a href="/resultados">Resultados</a>
+      <a href="https://t.me/ProyectumIA_bot" target="_blank" rel="noopener">IA</a>
+      <a href="/paquetes">Paquetes</a>
+    </div>
+    <button class="admin-pill out" id="adminBtn">Iniciar sesión</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <header class="page-head">
+    <p class="eyebrow">Comunidad</p>
+    <h1>Publicaciones de <span class="grad-text">Proyectum IA</span></h1>
+    <p>Novedades, casos y avances del programa.</p>
+  </header>
+
+  <!-- Composer: solo visible cuando el admin inició sesión -->
+  <div class="composer" id="composer">
+    <p class="m-tag">Nueva publicación</p>
+    <input type="text" id="postTitle" placeholder="Título de la publicación" maxlength="120">
+    <textarea id="postContent" placeholder="Escribe el contenido..." maxlength="700"></textarea>
+    <div class="char-count" id="charCount">0 / 700</div>
+    <div class="slug-preview">URL: <strong id="slugPreview">proyectumia.com/publicaciones/…</strong></div>
+    <div class="composer-row">
+      <div class="img-picker">
+        <label for="postImage">📷 Agregar imagen</label>
+        <input type="file" id="postImage" accept="image/*">
+        <img class="img-preview" id="imgPreview">
+      </div>
+      <button class="publish-btn" id="publishBtn">Publicar</button>
+    </div>
+  </div>
+
+  <div class="feed" id="feed">
+    <div class="empty-state">Cargando publicaciones…</div>
+  </div>
+</div>
+
+<!-- Login admin -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <button class="close-btn" id="closeLogin">✕</button>
+    <p class="eyebrow">Acceso admin</p>
+    <h2>Inicia sesión</h2>
+    <form id="loginForm">
+      <div class="login-field">
+        <label>Correo</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="login-field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" required>
+      </div>
+      <button type="submit" class="login-submit">Entrar</button>
+      <p class="login-error" id="loginError">Correo o contraseña incorrectos.</p>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIGURA TU CONEXIÓN A SUPABASE AQUÍ
+   (Project Settings → API en tu proyecto de Supabase)
+   ========================================================= */
+const SUPABASE_URL = "https://opagbIruzwsrxsggkjsa.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
+const ADMIN_EMAIL = "contact@proyectumia.com";
+const CHAR_LIMIT = 700;
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+/* ---------- Utilidades ---------- */
+function slugify(text){
+  return text
+    .toString().trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quita acentos
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 70)
+    .replace(/-$/,"");
+}
+function formatDate(iso){
+  return new Date(iso).toLocaleDateString('es-CO', { day:'numeric', month:'long', year:'numeric' });
+}
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+/* ---------- Sesión / login ---------- */
+const loginOverlay = document.getElementById('loginOverlay');
+const adminBtn = document.getElementById('adminBtn');
+const composer = document.getElementById('composer');
+let currentSession = null;
+
+async function refreshSession(){
+  const { data } = await sb.auth.getSession();
+  currentSession = data.session;
+  const isAdmin = currentSession && currentSession.user.email === ADMIN_EMAIL;
+  adminBtn.textContent = isAdmin ? "Cerrar sesión (admin)" : "Iniciar sesión";
+  adminBtn.className = "admin-pill " + (isAdmin ? "in" : "out");
+  composer.classList.toggle('open', !!isAdmin);
+  renderPosts(); // para mostrar/ocultar botones de borrar
+}
+
+adminBtn.addEventListener('click', async () => {
+  if(currentSession){
+    await sb.auth.signOut();
+    showToast("Sesión cerrada");
+    refreshSession();
+  } else {
+    loginOverlay.classList.add('open');
+  }
+});
+document.getElementById('closeLogin').addEventListener('click', () => loginOverlay.classList.remove('open'));
+loginOverlay.addEventListener('click', (e) => { if(e.target === loginOverlay) loginOverlay.classList.remove('open'); });
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errorEl = document.getElementById('loginError');
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){
+    errorEl.style.display = 'block';
+    return;
+  }
+  errorEl.style.display = 'none';
+  loginOverlay.classList.remove('open');
+  showToast("Sesión iniciada");
+  refreshSession();
+});
+
+/* ---------- Composer ---------- */
+const titleInput = document.getElementById('postTitle');
+const contentInput = document.getElementById('postContent');
+const charCount = document.getElementById('charCount');
+const slugPreview = document.getElementById('slugPreview');
+const imageInput = document.getElementById('postImage');
+const imgPreview = document.getElementById('imgPreview');
+
+function updateComposerPreview(){
+  const len = contentInput.value.length;
+  charCount.textContent = `${len} / ${CHAR_LIMIT}`;
+  charCount.classList.toggle('warn', len > CHAR_LIMIT * 0.9);
+  const base = titleInput.value || contentInput.value;
+  slugPreview.innerHTML = 'URL: <strong>proyectumia.com/publicaciones/' + (slugify(base) || '…') + '</strong>';
+}
+titleInput.addEventListener('input', updateComposerPreview);
+contentInput.addEventListener('input', updateComposerPreview);
+imageInput.addEventListener('change', () => {
+  const file = imageInput.files[0];
+  if(!file) return;
+  imgPreview.src = URL.createObjectURL(file);
+  imgPreview.style.display = 'block';
+});
+
+document.getElementById('publishBtn').addEventListener('click', async () => {
+  const title = titleInput.value.trim();
+  const content = contentInput.value.trim();
+  if(!title || !content){
+    showToast("Escribe un título y contenido antes de publicar");
+    return;
+  }
+  const btn = document.getElementById('publishBtn');
+  btn.disabled = true;
+  btn.textContent = "Publicando…";
+
+  try{
+    // El slug se genera a partir del título (contexto de la publicación) para una URL legible y buena para SEO
+    let slug = slugify(title) || slugify(content) || ('post-' + Date.now());
+    let imageUrl = null;
+
+    const file = imageInput.files[0];
+    if(file){
+      const path = `${Date.now()}-${slug}.${file.name.split('.').pop()}`;
+      const { error: upErr } = await sb.storage.from('post-images').upload(path, file);
+      if(upErr) throw upErr;
+      const { data: pub } = sb.storage.from('post-images').getPublicUrl(path);
+      imageUrl = pub.publicUrl;
+    }
+
+    // Evita choques de slug duplicado
+    let finalSlug = slug, n = 2;
+    while(true){
+      const { data: existing } = await sb.from('posts').select('id').eq('slug', finalSlug).maybeSingle();
+      if(!existing) break;
+      finalSlug = `${slug}-${n}`; n++;
+    }
+
+    const { error: insErr } = await sb.from('posts').insert({
+      title, content, slug: finalSlug, image_url: imageUrl
+    });
+    if(insErr) throw insErr;
+
+    titleInput.value = ""; contentInput.value = ""; imageInput.value = "";
+    imgPreview.style.display = 'none';
+    updateComposerPreview();
+    showToast("✅ Publicación creada");
+    loadPosts();
+  }catch(err){
+    console.error(err);
+    showToast("❌ No se pudo publicar: " + err.message);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = "Publicar";
+  }
+});
+
+/* ---------- Feed ---------- */
+let posts = [];
+async function loadPosts(){
+  const { data, error } = await sb.from('posts').select('*').order('created_at', { ascending: false });
+  if(error){
+    document.getElementById('feed').innerHTML = `<div class="empty-state">No se pudieron cargar las publicaciones.</div>`;
+    return;
+  }
+  posts = data || [];
+  renderPosts();
+}
+
+function renderPosts(){
+  const feed = document.getElementById('feed');
+  if(posts.length === 0){
+    feed.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
+      <p>Todavía no hay publicaciones.</p>
+    </div>`;
+    return;
+  }
+  const params = new URLSearchParams(location.search);
+  const highlightSlug = params.get('post');
+  const isAdmin = currentSession && currentSession.user.email === ADMIN_EMAIL;
+
+  feed.innerHTML = posts.map(p => `
+    <article class="post-card ${p.slug === highlightSlug ? 'highlight' : ''}" id="post-${p.slug}">
+      ${p.image_url ? `<img class="post-img" src="${p.image_url}" alt="">` : ""}
+      <div class="post-body">
+        <div class="post-meta"><span class="post-date">${formatDate(p.created_at)}</span></div>
+        <h2>${escapeHtml(p.title)}</h2>
+        <p class="post-content">${escapeHtml(p.content)}</p>
+        <div class="post-actions">
+          <button class="copy-link" data-slug="${p.slug}">🔗 Copiar link</button>
+          ${isAdmin ? `<button class="delete-btn" data-id="${p.id}" data-image="${p.image_url || ''}">Borrar</button>` : ""}
+        </div>
+      </div>
+    </article>
+  `).join("");
+
+  feed.querySelectorAll('.copy-link').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const url = `${location.origin}/publicaciones?post=${btn.dataset.slug}`;
+      navigator.clipboard.writeText(url);
+      showToast("Link copiado");
+    });
+  });
+  feed.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => deletePost(btn.dataset.id, btn.dataset.image));
+  });
+
+  if(highlightSlug){
+    const el = document.getElementById('post-' + highlightSlug);
+    if(el) setTimeout(()=>el.scrollIntoView({behavior:'smooth', block:'center'}), 200);
+  }
+}
+
+async function deletePost(id, imageUrl){
+  if(!confirm("¿Borrar esta publicación? No se puede deshacer.")) return;
+  try{
+    const { error } = await sb.from('posts').delete().eq('id', id);
+    if(error) throw error;
+    if(imageUrl){
+      const path = imageUrl.split('/post-images/')[1];
+      if(path) await sb.storage.from('post-images').remove([path]);
+    }
+    showToast("Publicación borrada");
+    loadPosts();
+  }catch(err){
+    showToast("❌ No se pudo borrar: " + err.message);
+  }
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ---------- Init ---------- */
+refreshSession();
+loadPosts();
+</script>
+
+</body>
+</html>
