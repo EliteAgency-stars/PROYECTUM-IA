@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Plataforma — PROYECTUM IA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#04141a; --bg-alt:#071f27; --panel:#0a2933;
+  --primary:#22FDF9; --primary-dim:#22fdf933; --secondary:#035266; --gold:#ffc94a;
+  --text:#eafffd; --text-dim:#8fb6bb; --line:#134753; --radius:18px;
+  --ff-display:'Space Grotesk', sans-serif; --ff-body:'Inter', sans-serif; --ff-mono:'IBM Plex Mono', monospace; --ff-hand:'Caveat', cursive;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ff-body);line-height:1.5;}
+img{max-width:100%;display:block;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;touch-action:manipulation;cursor:pointer;}
+h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
+.grad-text{background:linear-gradient(90deg,var(--primary),#8ffcf9 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+
+/* ---------- Layout ---------- */
+.app{display:grid;grid-template-columns:264px 1fr;min-height:100vh;}
+@media(max-width:900px){.app{grid-template-columns:1fr;}}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  background:var(--bg-alt);border-right:1px solid var(--line);
+  padding:26px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;
+  display:flex;flex-direction:column;gap:28px;
+}
+@media(max-width:900px){
+  .sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);}
+}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--ff-display);font-weight:700;font-size:1.05rem;}
+.brand .dot{width:10px;height:10px;border-radius:3px;background:var(--gold);transform:rotate(45deg);}
+.nav-group{display:flex;flex-direction:column;gap:4px;}
+.nav-label{font-family:var(--ff-mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:0 12px;margin-bottom:6px;}
+.nav-link{
+  display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;
+  color:var(--text-dim);font-size:.92rem;font-weight:500;transition:background .15s ease,color .15s ease;
+}
+.nav-link svg{width:18px;height:18px;flex:none;}
+.nav-link:hover{background:var(--panel);color:var(--text);}
+.nav-link.active{background:var(--primary-dim);color:var(--primary);}
+.sidebar-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;}
+.user-chip{display:flex;align-items:center;gap:10px;}
+.user-chip .avatar{
+  width:36px;height:36px;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));
+  display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:700;color:#03181c;flex:none;
+}
+.user-chip .who{font-size:.85rem;}
+.user-chip .who strong{display:block;color:var(--text);font-weight:600;}
+.user-chip .who span{color:var(--text-dim);font-size:.76rem;}
+
+/* ---------- Main ---------- */
+.main{padding:34px 36px 60px;max-width:1180px;width:100%;margin:0 auto;}
+@media(max-width:640px){.main{padding:22px 18px 48px;}}
+
+.topbar{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:8px;}
+.greeting p.eyebrow{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--primary);margin:0 0 6px;}
+.greeting h1{font-size:clamp(1.5rem,3vw,2rem);}
+.greeting h1 span{font-family:var(--ff-hand);color:var(--gold);font-weight:600;font-size:1.15em;}
+
+.progress-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:14px 18px;min-width:220px;
+}
+.progress-card .row{display:flex;justify-content:space-between;font-family:var(--ff-mono);font-size:.72rem;color:var(--text-dim);margin-bottom:8px;}
+.progress-card .row strong{color:var(--primary);}
+.progress-track{height:8px;border-radius:6px;background:var(--bg-alt);overflow:hidden;}
+.progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--secondary),var(--primary),var(--gold));box-shadow:0 0 10px var(--primary);transition:width .5s ease;}
+
+/* ---------- Level sections ---------- */
+.level-section{margin-top:44px;}
+.level-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
+.level-head .num{
+  font-family:var(--ff-mono);font-size:.78rem;color:var(--bg);background:var(--primary);
+  width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none;
+}
+.level-head .num.locked{background:var(--bg-alt);color:var(--text-dim);border:1px solid var(--line);}
+.level-head h2{font-size:1.12rem;color:var(--text);}
+.level-head .tag{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);}
+.level-line{flex:1;height:1px;background:var(--line);}
+
+.module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
+@media(max-width:900px){.module-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.module-grid{grid-template-columns:1fr;}}
+
+.module-card{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;text-align:left;position:relative;transition:transform .18s ease,border-color .18s ease;
+}
+.module-card:not(.locked):hover{transform:translateY(-3px);border-color:var(--primary);}
+.module-card .thumb{
+  position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--secondary),var(--bg-alt));
+  display:flex;align-items:center;justify-content:center;
+}
+.module-card .thumb svg{width:34px;height:34px;color:var(--primary);}
+.module-card.done .thumb svg{color:var(--gold);}
+.module-card.locked .thumb svg{color:var(--text-dim);}
+.module-card .thumb .duration{
+  position:absolute;bottom:8px;right:8px;background:#03181cdd;font-family:var(--ff-mono);
+  font-size:.68rem;padding:3px 7px;border-radius:6px;color:var(--text-dim);
+}
+.module-card .body{padding:16px 16px 18px;}
+.module-card .m-tag{font-family:var(--ff-mono);font-size:.64rem;letter-spacing:.08em;color:var(--gold);text-transform:uppercase;}
+.module-card.locked .m-tag{color:var(--text-dim);}
+.module-card h3{font-size:.94rem;margin-top:6px;color:var(--text);line-height:1.3;}
+.module-card.locked h3{color:var(--text-dim);}
+.module-card p{font-size:.78rem;color:var(--text-dim);margin-top:6px;line-height:1.4;}
+.module-card .status{
+  display:flex;align-items:center;gap:6px;margin-top:12px;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);
+}
+.module-card.done .status{color:var(--gold);}
+.module-card.locked .lockband{
+  position:absolute;inset:0;background:#04141acc;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:6px;opacity:0;transition:opacity .15s ease;
+}
+.module-card.locked:hover .lockband{opacity:1;}
+.module-card.locked .lockband svg{width:20px;height:20px;color:var(--text-dim);}
+.module-card.locked .lockband span{font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);text-align:center;padding:0 14px;}
+.module-card{border:1px solid var(--line);cursor:pointer;}
+.module-card.locked{cursor:not-allowed;}
+
+/* ---------- Player overlay ---------- */
+.player-overlay{
+  position:fixed;inset:0;background:#020c10ee;z-index:900;display:none;
+  align-items:center;justify-content:center;padding:24px;
+}
+.player-overlay.open{display:flex;}
+.player-box{
+  background:var(--bg-alt);border:1px solid var(--line);border-radius:20px;
+  width:100%;max-width:860px;max-height:92vh;overflow-y:auto;
+}
+.player-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);}
+.player-head h3{font-size:1rem;color:var(--text);}
+.player-head .m-tag{font-family:var(--ff-mono);font-size:.64rem;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;}
+.close-btn{
+  background:var(--panel);border:1px solid var(--line);color:var(--text-dim);
+  width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;
+}
+.close-btn:hover{color:var(--text);border-color:var(--primary);}
+.player-video{width:100%;aspect-ratio:16/9;background:#000;display:block;}
+.player-video video, .player-video iframe{width:100%;height:100%;border:none;display:block;}
+.player-foot{padding:18px 22px 22px;}
+.player-foot p{color:var(--text-dim);font-size:.9rem;line-height:1.55;}
+.player-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:16px;}
+.btn{
+  font-family:var(--ff-display);font-weight:600;font-size:.88rem;border:none;cursor:pointer;
+  padding:11px 20px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;
+  transition:transform .15s ease;
+}
+.btn:hover{transform:translateY(-1px);}
+.btn-primary{background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text-dim);}
+
+/* ---------- Toast ---------- */
+.toast{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+  background:var(--panel);border:1px solid var(--primary);color:var(--text);
+  font-family:var(--ff-mono);font-size:.8rem;padding:12px 18px;border-radius:12px;
+  opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:1000;
+  box-shadow:0 10px 30px -10px #000;
+}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+.mobile-topbar{display:none;}
+@media(max-width:900px){
+  .mobile-topbar{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:16px 18px;border-bottom:1px solid var(--line);background:var(--bg-alt);
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <a href="/" class="brand"><span class="dot"></span> PROYECTUM <span class="grad-text">IA</span></a>
+
+    <nav class="nav-group">
+      <span class="nav-label">Navegación</span>
+      <a href="/plataforma" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+        Mi plataforma
+      </a>
+      <a href="/publicaciones" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
+        Publicaciones
+      </a>
+      <a href="/resultados" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+        Resultados
+      </a>
+      <a href="/paquetes" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
+        Paquetes
+      </a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="avatar" id="avatarInitial">U</div>
+        <div class="who">
+          <strong id="userName">Tu cuenta</strong>
+          <span>Miembro Proyectum IA</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+
+    <div class="topbar">
+      <div class="greeting">
+        <p class="eyebrow">Tu plataforma</p>
+        <h1>Vamos con el siguiente <span>módulo</span></h1>
+      </div>
+      <div class="progress-card">
+        <div class="row"><span>Progreso general</span><strong id="progressLabel">0%</strong></div>
+        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div id="levelsRoot"></div>
+
+  </main>
+</div>
+
+<!-- ===================== PLAYER OVERLAY ===================== -->
+<div class="player-overlay" id="playerOverlay">
+  <div class="player-box">
+    <div class="player-head">
+      <div>
+        <p class="m-tag" id="playerTag">Módulo</p>
+        <h3 id="playerTitle">Título del módulo</h3>
+      </div>
+      <button class="close-btn" id="closePlayer">✕</button>
+    </div>
+    <div class="player-video" id="playerVideoWrap"></div>
+    <div class="player-foot">
+      <p id="playerDesc">Descripción del módulo.</p>
+      <div class="player-actions">
+        <button class="btn btn-ghost" id="closePlayer2">Cerrar</button>
+        <button class="btn btn-primary" id="markDone">Marcar como completado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   CONFIGURA TUS MÓDULOS AQUÍ
+   - id: identificador único (no lo repitas)
+   - videoType: "mp4" (Cloudinary / link directo) o "youtube" (id del video)
+   - videoSrc: URL del mp4, o el ID del video de YouTube
+   El primer módulo de cada nivel se libera solo. Los siguientes se
+   desbloquean al completar el anterior (progreso guardado en el navegador).
+   ========================================================= */
+const LEVELS = [
+  {
+    title: "Nivel 1 · Fundamentos",
+    tag: "Empieza aquí",
+    modules: [
+      { id: "n1-m1", title: "Bienvenida a Proyectum IA", desc: "Qué vas a lograr en este programa y cómo está organizado.", duration: "6 min", videoType: "mp4", videoSrc: "" },
+      { id: "n1-m2", title: "Cómo piensa un negocio con IA", desc: "El cambio de mentalidad antes de tocar cualquier herramienta.", duration: "11 min", videoType: "mp4", videoSrc: "" },
+      { id: "n1-m3", title: "Tu primer caso de uso", desc: "Identifica dónde la IA te ahorra más tiempo hoy mismo.", duration: "9 min", videoType: "mp4", videoSrc: "" }
+    ]
+  },
+  {
+    title: "Nivel 2 · Herramientas",
+    tag: "Manos a la obra",
+    modules: [
+      { id: "n2-m1", title: "Tu stack de IA", desc: "Las herramientas que vas a usar durante todo el programa.", duration: "14 min", videoType: "mp4", videoSrc: "" },
+      { id: "n2-m2", title: "Prompts que funcionan", desc: "Estructura de prompts para resultados consistentes.", duration: "13 min", videoType: "mp4", videoSrc: "" },
+      { id: "n2-m3", title: "Automatiza tu primer proceso", desc: "Conecta dos herramientas para ahorrar trabajo repetitivo.", duration: "16 min", videoType: "mp4", videoSrc: "" }
+    ]
+  },
+  {
+    title: "Nivel 3 · Contenido y ventas",
+    tag: "Escala tu negocio",
+    modules: [
+      { id: "n3-m1", title: "Contenido con IA a escala", desc: "Genera contenido de calidad sin perder tu voz de marca.", duration: "15 min", videoType: "mp4", videoSrc: "" },
+      { id: "n3-m2", title: "Embudo de ventas asistido", desc: "Cómo la IA acompaña a tu cliente hasta la compra.", duration: "18 min", videoType: "mp4", videoSrc: "" }
+    ]
+  },
+  {
+    title: "Nivel 4 · Siguiente paso",
+    tag: "Consolida",
+    modules: [
+      { id: "n4-m1", title: "Tu plan de 30 días", desc: "El plan de acción para implementar todo lo aprendido.", duration: "10 min", videoType: "mp4", videoSrc: "" }
+    ]
+  }
+];
+
+const STORAGE_KEY = "proyectumia_progress";
+function loadProgress(){
+  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+}
+function saveProgress(p){ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+let progress = loadProgress();
+
+const allModules = LEVELS.flatMap(l => l.modules);
+
+function isDone(id){ return !!progress[id]; }
+function isUnlocked(index){
+  if(index === 0) return true;
+  return isDone(allModules[index-1].id);
+}
+
+function render(){
+  const root = document.getElementById("levelsRoot");
+  root.innerHTML = "";
+  let flatIndex = 0;
+
+  LEVELS.forEach(level => {
+    const section = document.createElement("section");
+    section.className = "level-section";
+
+    const someUnlocked = level.modules.some((m, i) => isUnlocked(flatIndex + i));
+    section.innerHTML = `
+      <div class="level-head">
+        <span class="num ${someUnlocked ? '' : 'locked'}">${LEVELS.indexOf(level)+1}</span>
+        <h2>${level.title}</h2>
+        <span class="tag">${level.tag}</span>
+        <div class="level-line"></div>
+      </div>
+      <div class="module-grid"></div>
+    `;
+    const grid = section.querySelector(".module-grid");
+
+    level.modules.forEach((m) => {
+      const idx = flatIndex;
+      const unlocked = isUnlocked(idx);
+      const done = isDone(m.id);
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "module-card" + (done ? " done" : "") + (unlocked ? "" : " locked");
+      card.innerHTML = `
+        <div class="thumb">
+          ${done
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>`
+            : unlocked
+              ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>`
+          }
+          <span class="duration">${m.duration}</span>
+        </div>
+        <div class="body">
+          <p class="m-tag">${done ? "Completado" : unlocked ? "Disponible" : "Bloqueado"}</p>
+          <h3>${m.title}</h3>
+          <p>${m.desc}</p>
+          <div class="status">${done ? "✓ Visto" : unlocked ? "▶ Ver módulo" : "🔒 Completa el anterior"}</div>
+        </div>
+        ${unlocked ? "" : `<div class="lockband">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+          <span>Completa el módulo anterior para desbloquear</span>
+        </div>`}
+      `;
+      card.addEventListener("click", () => {
+        if(!unlocked){
+          showToast("🔒 Todavía no has desbloqueado este módulo");
+          return;
+        }
+        openPlayer(m);
+      });
+      grid.appendChild(card);
+      flatIndex++;
+    });
+
+    root.appendChild(section);
+  });
+
+  updateProgressBar();
+}
+
+function updateProgressBar(){
+  const total = allModules.length;
+  const done = allModules.filter(m => isDone(m.id)).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent = pct + "%";
+}
+
+/* ---------- Reproductor ---------- */
+let currentModule = null;
+function openPlayer(m){
+  currentModule = m;
+  document.getElementById("playerTag").textContent = isDone(m.id) ? "Completado" : "Módulo";
+  document.getElementById("playerTitle").textContent = m.title;
+  document.getElementById("playerDesc").textContent = m.desc;
+
+  const wrap = document.getElementById("playerVideoWrap");
+  wrap.innerHTML = "";
+  if(!m.videoSrc){
+    wrap.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-family:var(--ff-mono);font-size:.8rem;text-align:center;padding:20px;">
+      Todavía no se ha cargado el video de este módulo.<br>Agrega la URL en la configuración de LEVELS.
+    </div>`;
+  } else if(m.videoType === "youtube"){
+    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.videoSrc}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+  } else {
+    wrap.innerHTML = `<video src="${m.videoSrc}" controls playsinline></video>`;
+  }
+
+  const doneBtn = document.getElementById("markDone");
+  doneBtn.textContent = isDone(m.id) ? "Ya completado ✓" : "Marcar como completado";
+  document.getElementById("playerOverlay").classList.add("open");
+}
+function closePlayer(){
+  document.getElementById("playerOverlay").classList.remove("open");
+  const wrap = document.getElementById("playerVideoWrap");
+  wrap.innerHTML = "";
+}
+document.getElementById("closePlayer").addEventListener("click", closePlayer);
+document.getElementById("closePlayer2").addEventListener("click", closePlayer);
+document.getElementById("playerOverlay").addEventListener("click", (e) => {
+  if(e.target.id === "playerOverlay") closePlayer();
+});
+document.getElementById("markDone").addEventListener("click", () => {
+  if(!currentModule) return;
+  const wasDone = isDone(currentModule.id);
+  progress[currentModule.id] = true;
+  saveProgress(progress);
+  render();
+  if(!wasDone) showToast("✨ Módulo completado — ¡siguiente nivel desbloqueado!");
+  closePlayer();
+});
+
+/* ---------- Toast ---------- */
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+/* ---------- Nombre de usuario (placeholder hasta tener login real) ---------- */
+(function initUser(){
+  const name = localStorage.getItem("proyectumia_username") || "Tu cuenta";
+  document.getElementById("userName").textContent = name;
+  document.getElementById("avatarInitial").textContent = name.charAt(0).toUpperCase();
+})();
+
+render();
+</script>
+
+</body>
+</html>
