@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#04141a; --bg-alt:#071f27; --panel:#0a2933;
@@ -173,8 +174,10 @@ section{padding:88px 0;}
   display:flex;gap:36px;align-items:center;background:var(--panel);
   border:1px solid var(--line);border-radius:24px;padding:40px;
 }
-.author-img{width:120px;height:120px;border-radius:50%;overflow:hidden;flex:none;border:2px solid var(--primary);}
-.author-img img{width:100%;height:100%;object-fit:cover;}
+.author-img{width:120px;height:120px;border-radius:50%;overflow:visible;flex:none;border:2px solid var(--primary);}
+.author-img img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.author-img .photo-edit-btn{bottom:-6px;right:-6px;padding:6px;border-radius:50%;}
+.author-img .photo-edit-btn .btn-label{display:none;}
 .author-section h3{font-size:1.15rem;color:var(--text);}
 .author-section p{color:var(--text-dim);margin-top:8px;font-size:.95rem;}
 @media(max-width:640px){.author-section .wrap{flex-direction:column;text-align:center;padding:28px 22px;}}
@@ -352,17 +355,68 @@ footer p{max-width:640px;margin:6px auto;}
 
 /* paso 3: minijuego */
 #stepGame .game-head{max-width:560px;margin-bottom:24px;}
+.game-hint{display:flex;align-items:center;gap:8px;justify-content:center;color:var(--text-dim);font-size:.9rem;}
+.game-hint svg{width:16px;height:16px;color:var(--primary);flex:none;}
 .token-bar{font-family:var(--ff-mono);font-size:.78rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:7px 16px;border-radius:100px;margin-top:16px;display:inline-flex;align-items:center;gap:6px;transition:transform .2s ease;}
 .token-bar.spend{animation:tokenSpend .35s ease;}
 @keyframes tokenSpend{0%{transform:scale(1);}40%{transform:scale(1.15);}100%{transform:scale(1);}}
-.game-board{position:relative;width:min(92vw,560px);height:min(58vh,58dvh,440px);}
-.node{position:absolute;transform:translate(-50%,-50%);border-radius:16px;border:2px solid var(--line);background:var(--panel);color:var(--text);font-family:var(--ff-display);font-weight:600;font-size:.85rem;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;cursor:pointer;user-select:none;touch-action:none;transition:border-color .3s,box-shadow .3s,background .3s;z-index:2;line-height:1.2;}
-.node-core{width:96px;height:96px;left:50%;top:50%;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));color:#03181c;font-size:1rem;cursor:grab;box-shadow:0 0 30px -6px var(--primary);}
-.node-target{width:120px;height:80px;}
-.node-target.connected{border-color:var(--primary);box-shadow:0 0 20px -4px var(--primary);background:#0a2933;}
-#gameLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;}
-#gameLines line{stroke:var(--line);stroke-width:3;}
-#gameLines line.done{stroke:url(#introTrackGrad);}
+.game-board{
+  position:relative;width:min(92vw,560px);height:min(58vh,58dvh,440px);
+  border-radius:24px;overflow:hidden;
+}
+.game-board::before{
+  content:'';position:absolute;inset:0;z-index:0;border-radius:24px;
+  background-image:radial-gradient(circle, var(--line) 1.4px, transparent 1.4px);
+  background-size:26px 26px;opacity:.55;
+}
+.node{position:absolute;transform:translate(-50%,-50%);z-index:2;user-select:none;touch-action:none;}
+.node-core{
+  left:50%;top:50%;width:104px;height:104px;border-radius:50%;cursor:grab;
+  display:flex;align-items:center;justify-content:center;
+}
+.node-core .core-ring{
+  position:absolute;inset:-14px;border-radius:50%;border:1.5px solid var(--primary);
+  opacity:.5;animation:coreRing 2.4s ease-out infinite;
+}
+.node-core .core-ring.r2{animation-delay:.8s;}
+.node-core .core-ring.r3{animation-delay:1.6s;}
+@keyframes coreRing{0%{transform:scale(.7);opacity:.55;}100%{transform:scale(1.5);opacity:0;}}
+.node-core .core-body{
+  position:relative;width:100%;height:100%;border-radius:50%;
+  background:linear-gradient(140deg,var(--primary),var(--gold));color:#03181c;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:2px;
+  font-family:var(--ff-display);font-weight:700;font-size:1.05rem;
+  box-shadow:0 0 0 4px #04141a, 0 0 34px -4px var(--primary);
+}
+.node-core .core-body svg{width:24px;height:24px;}
+.node-target{
+  width:132px;padding:14px 10px 12px;border-radius:16px;cursor:pointer;
+  background:var(--panel);border:1.5px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;
+  transition:border-color .25s ease,box-shadow .25s ease,transform .2s ease,background .25s ease;
+}
+.node-target:hover{border-color:var(--primary);transform:translate(-50%,-52%);}
+.node-target .t-icon{
+  width:38px;height:38px;border-radius:10px;background:var(--bg-alt);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--primary);flex:none;
+  transition:background .25s ease,border-color .25s ease;
+}
+.node-target .t-icon svg{width:18px;height:18px;}
+.node-target .t-label{font-family:var(--ff-display);font-weight:600;font-size:.8rem;color:var(--text);line-height:1.25;}
+.node-target .t-check{
+  position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;
+  background:var(--primary);color:#03181c;display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(.4);transition:opacity .2s ease,transform .2s ease;box-shadow:0 0 0 3px #04141a;
+}
+.node-target .t-check svg{width:12px;height:12px;}
+.node-target.connected{border-color:var(--primary);box-shadow:0 0 24px -6px var(--primary);background:#0a2933;}
+.node-target.connected .t-icon{background:var(--primary-dim);border-color:var(--primary);}
+.node-target.connected .t-check{opacity:1;transform:scale(1);}
+#gameLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;}
+#gameLines line{stroke:var(--line);stroke-width:2.5;}
+#gameLines line.temp{stroke:var(--primary);stroke-width:2.5;stroke-dasharray:7 6;animation:dashFlow .5s linear infinite;}
+#gameLines line.done{stroke:url(#introTrackGrad);stroke-width:3.5;filter:drop-shadow(0 0 6px var(--primary-dim));}
+@keyframes dashFlow{to{stroke-dashoffset:-26;}}
 .levelup-toast{position:fixed;top:12%;left:50%;transform:translate(-50%,-20px);background:linear-gradient(140deg,var(--primary),var(--gold));color:#03181c;font-family:var(--ff-display);font-weight:700;padding:12px 26px;border-radius:100px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:70;white-space:nowrap;max-width:88vw;text-align:center;}
 .levelup-toast.show{opacity:1;transform:translate(-50%,0);}
 
@@ -377,33 +431,18 @@ footer p{max-width:640px;margin:6px auto;}
 .particle{position:fixed;width:8px;height:8px;border-radius:2px;z-index:9999;pointer-events:none;animation:particleFly .8s ease-out forwards;}
 @keyframes particleFly{to{transform:translate(var(--dx),var(--dy)) rotate(720deg);opacity:0;}}
 
-/* paso: carta manuscrita de Santiago (audio final) */
-.letter-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;max-width:640px;width:100%;}
-.letter-badge{font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:6px 14px;border-radius:100px;}
-.letter-paper{
-  position:relative;width:min(92vw,560px);max-height:min(64vh,64dvh,520px);overflow-y:auto;
-  background:linear-gradient(165deg,#f6ecd6,#efe2c4);
-  border-radius:6px 14px 10px 16px/10px 16px 6px 14px;
-  box-shadow:0 30px 70px -25px #000, 0 0 0 1px #d8c8a0 inset;
-  padding:30px 32px;transform:translateY(26px) rotate(-1.2deg) scale(.96);opacity:0;
-  transition:transform .6s cubic-bezier(.2,.9,.25,1.05), opacity .5s ease;
-}
-.letter-paper.appear{transform:translateY(0) rotate(-.6deg) scale(1);opacity:1;}
-.letter-text{
-  font-family:var(--ff-hand);color:#2c2113;font-size:clamp(1.15rem,2.6vw,1.5rem);
-  line-height:1.55;text-align:left;margin:0;
-}
-.letter-text .lw{opacity:.1;filter:blur(1.5px);transition:opacity .5s ease, filter .5s ease, color .5s ease;}
-.letter-text .lw.written{opacity:1;filter:blur(0);color:#241a0d;}
-.letter-signoff{font-family:var(--ff-hand);font-size:1.1rem;color:var(--gold);}
-
 @media(max-width:480px){
   .video-gate h1{font-size:1.4rem;}
   .phone-shell{border-radius:20px;}
   .voice-msg{max-width:92%;padding:10px 12px;}
   .game-board{height:min(52vh,52dvh,380px);}
-  .node-target{width:96px;height:68px;font-size:.74rem;padding:6px;}
-  .node-core{width:78px;height:78px;font-size:.85rem;}
+  .node-target{width:108px;padding:10px 6px 9px;gap:6px;}
+  .node-target .t-icon{width:32px;height:32px;}
+  .node-target .t-label{font-size:.72rem;}
+  .node-core{width:82px;height:82px;}
+  .node-core .core-body{font-size:.86rem;}
+  .node-core .core-body svg{width:19px;height:19px;}
+  .node-core .core-ring{inset:-10px;}
   #lockSvg{width:88px;height:88px;}
   .lock-wrap h2{font-size:1.1rem;}
   .bug{width:44px;height:44px;font-size:1.55rem;}
@@ -415,9 +454,6 @@ footer p{max-width:640px;margin:6px auto;}
   .wa-notif{padding:10px 12px;}
   .token-coin{font-size:2.2rem;}
   .token-row{gap:10px;margin-top:20px;}
-  .letter-paper{padding:22px 20px;max-height:min(58vh,58dvh,460px);}
-  .letter-text{font-size:1.08rem;}
-  .letter-signoff{font-size:1rem;}
 }
 @media(max-height:640px){
   .phone-shell{height:min(88vh,88dvh,640px);}
@@ -510,7 +546,21 @@ footer p{max-width:640px;margin:6px auto;}
   padding:14px;border-radius:10px;transition:transform .15s ease;
 }
 .login-submit:hover{transform:translateY(-1px);}
+.login-error{color:#ff8a8a;font-family:var(--ff-mono);font-size:.72rem;margin-top:10px;text-align:center;}
 .login-note{margin-top:14px;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);text-align:center;line-height:1.5;}
+
+/* Edición de fotos (solo admin) */
+.editable-photo{position:relative;}
+.photo-edit-btn{
+  position:absolute;bottom:12px;right:12px;z-index:5;
+  display:none;align-items:center;gap:6px;font-family:var(--ff-mono);font-size:.72rem;
+  background:#04141ae6;backdrop-filter:blur(6px);border:1px solid var(--primary);color:var(--primary);
+  padding:8px 13px;border-radius:100px;cursor:pointer;
+}
+.photo-edit-btn svg{width:14px;height:14px;}
+.photo-edit-btn:hover{background:var(--primary);color:#03181c;}
+body.admin-mode .photo-edit-btn{display:inline-flex;}
+.photo-edit-btn.uploading{pointer-events:none;opacity:.6;}
 </style>
 
 </head>
@@ -616,7 +666,10 @@ footer p{max-width:640px;margin:6px auto;}
     <div class="game-head">
       <div class="eyebrow">Desbloquea tu ruta</div>
       <h2 style="font-size:clamp(1.3rem,3vw,1.9rem);margin-top:10px;">Conecta la IA con las claves de tu crecimiento</h2>
-      <p style="color:var(--text-dim);margin-top:10px;">Usa tus tokens: arrastra desde el nodo <strong>IA</strong> hacia cada nodo, o tócalo directamente.</p>
+      <p class="game-hint" style="margin-top:10px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12h6M12 9v6"/><circle cx="12" cy="12" r="9"/></svg>
+        Arrastra desde el nodo <strong style="color:var(--text);">IA</strong> hacia cada tarjeta, o tócala directamente
+      </p>
       <div class="token-bar" id="tokenBar">🪙 <span id="tokenCount">3</span> tokens disponibles</div>
     </div>
     <div class="game-board" id="gameBoard">
@@ -629,10 +682,30 @@ footer p{max-width:640px;margin:6px auto;}
           </linearGradient>
         </defs>
       </svg>
-      <div class="node node-core" id="nodeCore">IA</div>
-      <div class="node node-target" data-node="estrategia" style="left:16%; top:20%;">Estrategia</div>
-      <div class="node node-target" data-node="redes" style="left:84%; top:20%;">Redes Sociales</div>
-      <div class="node node-target" data-node="manejo" style="left:50%; top:88%;">Manejo Profesional</div>
+      <div class="node node-core" id="nodeCore">
+        <span class="core-ring"></span>
+        <span class="core-ring r2"></span>
+        <span class="core-ring r3"></span>
+        <span class="core-body">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>
+          IA
+        </span>
+      </div>
+      <div class="node node-target" data-node="estrategia" style="left:16%; top:20%;">
+        <span class="t-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L19 7"/></svg></span>
+        <span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".6" fill="currentColor"/></svg></span>
+        <span class="t-label">Estrategia</span>
+      </div>
+      <div class="node node-target" data-node="redes" style="left:84%; top:20%;">
+        <span class="t-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L19 7"/></svg></span>
+        <span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="12" r="2.4"/><circle cx="18" cy="6" r="2.4"/><circle cx="18" cy="18" r="2.4"/><path d="M8.2 10.8L15.8 7.2M8.2 13.2l7.6 3.6"/></svg></span>
+        <span class="t-label">Redes Sociales</span>
+      </div>
+      <div class="node node-target" data-node="manejo" style="left:50%; top:88%;">
+        <span class="t-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L19 7"/></svg></span>
+        <span class="t-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M8 8V6a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></span>
+        <span class="t-label">Manejo Profesional</span>
+      </div>
     </div>
   </div>
 
@@ -652,16 +725,6 @@ footer p{max-width:640px;margin:6px auto;}
     </div>
   </div>
 
-  <!-- PASO 7: CARTA MANUSCRITA DE SANTIAGO -->
-  <div class="intro-step" id="stepLetter">
-    <div class="letter-wrap">
-      <div class="letter-badge">✒️ Un mensaje para ti</div>
-      <div class="letter-paper" id="letterPaper">
-        <p class="letter-text" id="letterText"></p>
-      </div>
-      <div class="letter-signoff">— Santiago, fundador de Proyectum IA</div>
-    </div>
-  </div>
 </div>
 
 <div class="xp-rail"><div class="xp-fill" id="xpFill"></div></div>
@@ -693,17 +756,18 @@ footer p{max-width:640px;margin:6px auto;}
     <button class="close-btn" id="closeLogin">✕</button>
     <p class="eyebrow">Acceso a la plataforma</p>
     <h2>Entra a tu cuenta</h2>
-    <p class="sub">Ingresa tu nombre y correo para entrar a tu plataforma de módulos.</p>
+    <p class="sub">Ingresa tu correo y contraseña para entrar.</p>
     <form id="loginForm">
-      <div class="login-field">
-        <label for="loginName">Nombre</label>
-        <input type="text" id="loginName" required placeholder="Tu nombre">
-      </div>
       <div class="login-field">
         <label for="loginEmail">Correo</label>
         <input type="email" id="loginEmail" required placeholder="tucorreo@email.com">
       </div>
-      <button type="submit" class="login-submit">Entrar a la plataforma</button>
+      <div class="login-field">
+        <label for="loginPass">Contraseña</label>
+        <input type="password" id="loginPass" required placeholder="••••••••">
+      </div>
+      <button type="submit" class="login-submit">Entrar</button>
+      <p class="login-error" id="loginError" style="display:none;">Correo o contraseña incorrectos.</p>
     </form>
     <p class="login-note">¿Aún no tienes acceso? <a href="#comprar" id="loginBuyLink" style="color:var(--primary);">Consigue tu cupo aquí</a>.</p>
   </div>
@@ -726,8 +790,12 @@ footer p{max-width:640px;margin:6px auto;}
     </div>
     <div class="hero-art">
       <div class="glow-ring"></div>
-      <div class="frame">
-        <img src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA">
+      <div class="frame editable-photo">
+        <img src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA" id="heroImg">
+        <button type="button" class="photo-edit-btn" data-key="hero" data-target="heroImg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          Cambiar foto
+        </button>
       </div>
     </div>
   </div>
@@ -851,8 +919,12 @@ footer p{max-width:640px;margin:6px auto;}
   <!-- AUTOR -->
   <section class="author-section">
     <div class="wrap">
-      <div class="author-img">
-        <img src="//static-public.pages.hotmart.com/uploads/media/file/7176922/group_10288.png" alt="Autor de Proyectum IA">
+      <div class="author-img editable-photo">
+        <img src="//static-public.pages.hotmart.com/uploads/media/file/7176922/group_10288.png" alt="Autor de Proyectum IA" id="authorImg">
+        <button type="button" class="photo-edit-btn" data-key="author" data-target="authorImg">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <span class="btn-label">Cambiar</span>
+        </button>
       </div>
       <div>
         <div class="eyebrow">Creador del programa</div>
@@ -908,15 +980,14 @@ revealTargets.forEach(el=>io.observe(el));
 <script>
 (function(){
   const overlay = document.getElementById('introOverlay');
-  const STEP_ORDER = ['video','tiktok','chat','tokens','game','lock','letter'];
+  const STEP_ORDER = ['video','tiktok','chat','tokens','game','lock'];
   const steps = {
     video: document.getElementById('stepVideo'),
     tiktok: document.getElementById('stepTiktok'),
     chat: document.getElementById('stepChat'),
     tokens: document.getElementById('stepTokens'),
     game: document.getElementById('stepGame'),
-    lock: document.getElementById('stepLock'),
-    letter: document.getElementById('stepLetter')
+    lock: document.getElementById('stepLock')
   };
   const introProgress = document.getElementById('introProgress');
   introProgress.innerHTML = STEP_ORDER.map(function(){ return '<span class="dot"></span>'; }).join('');
@@ -938,7 +1009,6 @@ revealTargets.forEach(el=>io.observe(el));
     overlay.classList.add('closed');
     document.body.style.overflow = '';
     voiceAudios.forEach(a=>{ a.pause(); });
-    if(letterAudio) letterAudio.pause();
     clearBugs();
     clearGroupTimers();
     document.querySelectorAll('#ttStage video').forEach(function(v){ v.pause(); });
@@ -1093,7 +1163,6 @@ revealTargets.forEach(el=>io.observe(el));
       unlockVideoForMobile(document.getElementById(id));
     });
     voiceAudios.forEach(unlockAudioForMobile);
-    unlockAudioForMobile(letterAudio);
     videoGate.style.display = 'none';
     introVideo.style.display = 'block';
     safePlay(introVideo, advanceFromVideo);
@@ -1556,8 +1625,7 @@ revealTargets.forEach(el=>io.observe(el));
       dragging = true;
       core.setPointerCapture(e.pointerId);
       tempLine = document.createElementNS('http://www.w3.org/2000/svg','line');
-      tempLine.setAttribute('stroke','var(--primary)');
-      tempLine.setAttribute('stroke-width','3');
+      tempLine.classList.add('temp');
       svg.appendChild(tempLine);
     });
     board.addEventListener('pointermove', function(e){
@@ -1609,105 +1677,7 @@ revealTargets.forEach(el=>io.observe(el));
       const b = lockSvg.getBoundingClientRect();
       spawnParticles(b.left+b.width/2, b.top+b.height/2);
     }, 1400);
-    setTimeout(function(){
-      goTo('letter');
-      startLetterSequence();
-    }, 2700);
-  }
-
-  /* ---- Paso final: carta manuscrita de Santiago, sincronizada con el audio ---- */
-  const LETTER_AUDIO_SRC = 'https://res.cloudinary.com/vlhv2gge/video/upload/v1785714866/0802_zmbugn.mp3';
-  const letterAudio = new Audio(LETTER_AUDIO_SRC);
-  letterAudio.preload = 'auto';
-  const LETTER_CUES = [
-    { t: 0.12,  text: '¿Si viste?' },
-    { t: 1.06,  text: 'Fuiste capaz de hacerlo.' },
-    { t: 2.24,  text: 'Te habla Santiago,' },
-    { t: 3.22,  text: 'fundador de Proyectum IA.' },
-    { t: 5.10,  text: 'Y confío plenamente en ti,' },
-    { t: 7.01,  text: 'porque gastaste 7 minutos de tu valioso tiempo' },
-    { t: 9.25,  text: 'en algo que te va a ayudar,' },
-    { t: 11.05, text: 'en algo que te va a sumar valor.' },
-    { t: 12.25, text: 'Esos 7 minutos' },
-    { t: 13.26, text: 'fácilmente los hubieras' },
-    { t: 15.01, text: 'podido usar' },
-    { t: 15.26, text: 'en TikTok,' },
-    { t: 16.20, text: 'Instagram,' },
-    { t: 17.11, text: 'o hablando con cualquier amigo,' },
-    { t: 19.01, text: 'todavía planeando las cosas.' },
-    { t: 20.23, text: 'Pues es hora de actuar,' },
-    { t: 22.04, text: 'y por eso estaré yo,' },
-    { t: 23.12, text: 'para apoyarte en todo este proceso.' },
-    { t: 25.04, text: 'Y no solo te lo digo yo,' },
-    { t: 26.20, text: 'te lo dicen los 5 años de experiencia' },
-    { t: 29.06, text: 'que tengo en las redes sociales,' },
-    { t: 30.22, text: 'el algoritmo,' },
-    { t: 31.13, text: 'trabajar con marcas,' },
-    { t: 32.17, text: 'con las mismas empresas' },
-    { t: 33.27, text: 'que crean tus redes sociales,' },
-    { t: 35.18, text: 'y entendiendo de adentro hacia afuera' },
-    { t: 37.24, text: 'cómo es la verdadera manera' },
-    { t: 39.05, text: 'de no solo venderte la solución perfecta,' },
-    { t: 41.16, text: 'sino también la realidad de lo que te vas a enfrentar,' },
-    { t: 44.05, text: 'sin miedo a decirte:' },
-    { t: 45.13, text: '"mira,' },
-    { t: 45.27, text: 'esto es lo que te va a pasar,' },
-    { t: 47.13, text: 'y esta es la solución a esos casos."' },
-    { t: 49.05, text: 'Muchas gracias por escucharme.' },
-    { t: 50.14, text: 'Confío en ti' },
-    { t: 51.16, text: 'y en toda tu familia,' },
-    { t: 52.17, text: 'porque por supuesto' },
-    { t: 53.16, text: 'va a verse muy afectada' },
-    { t: 54.26, text: '¡a positivo!' },
-    { t: 55.16, text: 'gracias a tu crecimiento.' },
-    { t: 56.24, text: 'Felicidades' },
-    { t: 57.23, text: 'y bienvenido.' }
-  ];
-  let letterSpans = [];
-  let letterAdvanced = false;
-
-  function buildLetterParagraph(){
-    const textEl = document.getElementById('letterText');
-    textEl.innerHTML = '';
-    letterSpans = LETTER_CUES.map(function(cue){
-      const span = document.createElement('span');
-      span.className = 'lw';
-      span.textContent = cue.text + ' ';
-      textEl.appendChild(span);
-      return { el: span, t: cue.t };
-    });
-  }
-
-  function revealLetterUpTo(currentTime){
-    letterSpans.forEach(function(item){
-      if(currentTime >= item.t && !item.el.classList.contains('written')){
-        item.el.classList.add('written');
-      }
-    });
-  }
-
-  function finishLetter(){
-    if(letterAdvanced) return;
-    letterAdvanced = true;
-    revealLetterUpTo(999);
-    setTimeout(closeOverlay, 1300);
-  }
-
-  function startLetterSequence(){
-    letterAdvanced = false;
-    buildLetterParagraph();
-    const paper = document.getElementById('letterPaper');
-    paper.classList.remove('appear');
-    void paper.offsetWidth;
-    paper.classList.add('appear');
-
-    letterAudio.currentTime = 0;
-    letterAudio.ontimeupdate = function(){ revealLetterUpTo(letterAudio.currentTime); };
-    letterAudio.onended = finishLetter;
-    letterAudio.onerror = finishLetter;
-    safePlay(letterAudio, finishLetter);
-    // seguridad: si por algo el audio nunca dispara 'ended', igual avanzamos
-    setTimeout(function(){ if(!letterAdvanced) finishLetter(); }, 66000);
+    setTimeout(closeOverlay, 2700);
   }
 })();
 </script>
@@ -1730,22 +1700,39 @@ revealTargets.forEach(el=>io.observe(el));
   const navLoginBtn = document.getElementById('navLoginBtn');
   const closeLogin = document.getElementById('closeLogin');
   const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
   const loginBuyLink = document.getElementById('loginBuyLink');
   loginBuyLink.href = HOTMART_URL;
   loginBuyLink.target = "_blank";
   loginBuyLink.rel = "noopener";
 
-  function isLoggedIn(){
-    return !!localStorage.getItem('proyectumia_username');
-  }
+  /* ---------- Supabase (mismo proyecto que /publicaciones) ---------- */
+  const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
+  const ADMIN_EMAIL = "contact@proyectumia.com";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let currentSession = null;
+
   function goToPlatform(){
     window.location.href = '/plataforma';
   }
 
-  navLoginBtn.addEventListener('click', function(){
-    if(isLoggedIn()){
-      goToPlatform();
+  async function refreshSession(){
+    const { data } = await sb.auth.getSession();
+    currentSession = data.session;
+    const isAdmin = currentSession && currentSession.user.email === ADMIN_EMAIL;
+    document.body.classList.toggle('admin-mode', !!isAdmin);
+    navLoginBtn.innerHTML = isAdmin
+      ? 'Cerrar sesión (admin) <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M18 8L22 12L18 16M22 12H10M14 4H6a2 2 0 00-2 2v12a2 2 0 002 2h8"/></svg>'
+      : 'Iniciar sesión <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  }
+
+  navLoginBtn.addEventListener('click', async function(){
+    if(currentSession){
+      await sb.auth.signOut();
+      await refreshSession();
     } else {
+      loginError.style.display = 'none';
       loginOverlay.classList.add('open');
     }
   });
@@ -1756,20 +1743,77 @@ revealTargets.forEach(el=>io.observe(el));
     if(e.target === loginOverlay) loginOverlay.classList.remove('open');
   });
 
-  loginForm.addEventListener('submit', function(e){
+  loginForm.addEventListener('submit', async function(e){
     e.preventDefault();
-    const name = document.getElementById('loginName').value.trim();
     const email = document.getElementById('loginEmail').value.trim();
-    if(!name || !email) return;
-    localStorage.setItem('proyectumia_username', name);
-    localStorage.setItem('proyectumia_email', email);
-    goToPlatform();
+    const password = document.getElementById('loginPass').value;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){
+      loginError.style.display = 'block';
+      return;
+    }
+    loginError.style.display = 'none';
+    loginOverlay.classList.remove('open');
+    await refreshSession();
+    // Si quien entró NO es el admin, lo mandamos a su plataforma (flujo de cliente)
+    if(!currentSession || currentSession.user.email !== ADMIN_EMAIL){
+      goToPlatform();
+    }
   });
 
-  // Si ya inició sesión antes, cambia el texto del botón para que sea directo
-  if(isLoggedIn()){
-    navLoginBtn.innerHTML = 'Ir a mi plataforma <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  /* ---------- Fotos editables del frontpage (solo admin) ---------- */
+  async function loadSiteImages(){
+    const { data, error } = await sb.from('site_images').select('key,url');
+    if(error || !data) return;
+    data.forEach(function(row){
+      const btn = document.querySelector('.photo-edit-btn[data-key="' + row.key + '"]');
+      if(!btn) return;
+      const img = document.getElementById(btn.dataset.target);
+      if(img && row.url) img.src = row.url;
+    });
   }
+
+  const sitePhotoInput = document.createElement('input');
+  sitePhotoInput.type = 'file';
+  sitePhotoInput.accept = 'image/*';
+  sitePhotoInput.style.display = 'none';
+  document.body.appendChild(sitePhotoInput);
+  let pendingEditBtn = null;
+
+  document.querySelectorAll('.photo-edit-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      pendingEditBtn = btn;
+      sitePhotoInput.value = '';
+      sitePhotoInput.click();
+    });
+  });
+
+  sitePhotoInput.addEventListener('change', async function(){
+    const file = sitePhotoInput.files[0];
+    if(!file || !pendingEditBtn) return;
+    const btn = pendingEditBtn;
+    const key = btn.dataset.key;
+    const img = document.getElementById(btn.dataset.target);
+    btn.classList.add('uploading');
+    try{
+      const ext = file.name.split('.').pop();
+      const path = 'site/' + key + '-' + Date.now() + '.' + ext;
+      const { error: upErr } = await sb.storage.from('post-images').upload(path, file);
+      if(upErr) throw upErr;
+      const { data: pub } = sb.storage.from('post-images').getPublicUrl(path);
+      const { error: dbErr } = await sb.from('site_images').upsert({ key: key, url: pub.publicUrl });
+      if(dbErr) throw dbErr;
+      if(img) img.src = pub.publicUrl;
+    }catch(err){
+      console.error(err);
+      alert('No se pudo actualizar la foto: ' + err.message);
+    }finally{
+      btn.classList.remove('uploading');
+    }
+  });
+
+  refreshSession();
+  loadSiteImages();
 })();
 </script>
 
