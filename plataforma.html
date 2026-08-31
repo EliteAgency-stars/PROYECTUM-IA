@@ -7,11 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#04141a; --bg-alt:#071f27; --panel:#0a2933;
   --primary:#22FDF9; --primary-dim:#22fdf933; --secondary:#035266; --gold:#ffc94a;
   --text:#eafffd; --text-dim:#8fb6bb; --line:#134753; --radius:18px;
+  --danger:#ff6a6a;
   --ff-display:'Space Grotesk', sans-serif; --ff-body:'Inter', sans-serif; --ff-mono:'IBM Plex Mono', monospace; --ff-hand:'Caveat', cursive;
 }
 *{box-sizing:border-box;}
@@ -19,6 +21,7 @@ body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ff-body);
 img{max-width:100%;display:block;}
 a{color:inherit;text-decoration:none;}
 button{font-family:inherit;touch-action:manipulation;cursor:pointer;}
+input,textarea{font-family:inherit;}
 h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .grad-text{background:linear-gradient(90deg,var(--primary),#8ffcf9 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
 
@@ -42,19 +45,29 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .nav-link{
   display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;
   color:var(--text-dim);font-size:.92rem;font-weight:500;transition:background .15s ease,color .15s ease;
+  background:none;border:none;width:100%;text-align:left;
 }
 .nav-link svg{width:18px;height:18px;flex:none;}
 .nav-link:hover{background:var(--panel);color:var(--text);}
 .nav-link.active{background:var(--primary-dim);color:var(--primary);}
-.sidebar-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;}
+.sidebar-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px;}
 .user-chip{display:flex;align-items:center;gap:10px;}
 .user-chip .avatar{
   width:36px;height:36px;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));
   display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:700;color:#03181c;flex:none;
 }
-.user-chip .who{font-size:.85rem;}
-.user-chip .who strong{display:block;color:var(--text);font-weight:600;}
+.user-chip .who{font-size:.85rem;overflow:hidden;}
+.user-chip .who strong{display:block;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .user-chip .who span{color:var(--text-dim);font-size:.76rem;}
+.admin-badge{
+  font-family:var(--ff-mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:2px 6px;display:inline-block;margin-top:4px;
+}
+.auth-btn{
+  font-family:var(--ff-mono);font-size:.76rem;color:var(--text-dim);border:1px solid var(--line);
+  border-radius:10px;padding:9px 10px;text-align:center;background:var(--panel);
+}
+.auth-btn:hover{color:var(--text);border-color:var(--primary);}
 
 /* ---------- Main ---------- */
 .main{padding:34px 36px 60px;max-width:1180px;width:100%;margin:0 auto;}
@@ -74,6 +87,20 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .progress-track{height:8px;border-radius:6px;background:var(--bg-alt);overflow:hidden;}
 .progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--secondary),var(--primary),var(--gold));box-shadow:0 0 10px var(--primary);transition:width .5s ease;}
 
+.anon-banner{
+  margin-top:22px;background:linear-gradient(100deg,var(--panel),var(--bg-alt));border:1px solid var(--primary);
+  border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.anon-banner p{margin:0;font-size:.86rem;color:var(--text-dim);}
+.anon-banner strong{color:var(--text);}
+
+/* ---------- Admin bar ---------- */
+.admin-bar{
+  margin-top:22px;background:#241a06;border:1px solid var(--gold);border-radius:14px;
+  padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
+}
+.admin-bar p{margin:0;font-family:var(--ff-mono);font-size:.78rem;color:var(--gold);}
+
 /* ---------- Level sections ---------- */
 .level-section{margin-top:44px;}
 .level-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
@@ -85,6 +112,10 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .level-head h2{font-size:1.12rem;color:var(--text);}
 .level-head .tag{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);}
 .level-line{flex:1;height:1px;background:var(--line);}
+.level-edit-btn{
+  font-family:var(--ff-mono);font-size:.68rem;color:var(--gold);background:none;border:1px solid var(--gold);
+  border-radius:7px;padding:5px 9px;flex:none;
+}
 
 .module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
 @media(max-width:900px){.module-grid{grid-template-columns:repeat(2,1fr);}}
@@ -97,21 +128,26 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .module-card:not(.locked):hover{transform:translateY(-3px);border-color:var(--primary);}
 .module-card .thumb{
   position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--secondary),var(--bg-alt));
-  display:flex;align-items:center;justify-content:center;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
 }
-.module-card .thumb svg{width:34px;height:34px;color:var(--primary);}
+.module-card .thumb img{width:100%;height:100%;object-fit:cover;opacity:.85;}
+.module-card .thumb svg{width:34px;height:34px;color:var(--primary);position:relative;z-index:1;}
 .module-card.done .thumb svg{color:var(--gold);}
 .module-card.locked .thumb svg{color:var(--text-dim);}
 .module-card .thumb .duration{
   position:absolute;bottom:8px;right:8px;background:#03181cdd;font-family:var(--ff-mono);
-  font-size:.68rem;padding:3px 7px;border-radius:6px;color:var(--text-dim);
+  font-size:.68rem;padding:3px 7px;border-radius:6px;color:var(--text-dim);z-index:1;
+}
+.module-card .thumb .preview-pill{
+  position:absolute;top:8px;left:8px;background:var(--gold);color:#241a06;font-family:var(--ff-mono);
+  font-size:.62rem;font-weight:600;padding:3px 8px;border-radius:6px;z-index:1;letter-spacing:.04em;text-transform:uppercase;
 }
 .module-card .body{padding:16px 16px 18px;}
 .module-card .m-tag{font-family:var(--ff-mono);font-size:.64rem;letter-spacing:.08em;color:var(--gold);text-transform:uppercase;}
 .module-card.locked .m-tag{color:var(--text-dim);}
 .module-card h3{font-size:.94rem;margin-top:6px;color:var(--text);line-height:1.3;}
 .module-card.locked h3{color:var(--text-dim);}
-.module-card p{font-size:.78rem;color:var(--text-dim);margin-top:6px;line-height:1.4;}
+.module-card p.desc{font-size:.78rem;color:var(--text-dim);margin-top:6px;line-height:1.4;}
 .module-card .status{
   display:flex;align-items:center;gap:6px;margin-top:12px;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);
 }
@@ -125,19 +161,37 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .module-card.locked .lockband span{font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);text-align:center;padding:0 14px;}
 .module-card{border:1px solid var(--line);cursor:pointer;}
 .module-card.locked{cursor:not-allowed;}
+.module-card .admin-tools{
+  position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:2;
+}
+.icon-btn{
+  width:26px;height:26px;border-radius:7px;background:#03181cdd;border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;color:var(--text-dim);flex:none;
+}
+.icon-btn:hover{color:var(--text);border-color:var(--primary);}
+.icon-btn svg{width:13px;height:13px;}
+
+.add-card{
+  border:1px dashed var(--line);border-radius:var(--radius);background:transparent;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
+  min-height:180px;color:var(--text-dim);font-family:var(--ff-mono);font-size:.78rem;
+}
+.add-card:hover{border-color:var(--primary);color:var(--primary);}
+.add-card svg{width:22px;height:22px;}
 
 /* ---------- Player overlay ---------- */
-.player-overlay{
+.player-overlay, .modal-overlay{
   position:fixed;inset:0;background:#020c10ee;z-index:900;display:none;
   align-items:center;justify-content:center;padding:24px;
 }
-.player-overlay.open{display:flex;}
-.player-box{
+.player-overlay.open, .modal-overlay.open{display:flex;}
+.player-box, .modal-box{
   background:var(--bg-alt);border:1px solid var(--line);border-radius:20px;
   width:100%;max-width:860px;max-height:92vh;overflow-y:auto;
 }
-.player-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);}
-.player-head h3{font-size:1rem;color:var(--text);}
+.modal-box{max-width:520px;}
+.player-head, .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);}
+.player-head h3, .modal-head h3{font-size:1rem;color:var(--text);}
 .player-head .m-tag{font-family:var(--ff-mono);font-size:.64rem;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;}
 .close-btn{
   background:var(--panel);border:1px solid var(--line);color:var(--text-dim);
@@ -145,10 +199,10 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 }
 .close-btn:hover{color:var(--text);border-color:var(--primary);}
 .player-video{width:100%;aspect-ratio:16/9;background:#000;display:block;}
-.player-video video, .player-video iframe{width:100%;height:100%;border:none;display:block;}
+.player-video iframe{width:100%;height:100%;border:none;display:block;}
 .player-foot{padding:18px 22px 22px;}
 .player-foot p{color:var(--text-dim);font-size:.9rem;line-height:1.55;}
-.player-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:16px;}
+.player-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;}
 .btn{
   font-family:var(--ff-display);font-weight:600;font-size:.88rem;border:none;cursor:pointer;
   padding:11px 20px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;
@@ -157,6 +211,47 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .btn:hover{transform:translateY(-1px);}
 .btn-primary{background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;}
 .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text-dim);}
+.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
+.btn-block{width:100%;justify-content:center;}
+
+.key-questions{margin-top:18px;border-top:1px solid var(--line);padding-top:16px;}
+.key-questions h4{font-family:var(--ff-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:10px;}
+.key-questions ul{margin:0;padding-left:18px;color:var(--text-dim);font-size:.86rem;display:flex;flex-direction:column;gap:6px;}
+
+/* ---------- Modal forms (admin) ---------- */
+.modal-body{padding:20px 22px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;}
+.field input, .field textarea, .field select{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:9px;
+  padding:10px 12px;color:var(--text);font-size:.88rem;
+}
+.field textarea{min-height:70px;resize:vertical;}
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
+.checkbox-field{display:flex;align-items:center;gap:8px;}
+.checkbox-field input{width:auto;}
+.checkbox-field label{margin:0;text-transform:none;font-size:.85rem;color:var(--text);}
+
+.qa-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.qa-row{display:flex;gap:8px;align-items:center;}
+.qa-row input{flex:1;}
+
+.admin-tabs{display:flex;gap:6px;padding:14px 22px 0;}
+.admin-tab{
+  font-family:var(--ff-mono);font-size:.74rem;padding:8px 12px;border-radius:9px 9px 0 0;
+  background:var(--panel);color:var(--text-dim);border:1px solid var(--line);border-bottom:none;
+}
+.admin-tab.active{color:var(--primary);background:var(--bg-alt);}
+
+.admin-list{display:flex;flex-direction:column;gap:10px;padding:16px 22px 22px;}
+.admin-list-item{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+}
+.admin-list-item .info strong{display:block;font-size:.86rem;}
+.admin-list-item .info span{font-size:.72rem;color:var(--text-dim);font-family:var(--ff-mono);}
+.admin-list-item .actions{display:flex;gap:6px;}
 
 /* ---------- Toast ---------- */
 .toast{
@@ -164,7 +259,7 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
   background:var(--panel);border:1px solid var(--primary);color:var(--text);
   font-family:var(--ff-mono);font-size:.8rem;padding:12px 18px;border-radius:12px;
   opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:1000;
-  box-shadow:0 10px 30px -10px #000;
+  box-shadow:0 10px 30px -10px #000;max-width:88vw;text-align:center;
 }
 .toast.show{opacity:1;transform:translate(-50%,0);}
 
@@ -203,16 +298,22 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
         Paquetes
       </a>
+      <button class="nav-link" id="adminNavBtn" style="display:none;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Modo administrador
+      </button>
     </nav>
 
     <div class="sidebar-foot">
-      <div class="user-chip">
+      <div class="user-chip" id="userChip" style="display:none;">
         <div class="avatar" id="avatarInitial">U</div>
         <div class="who">
           <strong id="userName">Tu cuenta</strong>
-          <span>Miembro Proyectum IA</span>
+          <span id="userEmail"></span>
+          <span class="admin-badge" id="adminBadge" style="display:none;">Admin</span>
         </div>
       </div>
+      <button class="auth-btn" id="authBtn">Iniciar sesión</button>
     </div>
   </aside>
 
@@ -224,9 +325,21 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
         <p class="eyebrow">Tu plataforma</p>
         <h1>Vamos con el siguiente <span>módulo</span></h1>
       </div>
-      <div class="progress-card">
+      <div class="progress-card" id="progressCard">
         <div class="row"><span>Progreso general</span><strong id="progressLabel">0%</strong></div>
         <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="anon-banner" id="anonBanner" style="display:none;">
+      <p>👀 Estás viendo <strong>solo el primer módulo</strong> como invitado. Inicia sesión para desbloquear la plataforma completa y guardar tu progreso.</p>
+      <button class="btn btn-primary" id="anonLoginBtn">Iniciar sesión</button>
+    </div>
+
+    <div class="admin-bar" id="adminBar" style="display:none;">
+      <p>🛠 Modo administrador activo — puedes crear niveles, módulos y preguntas clave directamente aquí.</p>
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" id="addLevelBtn">+ Nivel</button>
       </div>
     </div>
 
@@ -248,9 +361,120 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
     <div class="player-video" id="playerVideoWrap"></div>
     <div class="player-foot">
       <p id="playerDesc">Descripción del módulo.</p>
+      <div class="key-questions" id="playerQuestionsWrap" style="display:none;">
+        <h4>Preguntas clave de este módulo</h4>
+        <ul id="playerQuestionsList"></ul>
+      </div>
       <div class="player-actions">
         <button class="btn btn-ghost" id="closePlayer2">Cerrar</button>
         <button class="btn btn-primary" id="markDone">Marcar como completado</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LOGIN MODAL ===================== -->
+<div class="modal-overlay" id="loginModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3>Inicia sesión</h3>
+      <button class="close-btn" id="closeLogin">✕</button>
+    </div>
+    <div class="modal-body" id="loginBody">
+      <div class="field">
+        <label>Correo electrónico</label>
+        <input type="email" id="loginEmail" placeholder="tucorreo@ejemplo.com">
+      </div>
+      <div class="field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-block" id="loginSubmit">Entrar</button>
+      <p style="font-size:.76rem;color:var(--text-dim);margin-top:12px;text-align:center;">
+        ¿No tienes cuenta? <a href="#" id="showSignup" style="color:var(--primary);">Regístrate</a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ADMIN: NIVEL MODAL ===================== -->
+<div class="modal-overlay" id="levelModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="levelModalTitle">Nuevo nivel</h3>
+      <button class="close-btn" id="closeLevelModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="levelId">
+      <div class="field">
+        <label>Título del nivel</label>
+        <input type="text" id="levelTitle" placeholder="Nivel 1 · Fundamentos">
+      </div>
+      <div class="field">
+        <label>Etiqueta</label>
+        <input type="text" id="levelTag" placeholder="Empieza aquí">
+      </div>
+      <div class="field">
+        <label>Orden (número, menor = primero)</label>
+        <input type="number" id="levelSort" value="0">
+      </div>
+      <div class="player-actions" style="justify-content:space-between;">
+        <button class="btn btn-danger" id="deleteLevelBtn" style="display:none;">Eliminar nivel</button>
+        <button class="btn btn-primary" id="saveLevelBtn">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== ADMIN: MÓDULO MODAL ===================== -->
+<div class="modal-overlay" id="moduleModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <h3 id="moduleModalTitle">Nuevo módulo</h3>
+      <button class="close-btn" id="closeModuleModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="moduleId">
+      <input type="hidden" id="moduleLevelId">
+      <div class="field">
+        <label>Título del módulo</label>
+        <input type="text" id="moduleTitle" placeholder="Cómo piensa un negocio con IA">
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea id="moduleDesc" placeholder="De qué trata este módulo"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>ID de YouTube</label>
+          <input type="text" id="moduleYoutube" placeholder="dQw4w9WgXcQ">
+        </div>
+        <div class="field">
+          <label>Duración (texto)</label>
+          <input type="text" id="moduleDuration" placeholder="11 min">
+        </div>
+      </div>
+      <p style="font-size:.72rem;color:var(--text-dim);margin:-6px 0 14px;">
+        Pega solo el ID del video, no la URL completa. Ej: en youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong>, el ID es la parte final.
+      </p>
+      <div class="field">
+        <label>Orden dentro del nivel (número, menor = primero)</label>
+        <input type="number" id="moduleSort" value="0">
+      </div>
+      <div class="field checkbox-field">
+        <input type="checkbox" id="moduleIsPreview">
+        <label for="moduleIsPreview">Acceso libre sin sesión iniciada (vista previa pública)</label>
+      </div>
+
+      <div class="field">
+        <label>Preguntas clave</label>
+        <div class="qa-list" id="qaList"></div>
+        <button class="btn btn-ghost" id="addQuestionRow" type="button">+ Agregar pregunta</button>
+      </div>
+
+      <div class="player-actions" style="justify-content:space-between;margin-top:18px;">
+        <button class="btn btn-danger" id="deleteModuleBtn" style="display:none;">Eliminar módulo</button>
+        <button class="btn btn-primary" id="saveModuleBtn">Guardar módulo</button>
       </div>
     </div>
   </div>
@@ -260,65 +484,190 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 
 <script>
 /* =========================================================
-   CONFIGURA TUS MÓDULOS AQUÍ
-   - id: identificador único (no lo repitas)
-   - videoType: "mp4" (Cloudinary / link directo) o "youtube" (id del video)
-   - videoSrc: URL del mp4, o el ID del video de YouTube
-   El primer módulo de cada nivel se libera solo. Los siguientes se
-   desbloquean al completar el anterior (progreso guardado en el navegador).
+   1) CONFIGURA TU PROYECTO DE SUPABASE
    ========================================================= */
-const LEVELS = [
-  {
-    title: "Nivel 1 · Fundamentos",
-    tag: "Empieza aquí",
-    modules: [
-      { id: "n1-m1", title: "Bienvenida a Proyectum IA", desc: "Qué vas a lograr en este programa y cómo está organizado.", duration: "6 min", videoType: "mp4", videoSrc: "" },
-      { id: "n1-m2", title: "Cómo piensa un negocio con IA", desc: "El cambio de mentalidad antes de tocar cualquier herramienta.", duration: "11 min", videoType: "mp4", videoSrc: "" },
-      { id: "n1-m3", title: "Tu primer caso de uso", desc: "Identifica dónde la IA te ahorra más tiempo hoy mismo.", duration: "9 min", videoType: "mp4", videoSrc: "" }
-    ]
-  },
-  {
-    title: "Nivel 2 · Herramientas",
-    tag: "Manos a la obra",
-    modules: [
-      { id: "n2-m1", title: "Tu stack de IA", desc: "Las herramientas que vas a usar durante todo el programa.", duration: "14 min", videoType: "mp4", videoSrc: "" },
-      { id: "n2-m2", title: "Prompts que funcionan", desc: "Estructura de prompts para resultados consistentes.", duration: "13 min", videoType: "mp4", videoSrc: "" },
-      { id: "n2-m3", title: "Automatiza tu primer proceso", desc: "Conecta dos herramientas para ahorrar trabajo repetitivo.", duration: "16 min", videoType: "mp4", videoSrc: "" }
-    ]
-  },
-  {
-    title: "Nivel 3 · Contenido y ventas",
-    tag: "Escala tu negocio",
-    modules: [
-      { id: "n3-m1", title: "Contenido con IA a escala", desc: "Genera contenido de calidad sin perder tu voz de marca.", duration: "15 min", videoType: "mp4", videoSrc: "" },
-      { id: "n3-m2", title: "Embudo de ventas asistido", desc: "Cómo la IA acompaña a tu cliente hasta la compra.", duration: "18 min", videoType: "mp4", videoSrc: "" }
-    ]
-  },
-  {
-    title: "Nivel 4 · Siguiente paso",
-    tag: "Consolida",
-    modules: [
-      { id: "n4-m1", title: "Tu plan de 30 días", desc: "El plan de acción para implementar todo lo aprendido.", duration: "10 min", videoType: "mp4", videoSrc: "" }
-    ]
-  }
-];
+const SUPABASE_URL = "https://TU-PROYECTO.supabase.co";
+const SUPABASE_ANON_KEY = "TU-ANON-KEY";
+const ADMIN_EMAIL = "contact@proyectumia.com"; // debe coincidir con las policies del SQL
 
-const STORAGE_KEY = "proyectumia_progress";
-function loadProgress(){
-  try{ return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }catch(e){ return {}; }
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let session = null;
+let isAdmin = false;
+let LEVELS = [];       // [{id, title, tag, sort_order, modules:[...]}]
+let allModules = [];   // flat list, ordered
+let completedIds = new Set(); // module ids completed (from user_progress or localStorage)
+
+const LOCAL_KEY = "proyectumia_progress_anon";
+
+/* =========================================================
+   2) AUTENTICACIÓN
+   ========================================================= */
+async function initAuth(){
+  const { data } = await supabase.auth.getSession();
+  session = data.session;
+  applyAuthState();
+  supabase.auth.onAuthStateChange((_event, newSession) => {
+    session = newSession;
+    applyAuthState();
+    loadEverything();
+  });
 }
-function saveProgress(p){ localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
-let progress = loadProgress();
 
-const allModules = LEVELS.flatMap(l => l.modules);
+function applyAuthState(){
+  const authBtn = document.getElementById("authBtn");
+  const userChip = document.getElementById("userChip");
+  const adminNavBtn = document.getElementById("adminNavBtn");
+  const adminBadge = document.getElementById("adminBadge");
 
-function isDone(id){ return !!progress[id]; }
+  if(session && session.user){
+    const email = session.user.email || "";
+    isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    userChip.style.display = "flex";
+    document.getElementById("userName").textContent = email.split("@")[0];
+    document.getElementById("userEmail").textContent = email;
+    document.getElementById("avatarInitial").textContent = email.charAt(0).toUpperCase();
+    adminBadge.style.display = isAdmin ? "inline-block" : "none";
+    adminNavBtn.style.display = isAdmin ? "flex" : "none";
+    authBtn.textContent = "Cerrar sesión";
+  } else {
+    isAdmin = false;
+    userChip.style.display = "none";
+    adminNavBtn.style.display = "none";
+    authBtn.textContent = "Iniciar sesión";
+  }
+}
+
+document.getElementById("authBtn").addEventListener("click", async () => {
+  if(session){
+    await supabase.auth.signOut();
+    showToast("Sesión cerrada");
+  } else {
+    openLoginModal();
+  }
+});
+document.getElementById("anonLoginBtn").addEventListener("click", openLoginModal);
+
+function openLoginModal(){ document.getElementById("loginModal").classList.add("open"); }
+document.getElementById("closeLogin").addEventListener("click", () => document.getElementById("loginModal").classList.remove("open"));
+
+let signupMode = false;
+document.getElementById("showSignup").addEventListener("click", (e) => {
+  e.preventDefault();
+  signupMode = !signupMode;
+  document.getElementById("loginSubmit").textContent = signupMode ? "Crear cuenta" : "Entrar";
+  e.target.textContent = signupMode ? "Ya tengo cuenta" : "Regístrate";
+});
+
+document.getElementById("loginSubmit").addEventListener("click", async () => {
+  const email = document.getElementById("loginEmail").value.trim();
+  const password = document.getElementById("loginPassword").value;
+  if(!email || !password){ showToast("Completa correo y contraseña"); return; }
+
+  const { error } = signupMode
+    ? await supabase.auth.signUp({ email, password })
+    : await supabase.auth.signInWithPassword({ email, password });
+
+  if(error){ showToast("⚠️ " + error.message); return; }
+
+  document.getElementById("loginModal").classList.remove("open");
+  showToast(signupMode ? "Cuenta creada. Revisa tu correo si se requiere confirmación." : "Sesión iniciada ✨");
+});
+
+/* =========================================================
+   3) CARGA DE DATOS DESDE SUPABASE
+   ========================================================= */
+async function loadEverything(){
+  const { data: levelsData, error: e1 } = await supabase
+    .from("levels").select("*").order("sort_order", { ascending: true });
+  const { data: modulesData, error: e2 } = await supabase
+    .from("modules").select("*").order("sort_order", { ascending: true });
+  const { data: questionsData, error: e3 } = await supabase
+    .from("module_questions").select("*").order("sort_order", { ascending: true });
+
+  if(e1 || e2 || e3){
+    showToast("⚠️ Error cargando la plataforma. Revisa la consola.");
+    console.error(e1 || e2 || e3);
+    return;
+  }
+
+  const questionsByModule = {};
+  (questionsData || []).forEach(q => {
+    (questionsByModule[q.module_id] ||= []).push(q);
+  });
+
+  LEVELS = (levelsData || []).map(lvl => ({
+    ...lvl,
+    modules: (modulesData || [])
+      .filter(m => m.level_id === lvl.id)
+      .map(m => ({ ...m, questions: questionsByModule[m.id] || [] }))
+  }));
+
+  allModules = LEVELS.flatMap(l => l.modules);
+
+  await loadProgress();
+  render();
+}
+
+async function loadProgress(){
+  completedIds = new Set();
+  if(session && session.user){
+    const { data, error } = await supabase
+      .from("user_progress").select("module_id").eq("user_id", session.user.id);
+    if(!error){
+      (data || []).forEach(row => completedIds.add(row.module_id));
+    }
+  } else {
+    try{
+      const stored = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
+      stored.forEach(id => completedIds.add(id));
+    }catch(e){}
+  }
+}
+
+async function markModuleComplete(moduleId){
+  completedIds.add(moduleId);
+  if(session && session.user){
+    const { error } = await supabase
+      .from("user_progress")
+      .insert({ user_id: session.user.id, module_id: moduleId });
+    if(error && error.code !== "23505"){ // ignora duplicado
+      console.error(error);
+    }
+  } else {
+    const arr = Array.from(completedIds);
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(arr));
+  }
+}
+
+/* =========================================================
+   4) LÓGICA DE DESBLOQUEO
+   - Sin sesión: solo módulos marcados is_preview están disponibles.
+   - Con sesión: el primer módulo global siempre disponible; los
+     siguientes se desbloquean al completar el anterior.
+   ========================================================= */
+function isDone(id){ return completedIds.has(id); }
+
 function isUnlocked(index){
+  const mod = allModules[index];
+  if(!session){
+    return !!mod.is_preview; // invitados solo ven módulos marcados como preview
+  }
   if(index === 0) return true;
   return isDone(allModules[index-1].id);
 }
 
+/* =========================================================
+   5) RENDER
+   ========================================================= */
+function youtubeThumb(youtubeId){
+  return youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : "";
+}
+
 function render(){
+  document.getElementById("anonBanner").style.display = session ? "none" : "flex";
+  document.getElementById("adminBar").style.display = isAdmin ? "flex" : "none";
+
   const root = document.getElementById("levelsRoot");
   root.innerHTML = "";
   let flatIndex = 0;
@@ -331,9 +680,10 @@ function render(){
     section.innerHTML = `
       <div class="level-head">
         <span class="num ${someUnlocked ? '' : 'locked'}">${LEVELS.indexOf(level)+1}</span>
-        <h2>${level.title}</h2>
-        <span class="tag">${level.tag}</span>
+        <h2>${escapeHtml(level.title)}</h2>
+        <span class="tag">${escapeHtml(level.tag || "")}</span>
         <div class="level-line"></div>
+        ${isAdmin ? `<button class="level-edit-btn" data-level="${level.id}">Editar nivel</button>` : ""}
       </div>
       <div class="module-grid"></div>
     `;
@@ -346,30 +696,40 @@ function render(){
       const card = document.createElement("button");
       card.type = "button";
       card.className = "module-card" + (done ? " done" : "") + (unlocked ? "" : " locked");
+      const thumbUrl = youtubeThumb(m.youtube_id);
       card.innerHTML = `
+        ${isAdmin ? `<div class="admin-tools">
+          <button class="icon-btn" data-edit-module="${m.id}" title="Editar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+          </button>
+        </div>` : ""}
         <div class="thumb">
+          ${!session && m.is_preview ? `<span class="preview-pill">Vista previa</span>` : ""}
+          ${thumbUrl ? `<img src="${thumbUrl}" alt="">` : ""}
           ${done
             ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>`
             : unlocked
               ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`
               : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>`
           }
-          <span class="duration">${m.duration}</span>
+          <span class="duration">${escapeHtml(m.duration || "")}</span>
         </div>
         <div class="body">
           <p class="m-tag">${done ? "Completado" : unlocked ? "Disponible" : "Bloqueado"}</p>
-          <h3>${m.title}</h3>
-          <p>${m.desc}</p>
-          <div class="status">${done ? "✓ Visto" : unlocked ? "▶ Ver módulo" : "🔒 Completa el anterior"}</div>
+          <h3>${escapeHtml(m.title)}</h3>
+          <p class="desc">${escapeHtml(m.description || "")}</p>
+          <div class="status">${done ? "✓ Visto" : unlocked ? "▶ Ver módulo" : (session ? "🔒 Completa el anterior" : "🔒 Inicia sesión")}</div>
         </div>
         ${unlocked ? "" : `<div class="lockband">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
-          <span>Completa el módulo anterior para desbloquear</span>
+          <span>${session ? "Completa el módulo anterior para desbloquear" : "Inicia sesión para desbloquear la plataforma"}</span>
         </div>`}
       `;
-      card.addEventListener("click", () => {
+      card.addEventListener("click", (e) => {
+        if(e.target.closest("[data-edit-module]")) return; // el botón de editar tiene su propio handler
         if(!unlocked){
-          showToast("🔒 Todavía no has desbloqueado este módulo");
+          if(!session){ openLoginModal(); showToast("🔒 Inicia sesión para ver este módulo"); }
+          else showToast("🔒 Todavía no has desbloqueado este módulo");
           return;
         }
         openPlayer(m);
@@ -378,7 +738,31 @@ function render(){
       flatIndex++;
     });
 
+    if(isAdmin){
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "add-card";
+      addBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg><span>Agregar módulo</span>`;
+      addBtn.addEventListener("click", () => openModuleModal(null, level.id));
+      grid.appendChild(addBtn);
+    }
+
     root.appendChild(section);
+  });
+
+  // listeners de edición (admin)
+  root.querySelectorAll("[data-edit-module]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const mod = allModules.find(m => m.id === btn.dataset.editModule);
+      openModuleModal(mod, mod.level_id);
+    });
+  });
+  root.querySelectorAll(".level-edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const lvl = LEVELS.find(l => l.id === btn.dataset.level);
+      openLevelModal(lvl);
+    });
   });
 
   updateProgressBar();
@@ -392,48 +776,215 @@ function updateProgressBar(){
   document.getElementById("progressLabel").textContent = pct + "%";
 }
 
-/* ---------- Reproductor ---------- */
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[s]));
+}
+
+/* =========================================================
+   6) REPRODUCTOR
+   ========================================================= */
 let currentModule = null;
 function openPlayer(m){
   currentModule = m;
   document.getElementById("playerTag").textContent = isDone(m.id) ? "Completado" : "Módulo";
   document.getElementById("playerTitle").textContent = m.title;
-  document.getElementById("playerDesc").textContent = m.desc;
+  document.getElementById("playerDesc").textContent = m.description || "";
 
   const wrap = document.getElementById("playerVideoWrap");
   wrap.innerHTML = "";
-  if(!m.videoSrc){
+  if(!m.youtube_id){
     wrap.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-family:var(--ff-mono);font-size:.8rem;text-align:center;padding:20px;">
-      Todavía no se ha cargado el video de este módulo.<br>Agrega la URL en la configuración de LEVELS.
+      Todavía no se ha cargado el video de este módulo.
     </div>`;
-  } else if(m.videoType === "youtube"){
-    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.videoSrc}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
   } else {
-    wrap.innerHTML = `<video src="${m.videoSrc}" controls playsinline></video>`;
+    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.youtube_id}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+  }
+
+  const qWrap = document.getElementById("playerQuestionsWrap");
+  const qList = document.getElementById("playerQuestionsList");
+  if(m.questions && m.questions.length){
+    qList.innerHTML = m.questions.map(q => `<li>${escapeHtml(q.question)}</li>`).join("");
+    qWrap.style.display = "block";
+  } else {
+    qWrap.style.display = "none";
   }
 
   const doneBtn = document.getElementById("markDone");
   doneBtn.textContent = isDone(m.id) ? "Ya completado ✓" : "Marcar como completado";
+  doneBtn.style.display = session ? "inline-flex" : "none"; // invitados no guardan progreso persistente
   document.getElementById("playerOverlay").classList.add("open");
 }
 function closePlayer(){
   document.getElementById("playerOverlay").classList.remove("open");
-  const wrap = document.getElementById("playerVideoWrap");
-  wrap.innerHTML = "";
+  document.getElementById("playerVideoWrap").innerHTML = "";
 }
 document.getElementById("closePlayer").addEventListener("click", closePlayer);
 document.getElementById("closePlayer2").addEventListener("click", closePlayer);
 document.getElementById("playerOverlay").addEventListener("click", (e) => {
   if(e.target.id === "playerOverlay") closePlayer();
 });
-document.getElementById("markDone").addEventListener("click", () => {
+document.getElementById("markDone").addEventListener("click", async () => {
   if(!currentModule) return;
   const wasDone = isDone(currentModule.id);
-  progress[currentModule.id] = true;
-  saveProgress(progress);
+  await markModuleComplete(currentModule.id);
   render();
   if(!wasDone) showToast("✨ Módulo completado — ¡siguiente nivel desbloqueado!");
   closePlayer();
+});
+
+/* =========================================================
+   7) ADMIN — NIVELES
+   ========================================================= */
+document.getElementById("adminNavBtn").addEventListener("click", () => {
+  document.getElementById("adminBar").scrollIntoView({ behavior: "smooth" });
+});
+document.getElementById("addLevelBtn").addEventListener("click", () => openLevelModal(null));
+
+function openLevelModal(level){
+  document.getElementById("levelModalTitle").textContent = level ? "Editar nivel" : "Nuevo nivel";
+  document.getElementById("levelId").value = level ? level.id : "";
+  document.getElementById("levelTitle").value = level ? level.title : "";
+  document.getElementById("levelTag").value = level ? (level.tag || "") : "";
+  document.getElementById("levelSort").value = level ? level.sort_order : (LEVELS.length);
+  document.getElementById("deleteLevelBtn").style.display = level ? "inline-flex" : "none";
+  document.getElementById("levelModal").classList.add("open");
+}
+document.getElementById("closeLevelModal").addEventListener("click", () => document.getElementById("levelModal").classList.remove("open"));
+
+document.getElementById("saveLevelBtn").addEventListener("click", async () => {
+  const id = document.getElementById("levelId").value;
+  const payload = {
+    title: document.getElementById("levelTitle").value.trim(),
+    tag: document.getElementById("levelTag").value.trim(),
+    sort_order: Number(document.getElementById("levelSort").value) || 0
+  };
+  if(!payload.title){ showToast("El nivel necesita un título"); return; }
+
+  const { error } = id
+    ? await supabase.from("levels").update(payload).eq("id", id)
+    : await supabase.from("levels").insert(payload);
+
+  if(error){ showToast("⚠️ " + error.message); return; }
+  document.getElementById("levelModal").classList.remove("open");
+  showToast("Nivel guardado");
+  await loadEverything();
+});
+
+document.getElementById("deleteLevelBtn").addEventListener("click", async () => {
+  const id = document.getElementById("levelId").value;
+  if(!id) return;
+  if(!confirm("Esto también eliminará todos los módulos de este nivel. ¿Continuar?")) return;
+  const { error } = await supabase.from("levels").delete().eq("id", id);
+  if(error){ showToast("⚠️ " + error.message); return; }
+  document.getElementById("levelModal").classList.remove("open");
+  showToast("Nivel eliminado");
+  await loadEverything();
+});
+
+/* =========================================================
+   8) ADMIN — MÓDULOS + PREGUNTAS CLAVE
+   ========================================================= */
+let qaRows = []; // [{id?, question}]
+
+function openModuleModal(module, levelId){
+  document.getElementById("moduleModalTitle").textContent = module ? "Editar módulo" : "Nuevo módulo";
+  document.getElementById("moduleId").value = module ? module.id : "";
+  document.getElementById("moduleLevelId").value = levelId;
+  document.getElementById("moduleTitle").value = module ? module.title : "";
+  document.getElementById("moduleDesc").value = module ? (module.description || "") : "";
+  document.getElementById("moduleYoutube").value = module ? (module.youtube_id || "") : "";
+  document.getElementById("moduleDuration").value = module ? (module.duration || "") : "";
+  document.getElementById("moduleSort").value = module ? module.sort_order : 0;
+  document.getElementById("moduleIsPreview").checked = module ? !!module.is_preview : false;
+  document.getElementById("deleteModuleBtn").style.display = module ? "inline-flex" : "none";
+
+  qaRows = module && module.questions ? module.questions.map(q => ({ id: q.id, question: q.question })) : [];
+  renderQaRows();
+
+  document.getElementById("moduleModal").classList.add("open");
+}
+document.getElementById("closeModuleModal").addEventListener("click", () => document.getElementById("moduleModal").classList.remove("open"));
+
+function renderQaRows(){
+  const list = document.getElementById("qaList");
+  list.innerHTML = "";
+  qaRows.forEach((row, i) => {
+    const div = document.createElement("div");
+    div.className = "qa-row";
+    div.innerHTML = `
+      <input type="text" value="${escapeHtml(row.question)}" data-qa-index="${i}" placeholder="¿Pregunta clave del módulo?">
+      <button class="icon-btn" type="button" data-remove-qa="${i}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    `;
+    list.appendChild(div);
+  });
+  list.querySelectorAll("[data-qa-index]").forEach(input => {
+    input.addEventListener("input", (e) => {
+      qaRows[Number(e.target.dataset.qaIndex)].question = e.target.value;
+    });
+  });
+  list.querySelectorAll("[data-remove-qa]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      qaRows.splice(Number(btn.dataset.removeQa), 1);
+      renderQaRows();
+    });
+  });
+}
+document.getElementById("addQuestionRow").addEventListener("click", () => {
+  qaRows.push({ question: "" });
+  renderQaRows();
+});
+
+document.getElementById("saveModuleBtn").addEventListener("click", async () => {
+  const id = document.getElementById("moduleId").value;
+  const levelId = document.getElementById("moduleLevelId").value;
+  const payload = {
+    level_id: levelId,
+    title: document.getElementById("moduleTitle").value.trim(),
+    description: document.getElementById("moduleDesc").value.trim(),
+    youtube_id: document.getElementById("moduleYoutube").value.trim(),
+    duration: document.getElementById("moduleDuration").value.trim(),
+    sort_order: Number(document.getElementById("moduleSort").value) || 0,
+    is_preview: document.getElementById("moduleIsPreview").checked
+  };
+  if(!payload.title){ showToast("El módulo necesita un título"); return; }
+
+  let moduleId = id;
+  if(id){
+    const { error } = await supabase.from("modules").update(payload).eq("id", id);
+    if(error){ showToast("⚠️ " + error.message); return; }
+  } else {
+    const { data, error } = await supabase.from("modules").insert(payload).select().single();
+    if(error){ showToast("⚠️ " + error.message); return; }
+    moduleId = data.id;
+  }
+
+  // sincroniza preguntas: borra las existentes del módulo y vuelve a insertar
+  // (simple y suficiente para un panel de administración de bajo volumen)
+  await supabase.from("module_questions").delete().eq("module_id", moduleId);
+  const questionsToInsert = qaRows
+    .filter(r => r.question.trim())
+    .map((r, i) => ({ module_id: moduleId, question: r.question.trim(), sort_order: i }));
+  if(questionsToInsert.length){
+    const { error: qErr } = await supabase.from("module_questions").insert(questionsToInsert);
+    if(qErr){ showToast("⚠️ " + qErr.message); }
+  }
+
+  document.getElementById("moduleModal").classList.remove("open");
+  showToast("Módulo guardado");
+  await loadEverything();
+});
+
+document.getElementById("deleteModuleBtn").addEventListener("click", async () => {
+  const id = document.getElementById("moduleId").value;
+  if(!id) return;
+  if(!confirm("¿Eliminar este módulo y sus preguntas clave?")) return;
+  const { error } = await supabase.from("modules").delete().eq("id", id);
+  if(error){ showToast("⚠️ " + error.message); return; }
+  document.getElementById("moduleModal").classList.remove("open");
+  showToast("Módulo eliminado");
+  await loadEverything();
 });
 
 /* ---------- Toast ---------- */
@@ -443,17 +994,14 @@ function showToast(msg){
   t.textContent = msg;
   t.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 2600);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2800);
 }
 
-/* ---------- Nombre de usuario (placeholder hasta tener login real) ---------- */
-(function initUser(){
-  const name = localStorage.getItem("proyectumia_username") || "Tu cuenta";
-  document.getElementById("userName").textContent = name;
-  document.getElementById("avatarInitial").textContent = name.charAt(0).toUpperCase();
+/* ---------- Arranque ---------- */
+(async function init(){
+  await initAuth();
+  await loadEverything();
 })();
-
-render();
 </script>
 
 </body>
