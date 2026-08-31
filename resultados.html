@@ -3,28 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>PROYECTUM IA — Aprende, aplica, crece con IA</title>
+<title>Resultados — PROYECTUM IA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
   --bg:#04141a; --bg-alt:#071f27; --panel:#0a2933;
   --primary:#22FDF9; --primary-dim:#22fdf933; --secondary:#035266; --gold:#ffc94a;
   --text:#eafffd; --text-dim:#8fb6bb; --line:#134753; --radius:20px;
-  --ff-display:'Space Grotesk', sans-serif; --ff-body:'Inter', sans-serif; --ff-mono:'IBM Plex Mono', monospace;
+  --ff-display:'Space Grotesk', sans-serif; --ff-serif:'Fraunces', serif;
+  --ff-body:'Inter', sans-serif; --ff-mono:'IBM Plex Mono', monospace;
 }
 *{box-sizing:border-box;}
-body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ff-body);line-height:1.55;}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ff-body);line-height:1.6;}
 img{max-width:100%;display:block;}
 a{color:inherit;text-decoration:none;}
-button{font-family:inherit;}
+button,input,textarea{font-family:inherit;}
 h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .grad-text{background:linear-gradient(90deg,var(--primary),#8ffcf9 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
 .wrap{max-width:1180px;margin:0 auto;padding:0 20px;}
 .eyebrow{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--primary);}
-section{padding:80px 0;}
-@media(max-width:720px){section{padding:56px 0;}}
 
 /* Nav */
 .site-nav{position:sticky;top:0;z-index:80;background:#04141ae6;backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 20px;}
@@ -34,84 +34,146 @@ section{padding:80px 0;}
 .nav-links{display:flex;gap:4px;flex-wrap:wrap;}
 .nav-links a{font-family:var(--ff-mono);font-size:.76rem;color:var(--text-dim);padding:8px 12px;border-radius:100px;}
 .nav-links a:hover{color:var(--text);background:var(--panel);}
-.nav-cta{
-  font-family:var(--ff-mono);font-size:.72rem;border:none;background:linear-gradient(100deg,var(--primary),#7ff5f2);
-  color:#03181c;font-weight:600;cursor:pointer;border-radius:10px;padding:9px 16px;
+.nav-links a.active{color:var(--primary);background:var(--primary-dim);}
+.nav-login{
+  font-family:var(--ff-mono);font-size:.72rem;border:1px solid var(--line);background:var(--panel);color:var(--text-dim);
+  cursor:pointer;border-radius:10px;padding:9px 14px;
 }
+.nav-login:hover{color:var(--text);border-color:var(--primary);}
+.nav-login.in{background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;border:none;font-weight:600;}
 
-/* Hero */
-.hero{padding:78px 0 40px;text-align:center;position:relative;overflow:hidden;}
-.hero::before{
-  content:'';position:absolute;top:-180px;left:50%;transform:translateX(-50%);width:720px;height:360px;
+/* Masthead */
+.masthead{padding:56px 0 34px;text-align:center;position:relative;overflow:hidden;border-bottom:1px solid var(--line);}
+.masthead::before{
+  content:'';position:absolute;top:-160px;left:50%;transform:translateX(-50%);width:640px;height:320px;
   background:radial-gradient(ellipse at center, var(--primary-dim), transparent 70%);pointer-events:none;
 }
-.hero h1{font-size:clamp(2.2rem,5.2vw,3.4rem);position:relative;max-width:760px;margin:0 auto;}
-.hero p{color:var(--text-dim);max-width:540px;margin:16px auto 0;position:relative;}
-.hero-actions{display:flex;justify-content:center;gap:12px;margin-top:30px;flex-wrap:wrap;position:relative;}
-.btn-primary{
-  font-family:var(--ff-display);font-weight:600;font-size:.94rem;border:none;
-  background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;
-  padding:14px 26px;border-radius:12px;cursor:pointer;
-}
-.btn-ghost{
-  font-family:var(--ff-display);font-weight:600;font-size:.94rem;border:1px solid var(--line);
-  background:transparent;color:var(--text);padding:14px 26px;border-radius:12px;cursor:pointer;
-}
-.btn-ghost:hover{border-color:var(--primary);}
-
-.stat-row{display:flex;justify-content:center;gap:40px;margin-top:50px;flex-wrap:wrap;position:relative;}
+.masthead h1{font-family:var(--ff-serif);font-weight:600;font-size:clamp(2rem,5vw,3.1rem);position:relative;}
+.masthead p{color:var(--text-dim);max-width:520px;margin:14px auto 0;position:relative;font-size:.98rem;}
+.stat-row{display:flex;justify-content:center;gap:40px;margin-top:30px;flex-wrap:wrap;position:relative;}
 .stat-row .stat{text-align:center;}
-.stat-row .stat strong{display:block;font-family:var(--ff-display);font-size:1.7rem;color:var(--primary);}
-.stat-row .stat span{font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);}
+.stat-row .stat strong{display:block;font-family:var(--ff-display);font-size:1.6rem;color:var(--primary);}
+.stat-row .stat span{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);}
 
-/* Sección: cómo funciona */
-.how-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:36px;}
-@media(max-width:820px){.how-grid{grid-template-columns:1fr;}}
-.how-card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:26px;}
-.how-card .mark{font-family:var(--ff-display);font-size:1.6rem;color:var(--gold);}
-.how-card h3{font-size:1.05rem;margin-top:14px;}
-.how-card p{color:var(--text-dim);font-size:.9rem;margin-top:8px;}
-
-/* Sección: secciones del sitio */
-.section-head{max-width:560px;}
-.section-head p{color:var(--text-dim);margin-top:10px;}
-.hub-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:36px;}
-@media(max-width:900px){.hub-grid{grid-template-columns:1fr 1fr;}}
-@media(max-width:600px){.hub-grid{grid-template-columns:1fr;}}
-.hub-card{
-  background:var(--bg-alt);border:1px solid var(--line);border-radius:var(--radius);padding:24px;
-  display:flex;flex-direction:column;gap:10px;transition:border-color .2s ease,transform .2s ease;
+/* Admin toolbar */
+.admin-toolbar{display:none;justify-content:center;margin:28px 0 0;}
+body.admin-mode .admin-toolbar{display:flex;}
+.add-btn{
+  font-family:var(--ff-display);font-weight:600;font-size:.86rem;border:1px dashed var(--primary);
+  background:transparent;color:var(--primary);cursor:pointer;padding:11px 20px;border-radius:12px;
+  display:inline-flex;align-items:center;gap:8px;
 }
-.hub-card:hover{border-color:var(--primary);transform:translateY(-3px);}
-.hub-card .tag{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);}
-.hub-card h3{font-size:1.1rem;}
-.hub-card p{color:var(--text-dim);font-size:.88rem;flex:1;}
-.hub-card .go{font-family:var(--ff-mono);font-size:.76rem;color:var(--primary);}
+.add-btn:hover{background:var(--primary-dim);}
 
-/* Testimonio destacado */
-.quote-panel{
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  padding:40px;max-width:720px;margin:36px auto 0;text-align:center;
+/* Magazine feed */
+.issue{max-width:680px;margin:0 auto;padding:20px 0 100px;}
+.story{
+  position:relative;padding:52px 0;border-bottom:1px solid var(--line);
 }
-.quote-panel p{font-size:1.1rem;color:var(--text);}
-.quote-panel .who{margin-top:18px;font-family:var(--ff-mono);font-size:.78rem;color:var(--text-dim);}
+.story:first-child{padding-top:40px;}
+.story:last-child{border-bottom:none;}
 
-/* CTA final */
-.cta-final{
-  background:var(--bg-alt);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-  text-align:center;
+.story-kicker{display:flex;align-items:center;gap:10px;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:.1em;}
+.story-kicker .stars{display:inline-flex;gap:2px;}
+.story-kicker svg{width:11px;height:11px;color:var(--gold);}
+.story-kicker svg.off{color:var(--line);}
+
+.story-figure{margin:18px 0 4px;border-radius:14px;overflow:hidden;border:1px solid var(--line);}
+.story-figure img{width:100%;max-height:420px;object-fit:cover;}
+
+.story-body{
+  font-family:var(--ff-serif);font-size:1.18rem;color:var(--text);margin-top:20px;
 }
-.cta-final h2{font-size:clamp(1.6rem,4vw,2.2rem);max-width:560px;margin:0 auto;}
-.cta-final p{color:var(--text-dim);margin-top:12px;}
-.cta-final .hero-actions{margin-top:26px;}
+.story-body p{margin:0 0 1.1em;}
+.story-body p:first-of-type::first-letter{
+  font-family:var(--ff-serif);font-weight:700;font-size:3.4rem;line-height:.8;float:left;
+  padding:6px 10px 0 0;color:var(--primary);
+}
 
-/* Footer */
-footer{padding:40px 0;}
-.footer-row{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;}
-.footer-row .nav-brand{opacity:.8;}
-.footer-links{display:flex;gap:18px;flex-wrap:wrap;}
-.footer-links a{font-family:var(--ff-mono);font-size:.74rem;color:var(--text-dim);}
-.footer-links a:hover{color:var(--text);}
+.story-byline{display:flex;align-items:center;gap:12px;margin-top:26px;}
+.story-avatar{width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none;border:1.5px solid var(--line);background:var(--bg-alt);}
+.story-avatar.no-img{display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:700;color:var(--primary);background:var(--bg-alt);}
+.story-byline .who strong{display:block;font-size:.92rem;font-family:var(--ff-display);}
+.story-byline .who span{font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);}
+
+.story-admin-actions{position:absolute;top:44px;right:0;display:flex;gap:6px;}
+.story-admin-actions button{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--line);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;background:var(--panel);color:var(--text-dim);
+}
+.story-admin-actions button:hover{color:var(--text);border-color:var(--primary);}
+.story-admin-actions .del-btn:hover{color:#ff8a8a;border-color:#ff8a8a;}
+.story-admin-actions svg{width:13px;height:13px;}
+
+.empty-state{text-align:center;padding:80px 20px;color:var(--text-dim);}
+.empty-state svg{width:34px;height:34px;margin-bottom:12px;}
+
+/* Modal crear/editar */
+.t-modal{position:fixed;inset:0;z-index:220;background:#020c10ee;display:none;align-items:center;justify-content:center;padding:20px;}
+.t-modal.open{display:flex;}
+.t-modal-box{
+  width:100%;max-width:460px;max-height:90vh;overflow-y:auto;background:var(--bg-alt);
+  border:1px solid var(--line);border-radius:22px;padding:28px 26px;position:relative;
+}
+.t-modal-box .close-btn{position:absolute;top:16px;right:16px;background:var(--panel);border:1px solid var(--line);color:var(--text-dim);width:30px;height:30px;border-radius:9px;cursor:pointer;}
+.t-modal-box h2{font-size:1.2rem;margin-top:6px;}
+.field{margin-top:16px;}
+.field label{display:block;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);margin-bottom:6px;}
+.field input[type=text],.field textarea{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-size:.9rem;
+}
+.field textarea{resize:vertical;min-height:160px;font-family:var(--ff-serif);font-size:1rem;}
+.field-hint{font-family:var(--ff-mono);font-size:.66rem;color:var(--text-dim);margin-top:6px;}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--primary);}
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
+.star-picker{display:flex;gap:6px;margin-top:6px;}
+.star-picker button{background:none;border:none;cursor:pointer;padding:0;}
+.star-picker svg{width:24px;height:24px;color:var(--line);}
+.star-picker button.active svg{color:var(--gold);}
+.img-drop{
+  border:1.5px dashed var(--line);border-radius:12px;padding:14px;text-align:center;cursor:pointer;position:relative;
+  color:var(--text-dim);font-family:var(--ff-mono);font-size:.76rem;overflow:hidden;
+}
+.img-drop:hover{border-color:var(--primary);color:var(--text);}
+.img-drop img{max-height:110px;margin:0 auto 8px;border-radius:10px;width:100%;object-fit:cover;}
+.img-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.modal-actions{display:flex;gap:10px;margin-top:22px;}
+.save-btn{
+  flex:1;font-family:var(--ff-display);font-weight:600;background:linear-gradient(100deg,var(--primary),#7ff5f2);
+  color:#03181c;border:none;padding:13px;border-radius:10px;cursor:pointer;
+}
+.save-btn:disabled{opacity:.5;cursor:not-allowed;}
+.cancel-btn{
+  font-family:var(--ff-display);font-weight:600;background:transparent;border:1px solid var(--line);
+  color:var(--text-dim);padding:13px 18px;border-radius:10px;cursor:pointer;
+}
+
+/* Login */
+.login-overlay{position:fixed;inset:0;z-index:200;background:#020c10ee;display:none;align-items:center;justify-content:center;padding:20px;}
+.login-overlay.open{display:flex;}
+.login-box{width:100%;max-width:380px;background:var(--bg-alt);border:1px solid var(--line);border-radius:20px;padding:28px 24px;position:relative;}
+.login-box .close-btn{position:absolute;top:14px;right:14px;background:var(--panel);border:1px solid var(--line);color:var(--text-dim);width:28px;height:28px;border-radius:9px;cursor:pointer;}
+.login-box h2{font-size:1.2rem;margin-top:6px;}
+.login-field{margin-top:16px;}
+.login-field label{display:block;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);margin-bottom:6px;}
+.login-field input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);}
+.login-field input:focus{outline:none;border-color:var(--primary);}
+.login-submit{width:100%;margin-top:18px;font-family:var(--ff-display);font-weight:600;background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;border:none;padding:13px;border-radius:10px;cursor:pointer;}
+.login-error{color:#ff8a8a;font-family:var(--ff-mono);font-size:.72rem;margin-top:10px;display:none;text-align:center;}
+
+.toast{
+  position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);
+  background:var(--panel);border:1px solid var(--primary);color:var(--text);
+  font-family:var(--ff-mono);font-size:.78rem;padding:11px 16px;border-radius:12px;
+  opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:300;
+}
+.toast.show{opacity:1;transform:translate(-50%,0);}
+
+@media(max-width:600px){
+  .story-admin-actions{position:static;justify-content:flex-end;margin-top:14px;}
+  .story-body{font-size:1.08rem;}
+}
 </style>
 </head>
 <body>
@@ -122,135 +184,364 @@ footer{padding:40px 0;}
     <div class="nav-links">
       <a href="/plataforma">Plataforma</a>
       <a href="/publicaciones">Comunidad</a>
-      <a href="/resultados">Resultados</a>
+      <a href="/resultados" class="active">Resultados</a>
       <a href="/ia">IA</a>
       <a href="/paquetes">Paquetes</a>
     </div>
-    <button class="nav-cta" onclick="location.href='/paquetes'">Empezar ahora</button>
+    <button class="nav-login" id="navLoginBtn">Iniciar sesión</button>
   </div>
 </nav>
 
-<header class="hero">
+<header class="masthead">
   <div class="wrap">
-    <p class="eyebrow">Coaching + IA aplicada</p>
-    <h1>Aprende a usar la <span class="grad-text">IA</span> para hacer crecer lo que ya estás construyendo</h1>
-    <p>Un método paso a paso para dueños de negocio y creadores que quieren automatizar, vender más y trabajar con menos fricción, sin volverse programadores.</p>
-    <div class="hero-actions">
-      <button class="btn-primary" onclick="location.href='/paquetes'">Ver paquetes</button>
-      <button class="btn-ghost" onclick="location.href='/resultados'">Ver resultados</button>
+    <p class="eyebrow">Edición de casos reales</p>
+    <h1>Resultados de <span class="grad-text">nuestros clientes</span></h1>
+    <p>Historias completas de personas que aplicaron el método dentro de Proyectum IA, contadas en sus propias palabras.</p>
+    <div class="stat-row" id="statRow" style="display:none;">
+      <div class="stat"><strong id="statCount">0</strong><span>Historias</span></div>
+      <div class="stat"><strong id="statAvg">0.0</strong><span>Calificación promedio</span></div>
     </div>
-    <div class="stat-row">
-      <div class="stat"><strong>+120</strong><span>Estudiantes activos</span></div>
-      <div class="stat"><strong>4.9</strong><span>Calificación promedio</span></div>
-      <div class="stat"><strong>30+</strong><span>Automatizaciones entregadas</span></div>
+    <div class="admin-toolbar">
+      <button class="add-btn" id="addBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Agregar historia
+      </button>
     </div>
   </div>
 </header>
 
-<section>
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Cómo funciona</p>
-      <h2>Del primer módulo a tu primer sistema funcionando</h2>
-    </div>
-    <div class="how-grid">
-      <div class="how-card">
-        <span class="mark">Aprende</span>
-        <h3>Entra a la plataforma</h3>
-        <p>Accede a las lecciones y a la comunidad para entender cómo aplicar IA en tu negocio, sin conocimientos técnicos previos.</p>
+<div class="wrap">
+  <div class="issue" id="issue">
+    <div class="empty-state">Cargando resultados…</div>
+  </div>
+</div>
+
+<!-- Modal crear/editar -->
+<div class="t-modal" id="tModal">
+  <div class="t-modal-box">
+    <button class="close-btn" id="closeTModal">✕</button>
+    <p class="eyebrow" id="tModalEyebrow">Nueva historia</p>
+    <h2 id="tModalTitle">Agregar historia</h2>
+    <form id="tForm">
+      <div class="field">
+        <label>Foto de portada (opcional)</label>
+        <label class="img-drop" id="imgDropLabel">
+          <img id="imgDropPreview" style="display:none;">
+          <span id="imgDropText">📷 Clic para subir una foto</span>
+          <input type="file" id="tImage" accept="image/*">
+        </label>
       </div>
-      <div class="how-card">
-        <span class="mark">Construye</span>
-        <h3>Arma tu primer sistema</h3>
-        <p>Sigue las guías para montar tus automatizaciones y flujos de trabajo con acompañamiento y ejemplos reales.</p>
+      <div class="field-row">
+        <div class="field">
+          <label>Nombre</label>
+          <input type="text" id="tName" required maxlength="70" placeholder="Nombre del cliente">
+        </div>
+        <div class="field">
+          <label>Negocio / rol (opcional)</label>
+          <input type="text" id="tRole" maxlength="70" placeholder="Ej: Dueña de tienda online">
+        </div>
       </div>
-      <div class="how-card">
-        <span class="mark">Escala</span>
-        <h3>Aplica y mide resultados</h3>
-        <p>Pon a trabajar lo que construiste, ajusta con la comunidad y comparte tus resultados dentro de Proyectum IA.</p>
+      <div class="field">
+        <label>Historia completa</label>
+        <textarea id="tContent" required maxlength="4000" placeholder="Cuenta la historia del cliente en párrafos, como un artículo. Deja una línea en blanco entre párrafos."></textarea>
+        <p class="field-hint">Separa los párrafos dejando una línea vacía entre ellos — así se ven como párrafos de artículo, no como un solo bloque.</p>
       </div>
-    </div>
+      <div class="field">
+        <label>Calificación</label>
+        <div class="star-picker" id="starPicker"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" id="cancelTModal">Cancelar</button>
+        <button type="submit" class="save-btn" id="saveTBtn">Guardar</button>
+      </div>
+    </form>
   </div>
-</section>
+</div>
 
-<section>
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Explora el sitio</p>
-      <h2>Todo lo que necesitas está aquí</h2>
-      <p>Cada sección de Proyectum IA cubre una parte del camino: aprender, compartir, ver resultados reales y elegir el paquete que se ajusta a ti.</p>
-    </div>
-    <div class="hub-grid">
-      <a href="/plataforma" class="hub-card">
-        <span class="tag">Plataforma</span>
-        <h3>Lecciones y recursos</h3>
-        <p>El espacio donde avanzas módulo a módulo y tienes acceso a plantillas, guías y grabaciones.</p>
-        <span class="go">Entrar a la plataforma →</span>
-      </a>
-      <a href="/publicaciones" class="hub-card">
-        <span class="tag">Comunidad</span>
-        <h3>Publicaciones y comunidad</h3>
-        <p>Comparte tu progreso, resuelve dudas y conecta con otras personas aplicando el mismo método.</p>
-        <span class="go">Ver comunidad →</span>
-      </a>
-      <a href="/resultados" class="hub-card">
-        <span class="tag">Resultados</span>
-        <h3>Casos reales</h3>
-        <p>Testimonios de personas que ya aplicaron el método y lo que lograron con sus negocios.</p>
-        <span class="go">Ver resultados →</span>
-      </a>
-      <a href="/ia" class="hub-card">
-        <span class="tag">IA</span>
-        <h3>Herramientas de IA</h3>
-        <p>Descubre las herramientas y automatizaciones que puedes implementar según tu tipo de negocio.</p>
-        <span class="go">Explorar IA →</span>
-      </a>
-      <a href="/paquetes" class="hub-card">
-        <span class="tag">Paquetes</span>
-        <h3>Elige tu plan</h3>
-        <p>Compara los paquetes disponibles y elige el que mejor se ajusta a dónde estás hoy.</p>
-        <span class="go">Ver paquetes →</span>
-      </a>
-    </div>
+<!-- Login -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <button class="close-btn" id="closeLogin">✕</button>
+    <p class="eyebrow">Acceso admin</p>
+    <h2>Inicia sesión</h2>
+    <form id="loginForm">
+      <div class="login-field">
+        <label>Correo</label>
+        <input type="email" id="loginEmail" required>
+      </div>
+      <div class="login-field">
+        <label>Contraseña</label>
+        <input type="password" id="loginPass" required>
+      </div>
+      <button type="submit" class="login-submit">Entrar</button>
+      <p class="login-error" id="loginError">Correo o contraseña incorrectos.</p>
+    </form>
   </div>
-</section>
+</div>
 
-<section>
-  <div class="wrap">
-    <div class="section-head" style="margin:0 auto;text-align:center;">
-      <p class="eyebrow">Lo que dicen los clientes</p>
-      <h2>Resultados que hablan por sí solos</h2>
-    </div>
-    <div class="quote-panel">
-      <p>"Antes hacía todo manualmente. Ahora tengo un sistema que responde y organiza mis pedidos mientras yo me enfoco en vender."</p>
-      <p class="who">— Testimonio destacado, ver más en Resultados</p>
-    </div>
-  </div>
-</section>
+<div class="toast" id="toast"></div>
 
-<section class="cta-final">
-  <div class="wrap">
-    <h2>Tu próximo sistema puede estar listo esta semana</h2>
-    <p>Elige el paquete que se ajusta a tu momento y empieza a aplicar IA en tu negocio hoy mismo.</p>
-    <div class="hero-actions">
-      <button class="btn-primary" onclick="location.href='/paquetes'">Ver paquetes</button>
-      <button class="btn-ghost" onclick="location.href='/plataforma'">Conocer la plataforma</button>
-    </div>
-  </div>
-</section>
+<script>
+const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
+const ADMIN_EMAIL = "contact@proyectumia.com";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-<footer>
-  <div class="wrap footer-row">
-    <a href="/" class="nav-brand"><span class="dot"></span> PROYECTUM <span class="grad-text">IA</span></a>
-    <div class="footer-links">
-      <a href="/plataforma">Plataforma</a>
-      <a href="/publicaciones">Comunidad</a>
-      <a href="/resultados">Resultados</a>
-      <a href="/ia">IA</a>
-      <a href="/paquetes">Paquetes</a>
-    </div>
-  </div>
-</footer>
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2600);
+}
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+function paragraphsHtml(content){
+  return content
+    .split(/\n\s*\n/)
+    .map(p => p.trim())
+    .filter(Boolean)
+    .map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`)
+    .join('');
+}
+function starsHtml(rating){
+  let out = '';
+  for(let i=1;i<=5;i++){
+    out += `<svg viewBox="0 0 24 24" fill="currentColor" class="${i<=rating?'':'off'}"><path d="M12 2l2.9 6.4 7 .8-5.2 4.7 1.5 6.9L12 17.3 5.8 20.8l1.5-6.9L2.1 9.2l7-.8z"/></svg>`;
+  }
+  return out;
+}
+
+/* ---------- Sesión ---------- */
+const loginOverlay = document.getElementById('loginOverlay');
+const navLoginBtn = document.getElementById('navLoginBtn');
+let currentSession = null;
+let isAdmin = false;
+
+async function refreshSession(){
+  const { data } = await sb.auth.getSession();
+  currentSession = data.session;
+  isAdmin = !!(currentSession && currentSession.user.email === ADMIN_EMAIL);
+  document.body.classList.toggle('admin-mode', isAdmin);
+  navLoginBtn.textContent = currentSession ? "Cerrar sesión" : "Iniciar sesión";
+  navLoginBtn.classList.toggle('in', isAdmin);
+  renderTestimonials();
+}
+navLoginBtn.addEventListener('click', async () => {
+  if(currentSession){
+    await sb.auth.signOut();
+    showToast("Sesión cerrada");
+    refreshSession();
+  } else {
+    document.getElementById('loginError').style.display = 'none';
+    loginOverlay.classList.add('open');
+  }
+});
+document.getElementById('closeLogin').addEventListener('click', () => loginOverlay.classList.remove('open'));
+loginOverlay.addEventListener('click', (e) => { if(e.target === loginOverlay) loginOverlay.classList.remove('open'); });
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errorEl = document.getElementById('loginError');
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ errorEl.style.display = 'block'; return; }
+  errorEl.style.display = 'none';
+  loginOverlay.classList.remove('open');
+  showToast("Sesión iniciada");
+  refreshSession();
+});
+
+/* ---------- Cargar y mostrar ---------- */
+let testimonials = [];
+async function loadTestimonials(){
+  const { data, error } = await sb.from('testimonials').select('*').order('sort_order', { ascending: true }).order('created_at', { ascending: false });
+  if(error){
+    document.getElementById('issue').innerHTML = `<div class="empty-state">No se pudieron cargar los resultados.</div>`;
+    return;
+  }
+  testimonials = data || [];
+  renderTestimonials();
+}
+
+function renderTestimonials(){
+  const issue = document.getElementById('issue');
+  const statRow = document.getElementById('statRow');
+  if(testimonials.length === 0){
+    statRow.style.display = 'none';
+    issue.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      <p>${isAdmin ? "Todavía no has agregado ninguna historia." : "Muy pronto vamos a compartir los resultados de nuestros clientes aquí."}</p>
+    </div>`;
+    return;
+  }
+  statRow.style.display = 'flex';
+  document.getElementById('statCount').textContent = testimonials.length;
+  const avg = testimonials.reduce((s,t)=>s+(t.rating||5),0) / testimonials.length;
+  document.getElementById('statAvg').textContent = avg.toFixed(1);
+
+  issue.innerHTML = testimonials.map(t => `
+    <article class="story">
+      ${isAdmin ? `
+        <div class="story-admin-actions">
+          <button class="edit-btn" data-id="${t.id}" title="Editar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </button>
+          <button class="del-btn" data-id="${t.id}" data-image="${t.image_url || ''}" title="Borrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0l-1 14a2 2 0 01-2 2H7a2 2 0 01-2-2L4 6"/></svg>
+          </button>
+        </div>` : ""}
+      <div class="story-kicker">
+        <span>Caso de estudio</span>
+        <span class="stars">${starsHtml(t.rating || 5)}</span>
+      </div>
+      ${t.image_url ? `<div class="story-figure"><img src="${t.image_url}" alt="${escapeHtml(t.name)}"></div>` : ""}
+      <div class="story-body">${paragraphsHtml(t.content)}</div>
+      <div class="story-byline">
+        ${t.image_url
+          ? `<img class="story-avatar" src="${t.image_url}" alt="${escapeHtml(t.name)}">`
+          : `<div class="story-avatar no-img">${escapeHtml(t.name.charAt(0).toUpperCase())}</div>`}
+        <div class="who">
+          <strong>${escapeHtml(t.name)}</strong>
+          ${t.role ? `<span>${escapeHtml(t.role)}</span>` : ""}
+        </div>
+      </div>
+    </article>
+  `).join("");
+
+  issue.querySelectorAll('.edit-btn').forEach(btn => {
+    btn.addEventListener('click', () => openModal(testimonials.find(t => t.id === btn.dataset.id)));
+  });
+  issue.querySelectorAll('.del-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteTestimonial(btn.dataset.id, btn.dataset.image));
+  });
+}
+
+/* ---------- Modal crear/editar ---------- */
+const tModal = document.getElementById('tModal');
+const tForm = document.getElementById('tForm');
+const imgDropPreview = document.getElementById('imgDropPreview');
+const imgDropText = document.getElementById('imgDropText');
+const tImageInput = document.getElementById('tImage');
+const starPicker = document.getElementById('starPicker');
+let editingId = null;
+let currentImageUrl = null;
+let selectedRating = 5;
+
+for(let i=1;i<=5;i++){
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.dataset.val = i;
+  b.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.9 6.4 7 .8-5.2 4.7 1.5 6.9L12 17.3 5.8 20.8l1.5-6.9L2.1 9.2l7-.8z"/></svg>';
+  b.addEventListener('click', () => { selectedRating = i; renderStarPicker(); });
+  starPicker.appendChild(b);
+}
+function renderStarPicker(){
+  Array.from(starPicker.children).forEach(b => b.classList.toggle('active', Number(b.dataset.val) <= selectedRating));
+}
+
+document.getElementById('addBtn').addEventListener('click', () => openModal(null));
+document.getElementById('closeTModal').addEventListener('click', closeModal);
+document.getElementById('cancelTModal').addEventListener('click', closeModal);
+tModal.addEventListener('click', (e) => { if(e.target === tModal) closeModal(); });
+
+function openModal(t){
+  editingId = t ? t.id : null;
+  currentImageUrl = t ? (t.image_url || null) : null;
+  document.getElementById('tModalEyebrow').textContent = t ? "Editar historia" : "Nueva historia";
+  document.getElementById('tModalTitle').textContent = t ? "Editar historia" : "Agregar historia";
+  document.getElementById('tName').value = t ? t.name : '';
+  document.getElementById('tRole').value = t ? (t.role || '') : '';
+  document.getElementById('tContent').value = t ? t.content : '';
+  selectedRating = t ? (t.rating || 5) : 5;
+  renderStarPicker();
+  tImageInput.value = '';
+  if(t && t.image_url){
+    imgDropPreview.src = t.image_url;
+    imgDropPreview.style.display = 'block';
+    imgDropText.textContent = 'Clic para cambiar la foto';
+  } else {
+    imgDropPreview.style.display = 'none';
+    imgDropText.textContent = '📷 Clic para subir una foto';
+  }
+  tModal.classList.add('open');
+}
+function closeModal(){ tModal.classList.remove('open'); }
+
+tImageInput.addEventListener('change', () => {
+  const file = tImageInput.files[0];
+  if(!file) return;
+  imgDropPreview.src = URL.createObjectURL(file);
+  imgDropPreview.style.display = 'block';
+  imgDropText.textContent = file.name;
+});
+
+tForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('tName').value.trim();
+  const role = document.getElementById('tRole').value.trim();
+  const content = document.getElementById('tContent').value.trim();
+  if(!name || !content) return;
+
+  const saveBtn = document.getElementById('saveTBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = "Guardando…";
+
+  try{
+    let image_url = currentImageUrl;
+    const file = tImageInput.files[0];
+    if(file){
+      const path = `testimonials/${Date.now()}.${file.name.split('.').pop()}`;
+      const { error: upErr } = await sb.storage.from('post-images').upload(path, file);
+      if(upErr) throw upErr;
+      const { data: pub } = sb.storage.from('post-images').getPublicUrl(path);
+      image_url = pub.publicUrl;
+    }
+
+    if(editingId){
+      const { error } = await sb.from('testimonials').update({ name, role, content, rating: selectedRating, image_url }).eq('id', editingId);
+      if(error) throw error;
+      showToast("✅ Historia actualizada");
+    } else {
+      const { error } = await sb.from('testimonials').insert({ name, role, content, rating: selectedRating, image_url, sort_order: testimonials.length });
+      if(error) throw error;
+      showToast("✅ Historia agregada");
+    }
+    closeModal();
+    loadTestimonials();
+  }catch(err){
+    console.error(err);
+    showToast("❌ No se pudo guardar: " + err.message);
+  }finally{
+    saveBtn.disabled = false;
+    saveBtn.textContent = "Guardar";
+  }
+});
+
+async function deleteTestimonial(id, imageUrl){
+  if(!confirm("¿Borrar esta historia? No se puede deshacer.")) return;
+  try{
+    const { error } = await sb.from('testimonials').delete().eq('id', id);
+    if(error) throw error;
+    if(imageUrl){
+      const path = imageUrl.split('/post-images/')[1];
+      if(path) await sb.storage.from('post-images').remove([path]);
+    }
+    showToast("Historia borrada");
+    loadTestimonials();
+  }catch(err){
+    showToast("❌ No se pudo borrar: " + err.message);
+  }
+}
+
+/* ---------- Init ---------- */
+refreshSession();
+loadTestimonials();
+</script>
 
 </body>
 </html>
