@@ -601,6 +601,13 @@ footer p{max-width:640px;margin:6px auto;}
 }
 .admin-reset:hover{color:var(--text);border-color:var(--text-dim);}
 .admin-status{margin-top:12px;font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);text-align:center;min-height:1em;}
+
+/* =========================================================
+   LOGIN DEL PANEL DE ADMINISTRADOR (Supabase Auth)
+   ========================================================= */
+.admin-login-box{display:flex;flex-direction:column;gap:14px;}
+.admin-login-box .admin-field{margin-bottom:0;}
+.admin-login-error{font-family:var(--ff-mono);font-size:.72rem;color:#ff8a80;min-height:1em;}
 </style>
 
 </head>
@@ -641,7 +648,7 @@ footer p{max-width:640px;margin:6px auto;}
         </div>
         <div class="tt-video-wrap" data-i="2">
           <video id="ttVideo2" playsinline webkit-playsinline preload="auto"
-            src="https://res.cloudinary.com/vlhv2gge/video/upload/v1785600808/video_1_proyectum_wsn8qu.mp4"></video>
+            src="https://res.cloudinary.com/vlhv2gge/video/upload/v1785600809/Video_2_Proyectum_wlpeh0.mp4"></video>
         </div>
         <div class="tt-caption">@proyectum.ia · Así fue el antes y después 🚀</div>
         <div class="tt-side-icons">
@@ -741,17 +748,6 @@ footer p{max-width:640px;margin:6px auto;}
       <p class="micro">Conectaste toda la ruta. Desbloqueando tu acceso.</p>
     </div>
   </div>
-
-  <!-- PASO 7: CARTA MANUSCRITA DE SANTIAGO -->
-  <div class="intro-step" id="stepLetter">
-    <div class="letter-wrap">
-      <div class="letter-badge">✒️ Un mensaje para ti</div>
-      <div class="letter-paper" id="letterPaper">
-        <p class="letter-text" id="letterText"></p>
-      </div>
-      <div class="letter-signoff">— Santiago, fundador de Proyectum IA</div>
-    </div>
-  </div>
 </div>
 
 <div class="xp-rail"><div class="xp-fill" id="xpFill"></div></div>
@@ -835,47 +831,72 @@ footer p{max-width:640px;margin:6px auto;}
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-box">
     <button class="close-btn" id="closeAdmin">✕</button>
-    <p class="eyebrow">Solo administrador</p>
-    <h2>Editar imágenes y enlaces</h2>
-    <p class="sub">Cambia las imágenes o pega la URL de otra. Actualiza el link de compra de Hotmart y se aplicará en todos los botones de acceso del sitio.</p>
 
-    <div class="admin-section">
-      <h4>Imagen principal (Hero)</h4>
-      <img class="admin-preview" id="adminHeroPreview" src="" alt="Vista previa hero">
-      <div class="admin-field">
-        <label>URL de la imagen</label>
-        <input type="url" id="adminHeroUrl" placeholder="https://...">
-      </div>
-      <div class="admin-file-row">
-        <input type="file" id="adminHeroFile" accept="image/*">
+    <!-- Vista de LOGIN del panel admin (Supabase Auth) -->
+    <div id="adminLoginView">
+      <p class="eyebrow">Solo administrador</p>
+      <h2>Inicia sesión para editar</h2>
+      <p class="sub">Este panel edita el contenido público del sitio. Solo la cuenta administradora puede entrar.</p>
+      <div class="admin-login-box">
+        <div class="admin-field">
+          <label>Correo</label>
+          <input type="text" id="adminLoginEmail" placeholder="contact@proyectumia.com" autocomplete="username">
+        </div>
+        <div class="admin-field">
+          <label>Contraseña</label>
+          <input type="password" id="adminLoginPassword" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <p class="admin-login-error" id="adminLoginError"></p>
+        <button class="admin-save" id="adminLoginSubmit" type="button">Entrar</button>
       </div>
     </div>
 
-    <div class="admin-section">
-      <h4>Imagen del autor</h4>
-      <img class="admin-preview" id="adminAuthorPreview" src="" alt="Vista previa autor">
-      <div class="admin-field">
-        <label>URL de la imagen</label>
-        <input type="url" id="adminAuthorUrl" placeholder="https://...">
+    <!-- Vista de EDICIÓN (solo visible tras iniciar sesión como admin) -->
+    <div id="adminEditView" style="display:none;">
+      <p class="eyebrow">Solo administrador</p>
+      <h2>Editar imágenes y enlaces</h2>
+      <p class="sub">Cambia las imágenes o pega la URL de otra. Actualiza el link de compra de Hotmart y se aplicará en todos los botones de acceso del sitio.</p>
+
+      <div class="admin-section">
+        <h4>Imagen principal (Hero)</h4>
+        <img class="admin-preview" id="adminHeroPreview" src="" alt="Vista previa hero">
+        <div class="admin-field">
+          <label>URL de la imagen</label>
+          <input type="url" id="adminHeroUrl" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminHeroFile" accept="image/*">
+        </div>
       </div>
-      <div class="admin-file-row">
-        <input type="file" id="adminAuthorFile" accept="image/*">
+
+      <div class="admin-section">
+        <h4>Imagen del autor</h4>
+        <img class="admin-preview" id="adminAuthorPreview" src="" alt="Vista previa autor">
+        <div class="admin-field">
+          <label>URL de la imagen</label>
+          <input type="url" id="adminAuthorUrl" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminAuthorFile" accept="image/*">
+        </div>
       </div>
+
+      <div class="admin-section">
+        <h4>Enlace de compra (Hotmart)</h4>
+        <div class="admin-field">
+          <label>Aplica a: botón del Hero, CTA final, hotbar de "Acceso" y link de compra en el login</label>
+          <input type="text" id="adminBuyLink" placeholder="https://pay.hotmart.com/...">
+        </div>
+      </div>
+
+      <div class="admin-actions">
+        <button class="admin-reset" id="adminReset" type="button">Restaurar original</button>
+        <button class="admin-save" id="adminSave" type="button">Guardar cambios</button>
+      </div>
+      <p class="admin-status" id="adminStatus"></p>
+      <p class="admin-status" style="color:var(--text-dim);"><a href="#" id="adminLogoutLink" style="color:var(--text-dim);text-decoration:underline;">Cerrar sesión de administrador</a></p>
     </div>
 
-    <div class="admin-section">
-      <h4>Enlace de compra (Hotmart)</h4>
-      <div class="admin-field">
-        <label>Aplica a: botón del Hero, CTA final, hotbar de "Acceso" y link de compra en el login</label>
-        <input type="text" id="adminBuyLink" placeholder="https://pay.hotmart.com/...">
-      </div>
-    </div>
-
-    <div class="admin-actions">
-      <button class="admin-reset" id="adminReset" type="button">Restaurar original</button>
-      <button class="admin-save" id="adminSave" type="button">Guardar cambios</button>
-    </div>
-    <p class="admin-status" id="adminStatus"></p>
   </div>
 </div>
 
@@ -1077,16 +1098,28 @@ revealTargets.forEach(el=>io.observe(el));
 <!-- ============ LÓGICA DE LA INTRO INTERACTIVA ============ -->
 <script>
 (function(){
+  const INTRO_SEEN_KEY = 'proyectumia_intro_seen_v1';
   const overlay = document.getElementById('introOverlay');
-  const STEP_ORDER = ['video','tiktok','chat','tokens','game','lock','letter'];
+  const siteNav = document.getElementById('siteNav');
+  const mobileHotbar = document.getElementById('mobileHotbar');
+
+  // Si la persona YA vio el embudo completo antes en este navegador, nunca más se lo mostramos.
+  if (localStorage.getItem(INTRO_SEEN_KEY)) {
+    overlay.classList.add('closed');
+    document.body.style.overflow = '';
+    if (siteNav) siteNav.classList.add('visible');
+    if (mobileHotbar) mobileHotbar.classList.add('visible');
+    return;
+  }
+
+  const STEP_ORDER = ['video','tiktok','chat','tokens','game','lock'];
   const steps = {
     video: document.getElementById('stepVideo'),
     tiktok: document.getElementById('stepTiktok'),
     chat: document.getElementById('stepChat'),
     tokens: document.getElementById('stepTokens'),
     game: document.getElementById('stepGame'),
-    lock: document.getElementById('stepLock'),
-    letter: document.getElementById('stepLetter')
+    lock: document.getElementById('stepLock')
   };
   const introProgress = document.getElementById('introProgress');
   introProgress.innerHTML = STEP_ORDER.map(function(){ return '<span class="dot"></span>'; }).join('');
@@ -1102,20 +1135,22 @@ revealTargets.forEach(el=>io.observe(el));
   }
 
   document.body.style.overflow = 'hidden';
-  document.getElementById('skipIntro').addEventListener('click', closeOverlay);
+
+  // La primera vez que alguien ve el embudo no se puede saltar: se quita el botón de "Saltar intro".
+  const skipIntroBtn = document.getElementById('skipIntro');
+  if (skipIntroBtn) skipIntroBtn.remove();
 
   function closeOverlay(){
     overlay.classList.add('closed');
     document.body.style.overflow = '';
     voiceAudios.forEach(a=>{ a.pause(); });
-    if(letterAudio) letterAudio.pause();
     clearBugs();
     clearGroupTimers();
     document.querySelectorAll('#ttStage video').forEach(function(v){ v.pause(); });
-    const nav = document.getElementById('siteNav');
-    if(nav) nav.classList.add('visible');
-    const hotbar = document.getElementById('mobileHotbar');
-    if(hotbar) hotbar.classList.add('visible');
+    if(siteNav) siteNav.classList.add('visible');
+    if(mobileHotbar) mobileHotbar.classList.add('visible');
+    // Se marca como "ya visto" solo al completar todo el embudo, para que nunca más se repita.
+    localStorage.setItem(INTRO_SEEN_KEY, '1');
   }
 
   /* ---- Sonidos generados con Web Audio API (sin archivos externos) ---- */
@@ -1265,7 +1300,6 @@ revealTargets.forEach(el=>io.observe(el));
       unlockVideoForMobile(document.getElementById(id));
     });
     voiceAudios.forEach(unlockAudioForMobile);
-    unlockAudioForMobile(letterAudio);
     videoGate.style.display = 'none';
     introVideo.style.display = 'block';
     safePlay(introVideo, advanceFromVideo);
@@ -1421,20 +1455,23 @@ revealTargets.forEach(el=>io.observe(el));
     next();
   }
 
-  /* ---- Gamificación: elige tu tipo de negocio (aparece como mensaje/encuesta en el chat) ---- */
-  /* ---- Videos que Proyectum IA envía según el tipo de negocio elegido ---- */
+  /* ---- Gamificación: elige tu tipo de negocio (encuesta en el chat) ---- */
+  /* ---- Videos que Proyectum IA envía según la opción elegida ---- */
   const BIZ_VIDEOS = {
-    UGC: [
+    MarcaPersonal: [
       'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600936/WhatsApp_Video_2026-07-29_at_10.12.22_AM_qk3axw.mp4',
       'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600936/hf_20260801_021414_e7abded8-ed84-4d94-a5a6-4fb918efdac6_swg5wy.mp4'
     ],
-    Moda: [
+    NegocioDigital: [
       'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600937/hf_20260801_031224_5ef37f33-33c7-4c25-a2a1-cd6debec8b38_qujlvf.mp4'
     ],
-    Alimentos: [
+    NegocioTradicional: [
       'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600936/hf_20260801_025545_36bb0557-1754-49fb-8bf6-f20175d6928e_jyfvrx.mp4'
     ],
-    Servicios: [
+    InfoProductos: [
+      'https://res.cloudinary.com/vlhv2gge/video/upload/v1785602771/hf_20260801_163527_426a13dd-67ef-4c44-87e1-7030502e1c7e_fohapn.mp4'
+    ],
+    Empleado: [
       'https://res.cloudinary.com/vlhv2gge/video/upload/v1785602771/hf_20260801_163527_426a13dd-67ef-4c44-87e1-7030502e1c7e_fohapn.mp4'
     ]
   };
@@ -1464,12 +1501,13 @@ revealTargets.forEach(el=>io.observe(el));
     card.className = 'wa-msg-text biz-card';
     card.innerHTML =
       '<div class="wa-msg-sender" style="color:var(--gold)">PROYECTUM IA TEAM</div>' +
-      '<p class="biz-question">Antes de seguir... ¿cuál es tu tipo de negocio? 👇</p>' +
+      '<p class="biz-question">Antes de seguir... ¿cuál te representa mejor? 👇</p>' +
       '<div class="biz-options">' +
-        '<button type="button" data-v="UGC">🎬 UGC / Creador de contenido</button>' +
-        '<button type="button" data-v="Moda">👗 Moda y retail</button>' +
-        '<button type="button" data-v="Alimentos">🍔 Alimentos</button>' +
-        '<button type="button" data-v="Servicios">🛠️ Servicios</button>' +
+        '<button type="button" data-v="MarcaPersonal">✅ Marca personal</button>' +
+        '<button type="button" data-v="NegocioDigital">✅ Negocio digital</button>' +
+        '<button type="button" data-v="NegocioTradicional">⭕ Negocio tradicional</button>' +
+        '<button type="button" data-v="InfoProductos">⭕ Info productos</button>' +
+        '<button type="button" data-v="Empleado">⭕ Empleado</button>' +
       '</div>';
     waBody.appendChild(card);
     waBody.scrollTop = waBody.scrollHeight;
@@ -1487,7 +1525,7 @@ revealTargets.forEach(el=>io.observe(el));
         card.appendChild(chosen);
         waBody.scrollTop = waBody.scrollHeight;
         playLevelUp();
-        // Proyectum IA manda el/los video(s) de este negocio mientras arranca el Audio 2
+        // Proyectum IA manda el/los video(s) de esta opción mientras arranca el Audio 2
         setTimeout(function(){
           sendBizVideos(key);
           onDone();
@@ -1781,105 +1819,8 @@ revealTargets.forEach(el=>io.observe(el));
       const b = lockSvg.getBoundingClientRect();
       spawnParticles(b.left+b.width/2, b.top+b.height/2);
     }, 1400);
-    setTimeout(function(){
-      goTo('letter');
-      startLetterSequence();
-    }, 2700);
-  }
-
-  /* ---- Paso final: carta manuscrita de Santiago, sincronizada con el audio ---- */
-  const LETTER_AUDIO_SRC = 'https://res.cloudinary.com/vlhv2gge/video/upload/v1785714866/0802_zmbugn.mp3';
-  const letterAudio = new Audio(LETTER_AUDIO_SRC);
-  letterAudio.preload = 'auto';
-  const LETTER_CUES = [
-    { t: 0.12,  text: '¿Si viste?' },
-    { t: 1.06,  text: 'Fuiste capaz de hacerlo.' },
-    { t: 2.24,  text: 'Te habla Santiago,' },
-    { t: 3.22,  text: 'fundador de Proyectum IA.' },
-    { t: 5.10,  text: 'Y confío plenamente en ti,' },
-    { t: 7.01,  text: 'porque gastaste 7 minutos de tu valioso tiempo' },
-    { t: 9.25,  text: 'en algo que te va a ayudar,' },
-    { t: 11.05, text: 'en algo que te va a sumar valor.' },
-    { t: 12.25, text: 'Esos 7 minutos' },
-    { t: 13.26, text: 'fácilmente los hubieras' },
-    { t: 15.01, text: 'podido usar' },
-    { t: 15.26, text: 'en TikTok,' },
-    { t: 16.20, text: 'Instagram,' },
-    { t: 17.11, text: 'o hablando con cualquier amigo,' },
-    { t: 19.01, text: 'todavía planeando las cosas.' },
-    { t: 20.23, text: 'Pues es hora de actuar,' },
-    { t: 22.04, text: 'y por eso estaré yo,' },
-    { t: 23.12, text: 'para apoyarte en todo este proceso.' },
-    { t: 25.04, text: 'Y no solo te lo digo yo,' },
-    { t: 26.20, text: 'te lo dicen los 5 años de experiencia' },
-    { t: 29.06, text: 'que tengo en las redes sociales,' },
-    { t: 30.22, text: 'el algoritmo,' },
-    { t: 31.13, text: 'trabajar con marcas,' },
-    { t: 32.17, text: 'con las mismas empresas' },
-    { t: 33.27, text: 'que crean tus redes sociales,' },
-    { t: 35.18, text: 'y entendiendo de adentro hacia afuera' },
-    { t: 37.24, text: 'cómo es la verdadera manera' },
-    { t: 39.05, text: 'de no solo venderte la solución perfecta,' },
-    { t: 41.16, text: 'sino también la realidad de lo que te vas a enfrentar,' },
-    { t: 44.05, text: 'sin miedo a decirte:' },
-    { t: 45.13, text: '"mira,' },
-    { t: 45.27, text: 'esto es lo que te va a pasar,' },
-    { t: 47.13, text: 'y esta es la solución a esos casos."' },
-    { t: 49.05, text: 'Muchas gracias por escucharme.' },
-    { t: 50.14, text: 'Confío en ti' },
-    { t: 51.16, text: 'y en toda tu familia,' },
-    { t: 52.17, text: 'porque por supuesto' },
-    { t: 53.16, text: 'va a verse muy afectada' },
-    { t: 54.26, text: '¡a positivo!' },
-    { t: 55.16, text: 'gracias a tu crecimiento.' },
-    { t: 56.24, text: 'Felicidades' },
-    { t: 57.23, text: 'y bienvenido.' }
-  ];
-  let letterSpans = [];
-  let letterAdvanced = false;
-
-  function buildLetterParagraph(){
-    const textEl = document.getElementById('letterText');
-    textEl.innerHTML = '';
-    letterSpans = LETTER_CUES.map(function(cue){
-      const span = document.createElement('span');
-      span.className = 'lw';
-      span.textContent = cue.text + ' ';
-      textEl.appendChild(span);
-      return { el: span, t: cue.t };
-    });
-  }
-
-  function revealLetterUpTo(currentTime){
-    letterSpans.forEach(function(item){
-      if(currentTime >= item.t && !item.el.classList.contains('written')){
-        item.el.classList.add('written');
-      }
-    });
-  }
-
-  function finishLetter(){
-    if(letterAdvanced) return;
-    letterAdvanced = true;
-    revealLetterUpTo(999);
-    setTimeout(closeOverlay, 1300);
-  }
-
-  function startLetterSequence(){
-    letterAdvanced = false;
-    buildLetterParagraph();
-    const paper = document.getElementById('letterPaper');
-    paper.classList.remove('appear');
-    void paper.offsetWidth;
-    paper.classList.add('appear');
-
-    letterAudio.currentTime = 0;
-    letterAudio.ontimeupdate = function(){ revealLetterUpTo(letterAudio.currentTime); };
-    letterAudio.onended = finishLetter;
-    letterAudio.onerror = finishLetter;
-    safePlay(letterAudio, finishLetter);
-    // seguridad: si por algo el audio nunca dispara 'ended', igual avanzamos
-    setTimeout(function(){ if(!letterAdvanced) finishLetter(); }, 66000);
+    // Ya no hay carta de Santiago: al terminar de romperse el candado, cerramos el embudo.
+    setTimeout(closeOverlay, 2700);
   }
 })();
 </script>
@@ -1952,13 +1893,29 @@ revealTargets.forEach(el=>io.observe(el));
 })();
 </script>
 
-<!-- ============ PANEL DE ADMINISTRADOR ============ -->
-<!-- Permite cambiar, sin tocar código: la imagen del hero, la imagen del autor
-     y el enlace de compra de Hotmart (se aplica a todos los botones "buy-link":
-     CTA del hero, CTA final, hotbar de Acceso y el link de compra dentro del login).
-     Los cambios se guardan en localStorage de este navegador. -->
+<!-- ============ PANEL DE ADMINISTRADOR (protegido con Supabase Auth) ============ -->
+<!-- Antes, cualquier persona podía tocar el ícono de engranaje y editar la imagen del
+     hero, la imagen del autor y el link de compra sin iniciar sesión: ese era el bug.
+     Ahora el panel exige iniciar sesión con Supabase Auth, y solo la cuenta cuyo correo
+     coincide con ADMIN_EMAIL puede ver y usar el formulario de edición. Cualquier otra
+     persona (o alguien no autenticado) solo ve el formulario de inicio de sesión. -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
+  // === CONFIGURA ESTOS 3 VALORES CON LOS DE TU PROYECTO DE SUPABASE ===
+  // 1. SUPABASE_URL y SUPABASE_ANON_KEY: Project Settings -> API, en supabase.com
+  // 2. ADMIN_EMAIL: el correo (ya debe existir como usuario en Supabase Auth) que
+  //    tendrá permiso de editar el sitio. Por ahora se dejó tu correo de contacto.
+  const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
+  const ADMIN_EMAIL = "contact@proyectumia.com";
+
+  let supabaseClient = null;
+  let configured = SUPABASE_URL.indexOf('TU-PROYECTO') === -1 && SUPABASE_ANON_KEY.indexOf('TU-ANON-KEY') === -1;
+  if (configured && window.supabase) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
   const DEFAULTS = {
     heroImg: document.getElementById('heroImg') ? document.getElementById('heroImg').getAttribute('src') : '',
     authorImg: document.getElementById('authorImg') ? document.getElementById('authorImg').getAttribute('src') : '',
@@ -1985,7 +1942,6 @@ revealTargets.forEach(el=>io.observe(el));
       document.querySelectorAll('.buy-link').forEach(function(a){
         a.setAttribute('href', settings.buyLink);
       });
-      // también actualiza el enlace de Hotmart usado dentro de la intro/login por JS
       window.PROYECTUM_BUY_LINK = settings.buyLink;
       const loginBuyLink = document.getElementById('loginBuyLink');
       if(loginBuyLink) loginBuyLink.setAttribute('href', settings.buyLink);
@@ -1999,6 +1955,13 @@ revealTargets.forEach(el=>io.observe(el));
   const adminFab = document.getElementById('adminFab');
   const adminOverlay = document.getElementById('adminOverlay');
   const closeAdmin = document.getElementById('closeAdmin');
+  const adminLoginView = document.getElementById('adminLoginView');
+  const adminEditView = document.getElementById('adminEditView');
+  const adminLoginEmail = document.getElementById('adminLoginEmail');
+  const adminLoginPassword = document.getElementById('adminLoginPassword');
+  const adminLoginError = document.getElementById('adminLoginError');
+  const adminLoginSubmit = document.getElementById('adminLoginSubmit');
+  const adminLogoutLink = document.getElementById('adminLogoutLink');
   const adminHeroUrl = document.getElementById('adminHeroUrl');
   const adminAuthorUrl = document.getElementById('adminAuthorUrl');
   const adminBuyLink = document.getElementById('adminBuyLink');
@@ -2010,6 +1973,18 @@ revealTargets.forEach(el=>io.observe(el));
   const adminReset = document.getElementById('adminReset');
   const adminStatus = document.getElementById('adminStatus');
 
+  function showLoginView(message){
+    adminLoginView.style.display = 'block';
+    adminEditView.style.display = 'none';
+    adminLoginError.textContent = message || '';
+  }
+  function showEditView(){
+    adminLoginView.style.display = 'none';
+    adminEditView.style.display = 'block';
+    fillFormFromSettings(current);
+    adminStatus.textContent = '';
+  }
+
   function fillFormFromSettings(settings){
     adminHeroUrl.value = settings.heroImg || '';
     adminAuthorUrl.value = settings.authorImg || '';
@@ -2018,14 +1993,56 @@ revealTargets.forEach(el=>io.observe(el));
     adminAuthorPreview.src = settings.authorImg || '';
   }
 
-  adminFab.addEventListener('click', function(){
-    fillFormFromSettings(current);
-    adminStatus.textContent = '';
+  async function checkAdminSession(){
+    if(!supabaseClient) return false;
+    const { data } = await supabaseClient.auth.getSession();
+    const session = data && data.session;
+    return !!(session && session.user && session.user.email && session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
+  }
+
+  adminFab.addEventListener('click', async function(){
     adminOverlay.classList.add('open');
+    if(!configured){
+      showLoginView('Falta configurar Supabase (SUPABASE_URL / SUPABASE_ANON_KEY) en el código para poder iniciar sesión.');
+      return;
+    }
+    const isAdmin = await checkAdminSession();
+    if(isAdmin) showEditView();
+    else showLoginView('');
   });
   closeAdmin.addEventListener('click', function(){ adminOverlay.classList.remove('open'); });
   adminOverlay.addEventListener('click', function(e){
     if(e.target === adminOverlay) adminOverlay.classList.remove('open');
+  });
+
+  adminLoginSubmit.addEventListener('click', async function(){
+    if(!supabaseClient) return;
+    const email = (adminLoginEmail.value || '').trim();
+    const password = adminLoginPassword.value || '';
+    if(!email || !password){
+      adminLoginError.textContent = 'Ingresa correo y contraseña.';
+      return;
+    }
+    adminLoginError.textContent = 'Verificando...';
+    const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+    if(error){
+      adminLoginError.textContent = 'No se pudo iniciar sesión: ' + error.message;
+      return;
+    }
+    const sessionEmail = data && data.user && data.user.email;
+    if(!sessionEmail || sessionEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
+      adminLoginError.textContent = 'Esta cuenta no tiene permiso de administrador.';
+      await supabaseClient.auth.signOut();
+      return;
+    }
+    adminLoginPassword.value = '';
+    showEditView();
+  });
+
+  adminLogoutLink.addEventListener('click', async function(e){
+    e.preventDefault();
+    if(supabaseClient) await supabaseClient.auth.signOut();
+    adminOverlay.classList.remove('open');
   });
 
   adminHeroUrl.addEventListener('input', function(){ adminHeroPreview.src = adminHeroUrl.value; });
@@ -2053,7 +2070,12 @@ revealTargets.forEach(el=>io.observe(el));
     });
   });
 
-  adminSave.addEventListener('click', function(){
+  adminSave.addEventListener('click', async function(){
+    const isAdmin = await checkAdminSession();
+    if(!isAdmin){
+      showLoginView('Tu sesión expiró. Vuelve a iniciar sesión.');
+      return;
+    }
     current = {
       heroImg: adminHeroUrl.value.trim() || DEFAULTS.heroImg,
       authorImg: adminAuthorUrl.value.trim() || DEFAULTS.authorImg,
