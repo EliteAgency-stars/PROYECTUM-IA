@@ -2,1041 +2,721 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Plataforma — PROYECTUM IA</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Proyectum IA · Plataforma de Módulos</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.45.0/supabase.min.js"></script>
 <style>
 :root{
-  --bg:#04141a; --bg-alt:#071f27; --panel:#0a2933;
-  --primary:#22FDF9; --primary-dim:#22fdf933; --secondary:#035266; --gold:#ffc94a;
-  --text:#eafffd; --text-dim:#8fb6bb; --line:#134753; --radius:18px;
-  --danger:#ff6a6a;
-  --ff-display:'Space Grotesk', sans-serif; --ff-body:'Inter', sans-serif; --ff-mono:'IBM Plex Mono', monospace; --ff-hand:'Caveat', cursive;
+  --bg:#060a14;
+  --bg-elev:#0c1424;
+  --bg-card:#0f1a2e;
+  --line:#1c2a45;
+  --blue:#2f6fed;
+  --blue-bright:#5b9dff;
+  --blue-deep:#0d2a5c;
+  --text:#e7edf7;
+  --text-dim:#8fa0bd;
+  --text-faint:#5b6b89;
+  --danger:#ef5b5b;
+  --radius:14px;
+  --font: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, Roboto, sans-serif;
 }
 *{box-sizing:border-box;}
-body{margin:0;background:var(--bg);color:var(--text);font-family:var(--ff-body);line-height:1.5;}
-img{max-width:100%;display:block;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(47,111,237,.18), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(91,157,255,.10), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
 a{color:inherit;text-decoration:none;}
-button{font-family:inherit;touch-action:manipulation;cursor:pointer;}
-input,textarea{font-family:inherit;}
-h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
-.grad-text{background:linear-gradient(90deg,var(--primary),#8ffcf9 60%,var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent;}
+button{font-family:inherit;cursor:pointer;}
+::selection{background:var(--blue);color:#fff;}
 
-.app{display:grid;grid-template-columns:264px 1fr;min-height:100vh;}
-@media(max-width:900px){.app{grid-template-columns:1fr;}}
+/* ---------- Header ---------- */
+header{
+  position:sticky;top:0;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 22px;
+  background:rgba(6,10,20,.82);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px;font-size:17px;}
+.brand .mark{
+  width:30px;height:30px;border-radius:9px;
+  background:linear-gradient(135deg,var(--blue-bright),var(--blue-deep));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#fff;
+  box-shadow:0 0 0 1px rgba(91,157,255,.35), 0 4px 18px rgba(47,111,237,.35);
+}
+.brand small{color:var(--text-dim);font-weight:500;font-size:12px;display:block;margin-top:-2px;}
 
-.sidebar{
-  background:var(--bg-alt);border-right:1px solid var(--line);
-  padding:26px 20px;position:sticky;top:0;height:100vh;overflow-y:auto;
-  display:flex;flex-direction:column;gap:28px;
+.header-right{display:flex;align-items:center;gap:10px;}
+.pill-btn{
+  padding:9px 16px;border-radius:999px;border:1px solid var(--line);
+  background:var(--bg-elev);color:var(--text);font-size:13.5px;font-weight:600;
+  transition:border-color .15s, background .15s;
 }
-@media(max-width:900px){
-  .sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line);}
+.pill-btn:hover{border-color:var(--blue);}
+.pill-btn.primary{
+  background:linear-gradient(135deg,var(--blue-bright),var(--blue));
+  border:none;color:#fff;box-shadow:0 4px 16px rgba(47,111,237,.35);
 }
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--ff-display);font-weight:700;font-size:1.05rem;}
-.brand .dot{width:10px;height:10px;border-radius:3px;background:var(--gold);transform:rotate(45deg);}
-.nav-group{display:flex;flex-direction:column;gap:4px;}
-.nav-label{font-family:var(--ff-mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--text-dim);padding:0 12px;margin-bottom:6px;}
-.nav-link{
-  display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;
-  color:var(--text-dim);font-size:.92rem;font-weight:500;transition:background .15s ease,color .15s ease;
-  background:none;border:none;width:100%;text-align:left;
+.user-chip{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px 6px 6px;border-radius:999px;
+  background:var(--bg-elev);border:1px solid var(--line);
+  font-size:13px;color:var(--text-dim);
 }
-.nav-link svg{width:18px;height:18px;flex:none;}
-.nav-link:hover{background:var(--panel);color:var(--text);}
-.nav-link.active{background:var(--primary-dim);color:var(--primary);}
-.sidebar-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:16px;display:flex;flex-direction:column;gap:10px;}
-.user-chip{display:flex;align-items:center;gap:10px;}
-.user-chip .avatar{
-  width:36px;height:36px;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));
-  display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:700;color:#03181c;flex:none;
-}
-.user-chip .who{font-size:.85rem;overflow:hidden;}
-.user-chip .who strong{display:block;color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.user-chip .who span{color:var(--text-dim);font-size:.76rem;}
-.admin-badge{
-  font-family:var(--ff-mono);font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;
-  color:var(--gold);border:1px solid var(--gold);border-radius:6px;padding:2px 6px;display:inline-block;margin-top:4px;
-}
-.auth-btn{
-  font-family:var(--ff-mono);font-size:.76rem;color:var(--text-dim);border:1px solid var(--line);
-  border-radius:10px;padding:9px 10px;text-align:center;background:var(--panel);
-}
-.auth-btn:hover{color:var(--text);border-color:var(--primary);}
-
-.main{padding:34px 36px 60px;max-width:1180px;width:100%;margin:0 auto;}
-@media(max-width:640px){.main{padding:22px 18px 48px;}}
-
-.topbar{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;margin-bottom:8px;}
-.greeting p.eyebrow{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--primary);margin:0 0 6px;}
-.greeting h1{font-size:clamp(1.5rem,3vw,2rem);}
-.greeting h1 span{font-family:var(--ff-hand);color:var(--gold);font-weight:600;font-size:1.15em;}
-
-.progress-card{
-  background:var(--panel);border:1px solid var(--line);border-radius:14px;
-  padding:14px 18px;min-width:220px;
-}
-.progress-card .row{display:flex;justify-content:space-between;font-family:var(--ff-mono);font-size:.72rem;color:var(--text-dim);margin-bottom:8px;}
-.progress-card .row strong{color:var(--primary);}
-.progress-track{height:8px;border-radius:6px;background:var(--bg-alt);overflow:hidden;}
-.progress-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--secondary),var(--primary),var(--gold));box-shadow:0 0 10px var(--primary);transition:width .5s ease;}
-
-.anon-banner{
-  margin-top:22px;background:linear-gradient(100deg,var(--panel),var(--bg-alt));border:1px solid var(--primary);
-  border-radius:14px;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
-}
-.anon-banner p{margin:0;font-size:.86rem;color:var(--text-dim);}
-.anon-banner strong{color:var(--text);}
-
-.admin-bar{
-  margin-top:22px;background:#241a06;border:1px solid var(--gold);border-radius:14px;
-  padding:14px 18px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;
-}
-.admin-bar p{margin:0;font-family:var(--ff-mono);font-size:.78rem;color:var(--gold);}
-
-.level-section{margin-top:44px;}
-.level-head{display:flex;align-items:center;gap:14px;margin-bottom:20px;}
-.level-head .num{
-  font-family:var(--ff-mono);font-size:.78rem;color:var(--bg);background:var(--primary);
-  width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:600;flex:none;
-}
-.level-head .num.locked{background:var(--bg-alt);color:var(--text-dim);border:1px solid var(--line);}
-.level-head h2{font-size:1.12rem;color:var(--text);}
-.level-head .tag{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);}
-.level-line{flex:1;height:1px;background:var(--line);}
-.level-edit-btn{
-  font-family:var(--ff-mono);font-size:.68rem;color:var(--gold);background:none;border:1px solid var(--gold);
-  border-radius:7px;padding:5px 9px;flex:none;
+.user-chip .dot{width:8px;height:8px;border-radius:50%;background:#3ee089;box-shadow:0 0 8px #3ee089;}
+.admin-tag{
+  font-size:10.5px;font-weight:700;color:var(--blue-bright);
+  border:1px solid var(--blue-deep);padding:1px 7px;border-radius:999px;
+  background:rgba(47,111,237,.12);
 }
 
-.module-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;}
-@media(max-width:900px){.module-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:600px){.module-grid{grid-template-columns:1fr;}}
+/* ---------- Layout ---------- */
+main{max-width:1180px;margin:0 auto;padding:28px 20px 80px;}
+.hero{
+  padding:36px 4px 26px;
+  border-bottom:1px solid var(--line);
+  margin-bottom:26px;
+}
+.hero h1{font-size:clamp(24px,4vw,34px);margin:0 0 8px;font-weight:700;letter-spacing:-.2px;}
+.hero p{color:var(--text-dim);margin:0;font-size:15px;max-width:560px;line-height:1.5;}
 
-.module-card{
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  overflow:hidden;text-align:left;position:relative;transition:transform .18s ease,border-color .18s ease;
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap;}
+.search{
+  flex:1;min-width:200px;
+  background:var(--bg-card);border:1px solid var(--line);border-radius:11px;
+  padding:11px 14px;color:var(--text);font-size:14px;
 }
-.module-card:not(.locked):hover{transform:translateY(-3px);border-color:var(--primary);}
-.module-card .thumb{
-  position:relative;aspect-ratio:16/9;background:linear-gradient(135deg,var(--secondary),var(--bg-alt));
-  display:flex;align-items:center;justify-content:center;overflow:hidden;
-}
-.module-card .thumb img{width:100%;height:100%;object-fit:cover;opacity:.85;}
-.module-card .thumb svg{width:34px;height:34px;color:var(--primary);position:relative;z-index:1;}
-.module-card.done .thumb svg{color:var(--gold);}
-.module-card.locked .thumb svg{color:var(--text-dim);}
-.module-card .thumb .duration{
-  position:absolute;bottom:8px;right:8px;background:#03181cdd;font-family:var(--ff-mono);
-  font-size:.68rem;padding:3px 7px;border-radius:6px;color:var(--text-dim);z-index:1;
-}
-.module-card .thumb .preview-pill{
-  position:absolute;top:8px;left:8px;background:var(--gold);color:#241a06;font-family:var(--ff-mono);
-  font-size:.62rem;font-weight:600;padding:3px 8px;border-radius:6px;z-index:1;letter-spacing:.04em;text-transform:uppercase;
-}
-.module-card .body{padding:16px 16px 18px;}
-.module-card .m-tag{font-family:var(--ff-mono);font-size:.64rem;letter-spacing:.08em;color:var(--gold);text-transform:uppercase;}
-.module-card.locked .m-tag{color:var(--text-dim);}
-.module-card h3{font-size:.94rem;margin-top:6px;color:var(--text);line-height:1.3;}
-.module-card.locked h3{color:var(--text-dim);}
-.module-card p.desc{font-size:.78rem;color:var(--text-dim);margin-top:6px;line-height:1.4;}
-.module-card .status{
-  display:flex;align-items:center;gap:6px;margin-top:12px;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);
-}
-.module-card.done .status{color:var(--gold);}
-.module-card.locked .lockband{
-  position:absolute;inset:0;background:#04141acc;display:flex;align-items:center;justify-content:center;
-  flex-direction:column;gap:6px;opacity:0;transition:opacity .15s ease;
-}
-.module-card.locked:hover .lockband{opacity:1;}
-.module-card.locked .lockband svg{width:20px;height:20px;color:var(--text-dim);}
-.module-card.locked .lockband span{font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);text-align:center;padding:0 14px;}
-.module-card{border:1px solid var(--line);cursor:pointer;}
-.module-card.locked{cursor:not-allowed;}
-.module-card .admin-tools{
-  position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:2;
-}
-.icon-btn{
-  width:26px;height:26px;border-radius:7px;background:#03181cdd;border:1px solid var(--line);
-  display:flex;align-items:center;justify-content:center;color:var(--text-dim);flex:none;
-}
-.icon-btn:hover{color:var(--text);border-color:var(--primary);}
-.icon-btn svg{width:13px;height:13px;}
+.search::placeholder{color:var(--text-faint);}
+.search:focus{outline:none;border-color:var(--blue);}
 
-.add-card{
-  border:1px dashed var(--line);border-radius:var(--radius);background:transparent;
-  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;
-  min-height:180px;color:var(--text-dim);font-family:var(--ff-mono);font-size:.78rem;
+/* ---------- Module grid ---------- */
+.grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+  gap:18px;
 }
-.add-card:hover{border-color:var(--primary);color:var(--primary);}
-.add-card svg{width:22px;height:22px;}
+.card{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);
+  overflow:hidden;display:flex;flex-direction:column;
+  transition:border-color .15s, transform .15s;
+}
+.card:hover{border-color:var(--blue-deep);}
+.card .thumb{
+  aspect-ratio:16/9;background:var(--bg-elev);position:relative;overflow:hidden;
+}
+.card .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+.card .thumb .play{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(180deg,transparent 40%,rgba(6,10,20,.65));
+}
+.card .thumb .play svg{width:44px;height:44px;filter:drop-shadow(0 2px 10px rgba(0,0,0,.5));}
+.card .body{padding:15px 16px 17px;display:flex;flex-direction:column;gap:6px;flex:1;}
+.card h3{margin:0;font-size:16px;font-weight:700;line-height:1.3;}
+.card p{margin:0;color:var(--text-dim);font-size:13px;line-height:1.5;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.card .meta{margin-top:auto;padding-top:10px;display:flex;justify-content:space-between;align-items:center;
+  font-size:12px;color:var(--text-faint);}
 
-.player-overlay, .modal-overlay{
-  position:fixed;inset:0;background:#020c10ee;z-index:900;display:none;
-  align-items:center;justify-content:center;padding:24px;
+.empty{
+  text-align:center;padding:60px 20px;color:var(--text-dim);
+  border:1px dashed var(--line);border-radius:var(--radius);
 }
-.player-overlay.open, .modal-overlay.open{display:flex;}
-.player-box, .modal-box{
-  background:var(--bg-alt);border:1px solid var(--line);border-radius:20px;
-  width:100%;max-width:860px;max-height:92vh;overflow-y:auto;
-}
-.modal-box{max-width:520px;}
-.player-head, .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid var(--line);}
-.player-head h3, .modal-head h3{font-size:1rem;color:var(--text);}
-.player-head .m-tag{font-family:var(--ff-mono);font-size:.64rem;color:var(--gold);letter-spacing:.08em;text-transform:uppercase;}
-.close-btn{
-  background:var(--panel);border:1px solid var(--line);color:var(--text-dim);
-  width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:none;
-}
-.close-btn:hover{color:var(--text);border-color:var(--primary);}
-.player-video{width:100%;aspect-ratio:16/9;background:#000;display:block;}
-.player-video iframe{width:100%;height:100%;border:none;display:block;}
-.player-foot{padding:18px 22px 22px;}
-.player-foot p{color:var(--text-dim);font-size:.9rem;line-height:1.55;}
-.player-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:16px;flex-wrap:wrap;}
-.btn{
-  font-family:var(--ff-display);font-weight:600;font-size:.88rem;border:none;cursor:pointer;
-  padding:11px 20px;border-radius:10px;display:inline-flex;align-items:center;gap:8px;
-  transition:transform .15s ease;
-}
-.btn:hover{transform:translateY(-1px);}
-.btn-primary{background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;}
-.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text-dim);}
-.btn-danger{background:transparent;border:1px solid var(--danger);color:var(--danger);}
-.btn-block{width:100%;justify-content:center;}
 
-.key-questions{margin-top:18px;border-top:1px solid var(--line);padding-top:16px;}
-.key-questions h4{font-family:var(--ff-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:10px;}
-.key-questions ul{margin:0;padding-left:18px;color:var(--text-dim);font-size:.86rem;display:flex;flex-direction:column;gap:6px;}
+/* ---------- Modal base ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(3,6,12,.72);backdrop-filter:blur(4px);
+  display:none;align-items:flex-start;justify-content:center;z-index:100;
+  padding:24px 16px;overflow-y:auto;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:var(--bg-elev);border:1px solid var(--line);border-radius:16px;
+  width:100%;max-width:620px;margin:auto;padding:26px;position:relative;
+}
+.modal.wide{max-width:920px;}
+.modal h2{margin:0 0 4px;font-size:20px;}
+.modal .sub{color:var(--text-dim);font-size:13px;margin:0 0 20px;}
+.modal .close{
+  position:absolute;top:16px;right:16px;background:transparent;border:none;
+  color:var(--text-dim);font-size:20px;width:32px;height:32px;border-radius:8px;
+}
+.modal .close:hover{background:var(--bg-card);color:var(--text);}
 
-.modal-body{padding:20px 22px;}
 .field{margin-bottom:14px;}
-.field label{display:block;font-family:var(--ff-mono);font-size:.7rem;color:var(--text-dim);margin-bottom:6px;letter-spacing:.04em;text-transform:uppercase;}
-.field input, .field textarea, .field select{
-  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:9px;
-  padding:10px 12px;color:var(--text);font-size:.88rem;
+.field label{display:block;font-size:12.5px;color:var(--text-dim);margin-bottom:6px;font-weight:600;}
+.field input,.field textarea{
+  width:100%;background:var(--bg-card);border:1px solid var(--line);border-radius:10px;
+  padding:11px 12px;color:var(--text);font-size:14px;font-family:inherit;
 }
-.field textarea{min-height:70px;resize:vertical;}
-.field-row{display:flex;gap:12px;}
-.field-row .field{flex:1;}
-.checkbox-field{display:flex;align-items:center;gap:8px;}
-.checkbox-field input{width:auto;}
-.checkbox-field label{margin:0;text-transform:none;font-size:.85rem;color:var(--text);}
+.field textarea{resize:vertical;min-height:80px;}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--blue);}
+.field .hint{font-size:11.5px;color:var(--text-faint);margin-top:5px;}
 
-.qa-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
-.qa-row{display:flex;gap:8px;align-items:center;}
-.qa-row input{flex:1;}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:12px;display:none;}
+.msg.error{background:rgba(239,91,91,.1);border:1px solid rgba(239,91,91,.35);color:#ff9a9a;display:block;}
+.msg.ok{background:rgba(62,224,137,.1);border:1px solid rgba(62,224,137,.35);color:#8ff0be;display:block;}
 
-.admin-tabs{display:flex;gap:6px;padding:14px 22px 0;}
-.admin-tab{
-  font-family:var(--ff-mono);font-size:.74rem;padding:8px 12px;border-radius:9px 9px 0 0;
-  background:var(--panel);color:var(--text-dim);border:1px solid var(--line);border-bottom:none;
+/* ---------- Module detail ---------- */
+#viewOverlay .modal{max-width:900px;padding:0;overflow:hidden;}
+.player-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;}
+.player-wrap iframe{width:100%;height:100%;border:0;display:block;}
+.detail-body{padding:22px 24px 28px;}
+.detail-body h2{font-size:22px;margin:2px 0 8px;}
+.detail-body .desc{color:var(--text-dim);font-size:14.5px;line-height:1.6;margin-bottom:20px;}
+
+.sections-list{display:flex;flex-direction:column;gap:10px;margin-bottom:24px;}
+.section-item{
+  background:var(--bg-card);border:1px solid var(--line);border-radius:11px;
+  padding:13px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;
 }
-.admin-tab.active{color:var(--primary);background:var(--bg-alt);}
-
-.admin-list{display:flex;flex-direction:column;gap:10px;padding:16px 22px 22px;}
-.admin-list-item{
-  display:flex;justify-content:space-between;align-items:center;gap:10px;
-  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;
+.section-item .stitle{font-weight:600;font-size:14px;}
+.section-item .snote{color:var(--text-dim);font-size:12.5px;margin-top:2px;}
+.section-actions{display:flex;gap:6px;}
+.icon-btn{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--line);
+  background:var(--bg-elev);color:var(--text-dim);display:flex;align-items:center;justify-content:center;font-size:13px;
 }
-.admin-list-item .info strong{display:block;font-size:.86rem;}
-.admin-list-item .info span{font-size:.72rem;color:var(--text-dim);font-family:var(--ff-mono);}
-.admin-list-item .actions{display:flex;gap:6px;}
+.icon-btn:hover{color:var(--danger);border-color:var(--danger);}
 
-.toast{
-  position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
-  background:var(--panel);border:1px solid var(--primary);color:var(--text);
-  font-family:var(--ff-mono);font-size:.8rem;padding:12px 18px;border-radius:12px;
-  opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;z-index:1000;
-  box-shadow:0 10px 30px -10px #000;max-width:88vw;text-align:center;
+h3.block-title{font-size:14.5px;color:var(--text-dim);margin:0 0 12px;text-transform:none;font-weight:700;}
+
+/* comments */
+.comment{display:flex;gap:10px;margin-bottom:16px;}
+.avatar{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,var(--blue-bright),var(--blue-deep));
+  display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;
 }
-.toast.show{opacity:1;transform:translate(-50%,0);}
+.comment-body{flex:1;background:var(--bg-card);border:1px solid var(--line);border-radius:11px;padding:10px 13px;}
+.comment-body .cname{font-size:13px;font-weight:700;}
+.comment-body .ctime{font-size:11px;color:var(--text-faint);margin-left:6px;font-weight:400;}
+.comment-body .ctext{font-size:13.5px;color:var(--text);margin-top:4px;line-height:1.5;white-space:pre-wrap;}
+.comment-form{display:flex;gap:10px;margin-top:6px;align-items:flex-start;}
+.comment-form textarea{min-height:44px;}
+.comment-form button{flex-shrink:0;margin-top:0;}
 
-.mobile-topbar{display:none;}
-@media(max-width:900px){
-  .mobile-topbar{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:16px 18px;border-bottom:1px solid var(--line);background:var(--bg-alt);
-  }
+/* admin: sections editor rows */
+.sec-row{display:flex;gap:8px;margin-bottom:8px;}
+.sec-row input{flex:1;}
+.sec-row button{
+  width:38px;flex-shrink:0;border-radius:9px;border:1px solid var(--line);
+  background:var(--bg-card);color:var(--text-dim);
+}
+
+.small-note{font-size:12px;color:var(--text-faint);text-align:center;margin-top:26px;}
+
+/* loader */
+.loader{display:flex;justify-content:center;padding:40px 0;color:var(--text-dim);font-size:13px;}
+
+@media (max-width:640px){
+  header{padding:12px 14px;}
+  main{padding:18px 14px 60px;}
+  .modal{padding:20px;border-radius:14px;}
+  .detail-body{padding:18px;}
+  .brand span.name{display:none;}
 }
 </style>
 </head>
 <body>
 
-<div class="app">
-
-  <aside class="sidebar" id="sidebar">
-    <a href="/" class="brand"><span class="dot"></span> PROYECTUM <span class="grad-text">IA</span></a>
-
-    <nav class="nav-group">
-      <span class="nav-label">Navegación</span>
-      <a href="/plataforma" class="nav-link active">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
-        Mi plataforma
-      </a>
-      <a href="/publicaciones" class="nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
-        Publicaciones
-      </a>
-      <a href="/resultados" class="nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
-        Resultados
-      </a>
-      <a href="/paquetes" class="nav-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>
-        Paquetes
-      </a>
-      <button class="nav-link" id="adminNavBtn" style="display:none;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 004.6 15a1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
-        Modo administrador
-      </button>
-    </nav>
-
-    <div class="sidebar-foot">
-      <div class="user-chip" id="userChip" style="display:none;">
-        <div class="avatar" id="avatarInitial">U</div>
-        <div class="who">
-          <strong id="userName">Tu cuenta</strong>
-          <span id="userEmail"></span>
-          <span class="admin-badge" id="adminBadge" style="display:none;">Admin</span>
-        </div>
-      </div>
-      <button class="auth-btn" id="authBtn">Iniciar sesión</button>
+<header>
+  <div class="brand">
+    <div class="mark">PIA</div>
+    <div>
+      <span class="name">Proyectum IA</span>
+      <small>Módulos de aprendizaje</small>
     </div>
-  </aside>
+  </div>
+  <div class="header-right" id="headerRight">
+    <button class="pill-btn" id="loginBtn">Iniciar sesión</button>
+  </div>
+</header>
 
-  <main class="main">
+<main>
+  <div class="hero">
+    <h1>Explora los módulos</h1>
+    <p>Contenido en video, organizado por secciones, para aprender a tu ritmo.</p>
+  </div>
 
-    <div class="topbar">
-      <div class="greeting">
-        <p class="eyebrow">Tu plataforma</p>
-        <h1>Vamos con el siguiente <span>módulo</span></h1>
-      </div>
-      <div class="progress-card" id="progressCard">
-        <div class="row"><span>Progreso general</span><strong id="progressLabel">0%</strong></div>
-        <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-      </div>
+  <div class="toolbar">
+    <input class="search" id="searchInput" placeholder="Buscar un módulo…">
+    <button class="pill-btn primary" id="newModuleBtn" style="display:none;">+ Nuevo módulo</button>
+  </div>
+
+  <div id="gridWrap">
+    <div class="loader">Cargando módulos…</div>
+  </div>
+
+  <p class="small-note">Proyectum IA · Plataforma de módulos</p>
+</main>
+
+<!-- ============ LOGIN MODAL ============ -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal">
+    <button class="close" data-close="loginOverlay">✕</button>
+    <h2 id="authTitle">Iniciar sesión</h2>
+    <p class="sub" id="authSub">Entra con tu correo y contraseña.</p>
+    <div class="field">
+      <label>Correo</label>
+      <input type="email" id="authEmail" placeholder="tucorreo@ejemplo.com">
     </div>
-
-    <div class="anon-banner" id="anonBanner" style="display:none;">
-      <p>👀 Estás viendo <strong>solo el primer módulo</strong> como invitado. Inicia sesión para desbloquear la plataforma completa y guardar tu progreso.</p>
-      <button class="btn btn-primary" id="anonLoginBtn">Iniciar sesión</button>
+    <div class="field">
+      <label>Contraseña</label>
+      <input type="password" id="authPass" placeholder="••••••••">
     </div>
-
-    <div class="admin-bar" id="adminBar" style="display:none;">
-      <p>🛠 Modo administrador activo — puedes crear niveles, módulos y preguntas clave directamente aquí.</p>
-      <div style="display:flex;gap:10px;">
-        <button class="btn btn-ghost" id="addLevelBtn">+ Nivel</button>
-      </div>
+    <div class="form-actions">
+      <button class="pill-btn" id="toggleAuthMode">Crear cuenta</button>
+      <button class="pill-btn primary" id="authSubmit">Entrar</button>
     </div>
-
-    <div id="levelsRoot"></div>
-
-  </main>
-</div>
-
-<div class="player-overlay" id="playerOverlay">
-  <div class="player-box">
-    <div class="player-head">
-      <div>
-        <p class="m-tag" id="playerTag">Módulo</p>
-        <h3 id="playerTitle">Título del módulo</h3>
-      </div>
-      <button class="close-btn" id="closePlayer">✕</button>
-    </div>
-    <div class="player-video" id="playerVideoWrap"></div>
-    <div class="player-foot">
-      <p id="playerDesc">Descripción del módulo.</p>
-      <div class="key-questions" id="playerQuestionsWrap" style="display:none;">
-        <h4>Preguntas clave de este módulo</h4>
-        <ul id="playerQuestionsList"></ul>
-      </div>
-      <div class="player-actions">
-        <button class="btn btn-ghost" id="closePlayer2">Cerrar</button>
-        <button class="btn btn-primary" id="markDone">Marcar como completado</button>
-      </div>
-    </div>
+    <div class="msg" id="authMsg"></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="loginModal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3>Inicia sesión</h3>
-      <button class="close-btn" id="closeLogin">✕</button>
+<!-- ============ NEW / EDIT MODULE MODAL (admin) ============ -->
+<div class="overlay" id="moduleOverlay">
+  <div class="modal">
+    <button class="close" data-close="moduleOverlay">✕</button>
+    <h2 id="moduleFormTitle">Nuevo módulo</h2>
+    <p class="sub">Solo el administrador puede publicar módulos.</p>
+
+    <div class="field">
+      <label>Título</label>
+      <input type="text" id="mTitle" placeholder="Ej: Fundamentos de Prompt Engineering">
     </div>
-    <div class="modal-body" id="loginBody">
-      <div class="field">
-        <label>Correo electrónico</label>
-        <input type="email" id="loginEmail" placeholder="tucorreo@ejemplo.com">
-      </div>
-      <div class="field">
-        <label>Contraseña</label>
-        <input type="password" id="loginPassword" placeholder="••••••••">
-      </div>
-      <button class="btn btn-primary btn-block" id="loginSubmit">Entrar</button>
-      <p style="font-size:.76rem;color:var(--text-dim);margin-top:12px;text-align:center;">
-        ¿No tienes cuenta? <a href="#" id="showSignup" style="color:var(--primary);">Regístrate</a>
-      </p>
+    <div class="field">
+      <label>Descripción</label>
+      <textarea id="mDesc" placeholder="De qué trata este módulo…"></textarea>
     </div>
+    <div class="field">
+      <label>Enlace de YouTube</label>
+      <input type="text" id="mYoutube" placeholder="https://www.youtube.com/watch?v=…">
+      <div class="hint">Se muestra como vista previa dentro de la plataforma, sin subir el archivo de video.</div>
+    </div>
+    <div class="field">
+      <label>URL de la imagen de portada</label>
+      <input type="text" id="mCover" placeholder="https://…imagen.jpg">
+      <div class="hint">Puedes usar cualquier imagen alojada (o el thumbnail automático de YouTube, se rellena solo).</div>
+    </div>
+
+    <div class="form-actions">
+      <button class="pill-btn" data-close="moduleOverlay">Cancelar</button>
+      <button class="pill-btn primary" id="saveModuleBtn">Guardar módulo</button>
+    </div>
+    <div class="msg" id="moduleMsg"></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="levelModal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3 id="levelModalTitle">Nuevo nivel</h3>
-      <button class="close-btn" id="closeLevelModal">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="levelId">
-      <div class="field">
-        <label>Título del nivel</label>
-        <input type="text" id="levelTitle" placeholder="Nivel 1 · Fundamentos">
-      </div>
-      <div class="field">
-        <label>Etiqueta</label>
-        <input type="text" id="levelTag" placeholder="Empieza aquí">
-      </div>
-      <div class="field">
-        <label>Orden (número, menor = primero)</label>
-        <input type="number" id="levelSort" value="0">
-      </div>
-      <div class="player-actions" style="justify-content:space-between;">
-        <button class="btn btn-danger" id="deleteLevelBtn" style="display:none;">Eliminar nivel</button>
-        <button class="btn btn-primary" id="saveLevelBtn">Guardar</button>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- ============ MODULE DETAIL / VIEW ============ -->
+<div class="overlay" id="viewOverlay">
+  <div class="modal wide">
+    <button class="close" data-close="viewOverlay" style="z-index:5;background:rgba(6,10,20,.6);">✕</button>
+    <div class="player-wrap" id="playerWrap"></div>
+    <div class="detail-body">
+      <h2 id="vTitle"></h2>
+      <p class="desc" id="vDesc"></p>
 
-<div class="modal-overlay" id="moduleModal">
-  <div class="modal-box">
-    <div class="modal-head">
-      <h3 id="moduleModalTitle">Nuevo módulo</h3>
-      <button class="close-btn" id="closeModuleModal">✕</button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="moduleId">
-      <input type="hidden" id="moduleLevelId">
-      <div class="field">
-        <label>Título del módulo</label>
-        <input type="text" id="moduleTitle" placeholder="Cómo piensa un negocio con IA">
-      </div>
-      <div class="field">
-        <label>Descripción</label>
-        <textarea id="moduleDesc" placeholder="De qué trata este módulo"></textarea>
-      </div>
-      <div class="field-row">
-        <div class="field">
-          <label>ID de YouTube</label>
-          <input type="text" id="moduleYoutube" placeholder="dQw4w9WgXcQ">
-        </div>
-        <div class="field">
-          <label>Duración (texto)</label>
-          <input type="text" id="moduleDuration" placeholder="11 min">
-        </div>
-      </div>
-      <p style="font-size:.72rem;color:var(--text-dim);margin:-6px 0 14px;">
-        Pega solo el ID del video, no la URL completa. Ej: en youtube.com/watch?v=<strong>dQw4w9WgXcQ</strong>, el ID es la parte final.
-      </p>
-      <div class="field">
-        <label>Orden dentro del nivel (número, menor = primero)</label>
-        <input type="number" id="moduleSort" value="0">
-      </div>
-      <div class="field checkbox-field">
-        <input type="checkbox" id="moduleIsPreview">
-        <label for="moduleIsPreview">Acceso libre sin sesión iniciada (vista previa pública)</label>
+      <div id="adminSectionEditor" style="display:none;margin-bottom:24px;">
+        <h3 class="block-title">Editar secciones (admin)</h3>
+        <div id="secRows"></div>
+        <button class="pill-btn" id="addSecRow" style="margin-top:4px;">+ Añadir sección</button>
+        <button class="pill-btn primary" id="saveSecBtn" style="margin-left:8px;">Guardar secciones</button>
+        <button class="pill-btn" id="deleteModuleBtn" style="margin-left:8px;color:#ff9a9a;">Eliminar módulo</button>
       </div>
 
-      <div class="field">
-        <label>Preguntas clave</label>
-        <div class="qa-list" id="qaList"></div>
-        <button class="btn btn-ghost" id="addQuestionRow" type="button">+ Agregar pregunta</button>
-      </div>
+      <h3 class="block-title" id="sectionsHeading" style="display:none;">Contenido del módulo</h3>
+      <div class="sections-list" id="sectionsList"></div>
 
-      <div class="player-actions" style="justify-content:space-between;margin-top:18px;">
-        <button class="btn btn-danger" id="deleteModuleBtn" style="display:none;">Eliminar módulo</button>
-        <button class="btn btn-primary" id="saveModuleBtn">Guardar módulo</button>
-      </div>
+      <h3 class="block-title">Comentarios</h3>
+      <div id="commentsList"></div>
+      <div id="commentFormWrap"></div>
     </div>
   </div>
 </div>
-
-<div class="toast" id="toast"></div>
 
 <script>
+/* ============================================================
+   CONFIG
+============================================================ */
 const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
 const ADMIN_EMAIL = "contact@proyectumia.com";
 
-let session = null;
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
 let isAdmin = false;
-let LEVELS = [];
-let allModules = [];
-let completedIds = new Set();
-let supabase = null;
-let supabaseReady = false;
+let modules = [];
+let authMode = "login"; // or "signup"
+let activeModuleId = null;
 
-const LOCAL_KEY = "proyectumia_progress_anon";
+/* ============================================================
+   HELPERS
+============================================================ */
+function $(id){ return document.getElementById(id); }
+function openModal(id){ $(id).classList.add("open"); }
+function closeModal(id){ $(id).classList.remove("open"); }
+document.querySelectorAll("[data-close]").forEach(el=>{
+  el.addEventListener("click", ()=> closeModal(el.dataset.close));
+});
+document.querySelectorAll(".overlay").forEach(ov=>{
+  ov.addEventListener("click", (e)=>{ if(e.target === ov) ov.classList.remove("open"); });
+});
 
-/* ---------- Toast (definida primero: la usan los mensajes de error) ---------- */
-let toastTimer = null;
-function showToast(msg){
-  const t = document.getElementById("toast");
-  if(!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 3600);
+function youtubeId(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+function youtubeThumb(url){
+  const id = youtubeId(url);
+  return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : "";
+}
+function escapeHtml(str){
+  return (str||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function timeAgo(dateStr){
+  const d = new Date(dateStr);
+  const diff = (Date.now() - d.getTime())/1000;
+  if(diff < 60) return "hace un momento";
+  if(diff < 3600) return `hace ${Math.floor(diff/60)} min`;
+  if(diff < 86400) return `hace ${Math.floor(diff/3600)} h`;
+  return `hace ${Math.floor(diff/86400)} d`;
+}
+function initials(email){
+  return (email||"?").slice(0,2).toUpperCase();
 }
 
-/* =========================================================
-   0) CONEXIÓN A SUPABASE — AHORA PROTEGIDA
-   Si esto falla (CDN bloqueado, red caída, key inválida),
-   ya NO detiene el resto del script. Solo desactiva las
-   funciones que dependen de la base de datos y avisa al usuario.
-   ========================================================= */
-function initSupabaseClient(){
-  try{
-    if(!window.supabase || typeof window.supabase.createClient !== "function"){
-      throw new Error("La librería de Supabase (supabase-js) no se cargó desde el CDN.");
-    }
-    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    supabaseReady = true;
-  } catch(err){
-    console.error("[Proyectum IA] Error inicializando Supabase:", err);
-    supabaseReady = false;
-    showToast("⚠️ No se pudo conectar con el servidor. Revisa tu conexión o desactiva el bloqueador de anuncios y recarga la página.");
-  }
+/* ============================================================
+   AUTH
+============================================================ */
+async function refreshSession(){
+  const { data:{ session } } = await sb.auth.getSession();
+  currentUser = session?.user || null;
+  isAdmin = !!currentUser && currentUser.email?.toLowerCase() === ADMIN_EMAIL;
+  renderHeader();
+  $("newModuleBtn").style.display = isAdmin ? "inline-block" : "none";
 }
 
-/* =========================================================
-   WIRING DE UI QUE **NO** DEPENDE DE SUPABASE
-   Esto se conecta primero y siempre, así los modales
-   (abrir/cerrar) funcionan aunque falle la conexión.
-   ========================================================= */
-function wireStaticUI(){
-  document.getElementById("closeLogin").addEventListener("click", () => document.getElementById("loginModal").classList.remove("open"));
-  document.getElementById("anonLoginBtn").addEventListener("click", openLoginModal);
-  document.getElementById("authBtn").addEventListener("click", async () => {
-    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía. Recarga la página."); return; }
-    if(session){
-      await supabase.auth.signOut();
-      showToast("Sesión cerrada");
-    } else {
-      openLoginModal();
-    }
-  });
+sb.auth.onAuthStateChange((_event, session)=>{
+  currentUser = session?.user || null;
+  isAdmin = !!currentUser && currentUser.email?.toLowerCase() === ADMIN_EMAIL;
+  renderHeader();
+  $("newModuleBtn").style.display = isAdmin ? "inline-block" : "none";
+});
 
-  document.getElementById("closePlayer").addEventListener("click", closePlayer);
-  document.getElementById("closePlayer2").addEventListener("click", closePlayer);
-  document.getElementById("playerOverlay").addEventListener("click", (e) => {
-    if(e.target.id === "playerOverlay") closePlayer();
-  });
-  document.getElementById("markDone").addEventListener("click", async () => {
-    if(!currentModule) return;
-    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
-    const wasDone = isDone(currentModule.id);
-    await markModuleComplete(currentModule.id);
-    render();
-    if(!wasDone) showToast("✨ Módulo completado — ¡siguiente nivel desbloqueado!");
-    closePlayer();
-  });
-
-  let signupMode = false;
-  document.getElementById("showSignup").addEventListener("click", (e) => {
-    e.preventDefault();
-    signupMode = !signupMode;
-    document.getElementById("loginSubmit").textContent = signupMode ? "Crear cuenta" : "Entrar";
-    e.target.textContent = signupMode ? "Ya tengo cuenta" : "Regístrate";
-  });
-
-  document.getElementById("loginSubmit").addEventListener("click", async () => {
-    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía. Recarga la página."); return; }
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
-    if(!email || !password){ showToast("Completa correo y contraseña"); return; }
-
-    const { error } = signupMode
-      ? await supabase.auth.signUp({ email, password })
-      : await supabase.auth.signInWithPassword({ email, password });
-
-    if(error){ showToast("⚠️ " + error.message); return; }
-
-    document.getElementById("loginModal").classList.remove("open");
-    showToast(signupMode ? "Cuenta creada. Revisa tu correo si se requiere confirmación." : "Sesión iniciada ✨");
-  });
-
-  document.getElementById("adminNavBtn").addEventListener("click", () => {
-    document.getElementById("adminBar").scrollIntoView({ behavior: "smooth" });
-  });
-  document.getElementById("addLevelBtn").addEventListener("click", () => openLevelModal(null));
-  document.getElementById("closeLevelModal").addEventListener("click", () => document.getElementById("levelModal").classList.remove("open"));
-
-  document.getElementById("saveLevelBtn").addEventListener("click", async () => {
-    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
-    const id = document.getElementById("levelId").value;
-    const payload = {
-      title: document.getElementById("levelTitle").value.trim(),
-      tag: document.getElementById("levelTag").value.trim(),
-      sort_order: Number(document.getElementById("levelSort").value) || 0
-    };
-    if(!payload.title){ showToast("El nivel necesita un título"); return; }
-
-    const { error } = id
-      ? await supabase.from("levels").update(payload).eq("id", id)
-      : await supabase.from("levels").insert(payload);
-
-    if(error){ showToast("⚠️ " + error.message); return; }
-    document.getElementById("levelModal").classList.remove("open");
-    showToast("Nivel guardado");
-    await loadEverything();
-  });
-
-  document.getElementById("deleteLevelBtn").addEventListener("click", async () => {
-    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
-    const id = document.getElementById("levelId").value;
-    if(!id) return;
-    if(!confirm("Esto también eliminará todos los módulos de este nivel. ¿Continuar?")) return;
-    const { error } = await supabase.from("levels").delete().eq("id", id);
-    if(error){ showToast("⚠️ " + error.message); return; }
-    document.getElementById("levelModal").classList.remove("open");
-    showToast("Nivel eliminado");
-    await loadEverything();
-  });
-
-  document.getElementById("closeModuleModal").addEventListener("click", () => document.getElementById("moduleModal").classList.remove("open"));
-  document.getElementById("addQuestionRow").addEventListener("click", () => {
-    qaRows.push({ question: "" });
-    renderQaRows();
-  });
-
-  document.getElementById("saveModuleBtn").addEventListener("click", async () => {
-    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
-    const id = document.getElementById("moduleId").value;
-    const levelId = document.getElementById("moduleLevelId").value;
-    const payload = {
-      level_id: levelId,
-      title: document.getElementById("moduleTitle").value.trim(),
-      description: document.getElementById("moduleDesc").value.trim(),
-      youtube_id: document.getElementById("moduleYoutube").value.trim(),
-      duration: document.getElementById("moduleDuration").value.trim(),
-      sort_order: Number(document.getElementById("moduleSort").value) || 0,
-      is_preview: document.getElementById("moduleIsPreview").checked
-    };
-    if(!payload.title){ showToast("El módulo necesita un título"); return; }
-
-    let moduleId = id;
-    if(id){
-      const { error } = await supabase.from("modules").update(payload).eq("id", id);
-      if(error){ showToast("⚠️ " + error.message); return; }
-    } else {
-      const { data, error } = await supabase.from("modules").insert(payload).select().single();
-      if(error){ showToast("⚠️ " + error.message); return; }
-      moduleId = data.id;
-    }
-
-    await supabase.from("module_questions").delete().eq("module_id", moduleId);
-    const questionsToInsert = qaRows
-      .filter(r => r.question.trim())
-      .map((r, i) => ({ module_id: moduleId, question: r.question.trim(), sort_order: i }));
-    if(questionsToInsert.length){
-      const { error: qErr } = await supabase.from("module_questions").insert(questionsToInsert);
-      if(qErr){ showToast("⚠️ " + qErr.message); }
-    }
-
-    document.getElementById("moduleModal").classList.remove("open");
-    showToast("Módulo guardado");
-    await loadEverything();
-  });
-
-  document.getElementById("deleteModuleBtn").addEventListener("click", async () => {
-    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
-    const id = document.getElementById("moduleId").value;
-    if(!id) return;
-    if(!confirm("¿Eliminar este módulo y sus preguntas clave?")) return;
-    const { error } = await supabase.from("modules").delete().eq("id", id);
-    if(error){ showToast("⚠️ " + error.message); return; }
-    document.getElementById("moduleModal").classList.remove("open");
-    showToast("Módulo eliminado");
-    await loadEverything();
-  });
-}
-
-function openLoginModal(){ document.getElementById("loginModal").classList.add("open"); }
-
-/* =========================================================
-   AUTENTICACIÓN
-   ========================================================= */
-async function initAuth(){
-  if(!supabaseReady) return;
-  try{
-    const { data } = await supabase.auth.getSession();
-    session = data.session;
-    applyAuthState();
-    supabase.auth.onAuthStateChange((_event, newSession) => {
-      session = newSession;
-      applyAuthState();
-      loadEverything();
+function renderHeader(){
+  const wrap = $("headerRight");
+  if(currentUser){
+    wrap.innerHTML = `
+      <div class="user-chip">
+        <span class="dot"></span>
+        ${escapeHtml(currentUser.email)}
+        ${isAdmin ? '<span class="admin-tag">ADMIN</span>' : ''}
+      </div>
+      <button class="pill-btn" id="logoutBtn">Salir</button>
+    `;
+    $("logoutBtn").addEventListener("click", async ()=>{
+      await sb.auth.signOut();
     });
-  } catch(err){
-    console.error("[Proyectum IA] Error en initAuth:", err);
-    showToast("⚠️ Error verificando la sesión.");
-  }
-}
-
-function applyAuthState(){
-  const authBtn = document.getElementById("authBtn");
-  const userChip = document.getElementById("userChip");
-  const adminNavBtn = document.getElementById("adminNavBtn");
-  const adminBadge = document.getElementById("adminBadge");
-
-  if(session && session.user){
-    const email = session.user.email || "";
-    isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
-    userChip.style.display = "flex";
-    document.getElementById("userName").textContent = email.split("@")[0];
-    document.getElementById("userEmail").textContent = email;
-    document.getElementById("avatarInitial").textContent = email.charAt(0).toUpperCase();
-    adminBadge.style.display = isAdmin ? "inline-block" : "none";
-    adminNavBtn.style.display = isAdmin ? "flex" : "none";
-    authBtn.textContent = "Cerrar sesión";
   } else {
-    isAdmin = false;
-    userChip.style.display = "none";
-    adminNavBtn.style.display = "none";
-    authBtn.textContent = "Iniciar sesión";
+    wrap.innerHTML = `<button class="pill-btn" id="loginBtn">Iniciar sesión</button>`;
+    $("loginBtn").addEventListener("click", ()=> openModal("loginOverlay"));
   }
 }
+$("loginBtn").addEventListener("click", ()=> openModal("loginOverlay"));
 
-/* =========================================================
-   CARGA DE DATOS
-   ========================================================= */
-async function loadEverything(){
-  if(!supabaseReady){
-    showToast("⚠️ No se puede cargar el contenido: sin conexión al servidor.");
+$("toggleAuthMode").addEventListener("click", ()=>{
+  authMode = authMode === "login" ? "signup" : "login";
+  $("authTitle").textContent = authMode === "login" ? "Iniciar sesión" : "Crear cuenta";
+  $("authSub").textContent = authMode === "login" ? "Entra con tu correo y contraseña." : "Regístrate para comentar y ver los módulos.";
+  $("authSubmit").textContent = authMode === "login" ? "Entrar" : "Registrarme";
+  $("toggleAuthMode").textContent = authMode === "login" ? "Crear cuenta" : "Ya tengo cuenta";
+  $("authMsg").className = "msg";
+  $("authMsg").textContent = "";
+});
+
+$("authSubmit").addEventListener("click", async ()=>{
+  const email = $("authEmail").value.trim();
+  const password = $("authPass").value;
+  const msgEl = $("authMsg");
+  msgEl.className = "msg"; msgEl.textContent = "";
+  if(!email || !password){
+    msgEl.className = "msg error"; msgEl.textContent = "Completa correo y contraseña.";
     return;
   }
+  $("authSubmit").disabled = true;
   try{
-    const { data: levelsData, error: e1 } = await supabase
-      .from("levels").select("*").order("sort_order", { ascending: true });
-    const { data: modulesData, error: e2 } = await supabase
-      .from("modules").select("*").order("sort_order", { ascending: true });
-    const { data: questionsData, error: e3 } = await supabase
-      .from("module_questions").select("*").order("sort_order", { ascending: true });
-
-    if(e1 || e2 || e3){
-      showToast("⚠️ Error cargando la plataforma. Revisa la consola.");
-      console.error(e1 || e2 || e3);
-      return;
+    if(authMode === "login"){
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+      closeModal("loginOverlay");
+    } else {
+      const { error } = await sb.auth.signUp({ email, password });
+      if(error) throw error;
+      msgEl.className = "msg ok";
+      msgEl.textContent = "Cuenta creada. Revisa tu correo si se requiere confirmación, o inicia sesión.";
     }
-
-    const questionsByModule = {};
-    (questionsData || []).forEach(q => {
-      (questionsByModule[q.module_id] ||= []).push(q);
-    });
-
-    LEVELS = (levelsData || []).map(lvl => ({
-      ...lvl,
-      modules: (modulesData || [])
-        .filter(m => m.level_id === lvl.id)
-        .map(m => ({ ...m, questions: questionsByModule[m.id] || [] }))
-    }));
-
-    allModules = LEVELS.flatMap(l => l.modules);
-
-    await loadProgress();
-    render();
-  } catch(err){
-    console.error("[Proyectum IA] Error en loadEverything:", err);
-    showToast("⚠️ Error inesperado cargando la plataforma.");
+  }catch(err){
+    msgEl.className = "msg error";
+    msgEl.textContent = err.message || "Algo salió mal.";
   }
-}
+  $("authSubmit").disabled = false;
+});
 
-async function loadProgress(){
-  completedIds = new Set();
-  if(session && session.user){
-    const { data, error } = await supabase
-      .from("user_progress").select("module_id").eq("user_id", session.user.id);
-    if(!error){
-      (data || []).forEach(row => completedIds.add(row.module_id));
-    }
-  } else {
-    try{
-      const stored = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
-      stored.forEach(id => completedIds.add(id));
-    }catch(e){}
+/* ============================================================
+   LOAD MODULES
+============================================================ */
+async function loadModules(){
+  const { data, error } = await sb
+    .from("modules")
+    .select("*")
+    .order("created_at", { ascending:false });
+  if(error){
+    $("gridWrap").innerHTML = `<div class="empty">No se pudieron cargar los módulos.<br><small>${escapeHtml(error.message)}</small></div>`;
+    return;
   }
+  modules = data || [];
+  renderGrid();
 }
 
-async function markModuleComplete(moduleId){
-  completedIds.add(moduleId);
-  if(session && session.user){
-    const { error } = await supabase
-      .from("user_progress")
-      .insert({ user_id: session.user.id, module_id: moduleId });
-    if(error && error.code !== "23505"){
-      console.error(error);
-    }
-  } else {
-    const arr = Array.from(completedIds);
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(arr));
+function renderGrid(filter=""){
+  const wrap = $("gridWrap");
+  const q = filter.trim().toLowerCase();
+  const list = modules.filter(m => !q || m.title.toLowerCase().includes(q) || (m.description||"").toLowerCase().includes(q));
+
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="empty">${modules.length === 0 ? "Todavía no hay módulos publicados." : "No se encontraron módulos."}</div>`;
+    return;
   }
-}
 
-/* =========================================================
-   LÓGICA DE DESBLOQUEO
-   ========================================================= */
-function isDone(id){ return completedIds.has(id); }
-
-function isUnlocked(index){
-  const mod = allModules[index];
-  if(!session){
-    return !!mod.is_preview;
-  }
-  if(index === 0) return true;
-  return isDone(allModules[index-1].id);
-}
-
-/* =========================================================
-   RENDER
-   ========================================================= */
-function youtubeThumb(youtubeId){
-  return youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : "";
-}
-
-function render(){
-  document.getElementById("anonBanner").style.display = session ? "none" : "flex";
-  document.getElementById("adminBar").style.display = isAdmin ? "flex" : "none";
-
-  const root = document.getElementById("levelsRoot");
-  root.innerHTML = "";
-  let flatIndex = 0;
-
-  LEVELS.forEach(level => {
-    const section = document.createElement("section");
-    section.className = "level-section";
-
-    const someUnlocked = level.modules.some((m, i) => isUnlocked(flatIndex + i));
-    section.innerHTML = `
-      <div class="level-head">
-        <span class="num ${someUnlocked ? '' : 'locked'}">${LEVELS.indexOf(level)+1}</span>
-        <h2>${escapeHtml(level.title)}</h2>
-        <span class="tag">${escapeHtml(level.tag || "")}</span>
-        <div class="level-line"></div>
-        ${isAdmin ? `<button class="level-edit-btn" data-level="${level.id}">Editar nivel</button>` : ""}
+  wrap.innerHTML = `<div class="grid">${list.map(m => `
+    <div class="card" data-id="${m.id}">
+      <div class="thumb">
+        <img src="${escapeHtml(m.cover_url || youtubeThumb(m.youtube_url))}" alt="" loading="lazy" onerror="this.style.display='none'">
+        <div class="play">
+          <svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="11" fill="rgba(6,10,20,.55)" stroke="rgba(255,255,255,.7)" stroke-width="1"/><path d="M10 8l6 4-6 4V8z"/></svg>
+        </div>
       </div>
-      <div class="module-grid"></div>
-    `;
-    const grid = section.querySelector(".module-grid");
+      <div class="body">
+        <h3>${escapeHtml(m.title)}</h3>
+        <p>${escapeHtml(m.description || "")}</p>
+        <div class="meta"><span>Módulo</span><span>${new Date(m.created_at).toLocaleDateString()}</span></div>
+      </div>
+    </div>
+  `).join("")}</div>`;
 
-    level.modules.forEach((m) => {
-      const idx = flatIndex;
-      const unlocked = isUnlocked(idx);
-      const done = isDone(m.id);
-      const card = document.createElement("button");
-      card.type = "button";
-      card.className = "module-card" + (done ? " done" : "") + (unlocked ? "" : " locked");
-      const thumbUrl = youtubeThumb(m.youtube_id);
-      card.innerHTML = `
-        ${isAdmin ? `<div class="admin-tools">
-          <button class="icon-btn" data-edit-module="${m.id}" title="Editar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
-          </button>
-        </div>` : ""}
-        <div class="thumb">
-          ${!session && m.is_preview ? `<span class="preview-pill">Vista previa</span>` : ""}
-          ${thumbUrl ? `<img src="${thumbUrl}" alt="">` : ""}
-          ${done
-            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>`
-            : unlocked
-              ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`
-              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>`
-          }
-          <span class="duration">${escapeHtml(m.duration || "")}</span>
-        </div>
-        <div class="body">
-          <p class="m-tag">${done ? "Completado" : unlocked ? "Disponible" : "Bloqueado"}</p>
-          <h3>${escapeHtml(m.title)}</h3>
-          <p class="desc">${escapeHtml(m.description || "")}</p>
-          <div class="status">${done ? "✓ Visto" : unlocked ? "▶ Ver módulo" : (session ? "🔒 Completa el anterior" : "🔒 Inicia sesión")}</div>
-        </div>
-        ${unlocked ? "" : `<div class="lockband">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
-          <span>${session ? "Completa el módulo anterior para desbloquear" : "Inicia sesión para desbloquear la plataforma"}</span>
-        </div>`}
-      `;
-      card.addEventListener("click", (e) => {
-        if(e.target.closest("[data-edit-module]")) return;
-        if(!unlocked){
-          if(!session){ openLoginModal(); showToast("🔒 Inicia sesión para ver este módulo"); }
-          else showToast("🔒 Todavía no has desbloqueado este módulo");
-          return;
-        }
-        openPlayer(m);
-      });
-      grid.appendChild(card);
-      flatIndex++;
-    });
+  wrap.querySelectorAll(".card").forEach(card=>{
+    card.addEventListener("click", ()=> openModuleDetail(card.dataset.id));
+  });
+}
 
-    if(isAdmin){
-      const addBtn = document.createElement("button");
-      addBtn.type = "button";
-      addBtn.className = "add-card";
-      addBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg><span>Agregar módulo</span>`;
-      addBtn.addEventListener("click", () => openModuleModal(null, level.id));
-      grid.appendChild(addBtn);
+$("searchInput").addEventListener("input", (e)=> renderGrid(e.target.value));
+
+/* ============================================================
+   CREATE / EDIT MODULE (admin)
+============================================================ */
+let editingModuleId = null;
+
+$("newModuleBtn").addEventListener("click", ()=>{
+  editingModuleId = null;
+  $("moduleFormTitle").textContent = "Nuevo módulo";
+  $("mTitle").value = ""; $("mDesc").value = ""; $("mYoutube").value = ""; $("mCover").value = "";
+  $("moduleMsg").className = "msg"; $("moduleMsg").textContent = "";
+  openModal("moduleOverlay");
+});
+
+$("mYoutube").addEventListener("blur", ()=>{
+  if(!$("mCover").value.trim()){
+    const t = youtubeThumb($("mYoutube").value.trim());
+    if(t) $("mCover").value = t;
+  }
+});
+
+$("saveModuleBtn").addEventListener("click", async ()=>{
+  const title = $("mTitle").value.trim();
+  const description = $("mDesc").value.trim();
+  const youtube_url = $("mYoutube").value.trim();
+  const cover_url = $("mCover").value.trim() || youtubeThumb(youtube_url);
+  const msgEl = $("moduleMsg");
+  msgEl.className = "msg"; msgEl.textContent = "";
+
+  if(!title || !youtube_url){
+    msgEl.className = "msg error"; msgEl.textContent = "Título y enlace de YouTube son obligatorios.";
+    return;
+  }
+  if(!youtubeId(youtube_url)){
+    msgEl.className = "msg error"; msgEl.textContent = "Ese enlace de YouTube no parece válido.";
+    return;
+  }
+
+  $("saveModuleBtn").disabled = true;
+  try{
+    if(editingModuleId){
+      const { error } = await sb.from("modules").update({ title, description, youtube_url, cover_url }).eq("id", editingModuleId);
+      if(error) throw error;
+    } else {
+      const { error } = await sb.from("modules").insert({ title, description, youtube_url, cover_url, created_by: currentUser.id });
+      if(error) throw error;
     }
+    closeModal("moduleOverlay");
+    await loadModules();
+  }catch(err){
+    msgEl.className = "msg error"; msgEl.textContent = err.message || "No se pudo guardar el módulo.";
+  }
+  $("saveModuleBtn").disabled = false;
+});
 
-    root.appendChild(section);
-  });
+/* ============================================================
+   MODULE DETAIL (video, sections, comments)
+============================================================ */
+async function openModuleDetail(id){
+  const mod = modules.find(m => m.id === id);
+  if(!mod) return;
+  activeModuleId = id;
 
-  root.querySelectorAll("[data-edit-module]").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const mod = allModules.find(m => m.id === btn.dataset.editModule);
-      openModuleModal(mod, mod.level_id);
-    });
-  });
-  root.querySelectorAll(".level-edit-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const lvl = LEVELS.find(l => l.id === btn.dataset.level);
-      openLevelModal(lvl);
-    });
-  });
+  $("vTitle").textContent = mod.title;
+  $("vDesc").textContent = mod.description || "";
+  const yid = youtubeId(mod.youtube_url);
+  $("playerWrap").innerHTML = yid
+    ? `<iframe src="https://www.youtube.com/embed/${yid}" title="${escapeHtml(mod.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
+    : "";
 
-  updateProgressBar();
-}
-
-function updateProgressBar(){
-  const total = allModules.length;
-  const done = allModules.filter(m => isDone(m.id)).length;
-  const pct = total ? Math.round((done/total)*100) : 0;
-  document.getElementById("progressFill").style.width = pct + "%";
-  document.getElementById("progressLabel").textContent = pct + "%";
-}
-
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[s]));
-}
-
-/* =========================================================
-   REPRODUCTOR
-   ========================================================= */
-let currentModule = null;
-function openPlayer(m){
-  currentModule = m;
-  document.getElementById("playerTag").textContent = isDone(m.id) ? "Completado" : "Módulo";
-  document.getElementById("playerTitle").textContent = m.title;
-  document.getElementById("playerDesc").textContent = m.description || "";
-
-  const wrap = document.getElementById("playerVideoWrap");
-  wrap.innerHTML = "";
-  if(!m.youtube_id){
-    wrap.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-family:var(--ff-mono);font-size:.8rem;text-align:center;padding:20px;">
-      Todavía no se ha cargado el video de este módulo.
-    </div>`;
-  } else {
-    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.youtube_id}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+  $("adminSectionEditor").style.display = isAdmin ? "block" : "none";
+  if(isAdmin){
+    $("secRows").innerHTML = "";
+    await loadSectionsIntoEditor(id);
   }
 
-  const qWrap = document.getElementById("playerQuestionsWrap");
-  const qList = document.getElementById("playerQuestionsList");
-  if(m.questions && m.questions.length){
-    qList.innerHTML = m.questions.map(q => `<li>${escapeHtml(q.question)}</li>`).join("");
-    qWrap.style.display = "block";
+  openModal("viewOverlay");
+  await Promise.all([ loadSectionsView(id), loadComments(id) ]);
+}
+
+/* --- sections (public view) --- */
+async function loadSectionsView(moduleId){
+  const { data, error } = await sb.from("sections").select("*").eq("module_id", moduleId).order("position", { ascending:true });
+  const listEl = $("sectionsList");
+  const heading = $("sectionsHeading");
+  if(error || !data || data.length === 0){
+    heading.style.display = "none";
+    listEl.innerHTML = "";
+    return;
+  }
+  heading.style.display = "block";
+  listEl.innerHTML = data.map(s => `
+    <div class="section-item">
+      <div>
+        <div class="stitle">${escapeHtml(s.title)}</div>
+        ${s.description ? `<div class="snote">${escapeHtml(s.description)}</div>` : ""}
+      </div>
+    </div>
+  `).join("");
+}
+
+/* --- sections (admin editor) --- */
+async function loadSectionsIntoEditor(moduleId){
+  const { data } = await sb.from("sections").select("*").eq("module_id", moduleId).order("position", { ascending:true });
+  const rowsEl = $("secRows");
+  rowsEl.innerHTML = "";
+  (data || []).forEach(s => addSecRow(s.title, s.id));
+  if(!data || data.length === 0) addSecRow("");
+}
+function addSecRow(value="", id=null){
+  const row = document.createElement("div");
+  row.className = "sec-row";
+  row.dataset.id = id || "";
+  row.innerHTML = `<input type="text" placeholder="Nombre de la sección" value="${escapeHtml(value)}"><button type="button">✕</button>`;
+  row.querySelector("button").addEventListener("click", ()=> row.remove());
+  $("secRows").appendChild(row);
+}
+$("addSecRow").addEventListener("click", ()=> addSecRow(""));
+
+$("saveSecBtn").addEventListener("click", async ()=>{
+  if(!activeModuleId) return;
+  const rows = [...$("secRows").querySelectorAll(".sec-row")];
+  const titles = rows.map(r => r.querySelector("input").value.trim()).filter(Boolean);
+
+  await sb.from("sections").delete().eq("module_id", activeModuleId);
+  if(titles.length){
+    const inserts = titles.map((title, i) => ({ module_id: activeModuleId, title, position: i }));
+    await sb.from("sections").insert(inserts);
+  }
+  await loadSectionsView(activeModuleId);
+  await loadSectionsIntoEditor(activeModuleId);
+});
+
+$("deleteModuleBtn").addEventListener("click", async ()=>{
+  if(!activeModuleId) return;
+  if(!confirm("¿Eliminar este módulo? Esta acción no se puede deshacer.")) return;
+  await sb.from("modules").delete().eq("id", activeModuleId);
+  closeModal("viewOverlay");
+  await loadModules();
+});
+
+/* --- comments --- */
+async function loadComments(moduleId){
+  const { data, error } = await sb
+    .from("comments")
+    .select("*")
+    .eq("module_id", moduleId)
+    .order("created_at", { ascending:true });
+
+  const listEl = $("commentsList");
+  if(error){
+    listEl.innerHTML = `<p style="color:var(--text-dim);font-size:13px;">No se pudieron cargar los comentarios.</p>`;
+  } else if(!data || data.length === 0){
+    listEl.innerHTML = `<p style="color:var(--text-faint);font-size:13px;">Sé el primero en comentar.</p>`;
   } else {
-    qWrap.style.display = "none";
+    listEl.innerHTML = data.map(c => `
+      <div class="comment">
+        <div class="avatar">${initials(c.author_email)}</div>
+        <div class="comment-body">
+          <span class="cname">${escapeHtml((c.author_email||"").split("@")[0])}</span>
+          <span class="ctime">${timeAgo(c.created_at)}</span>
+          <div class="ctext">${escapeHtml(c.content)}</div>
+        </div>
+      </div>
+    `).join("");
   }
 
-  const doneBtn = document.getElementById("markDone");
-  doneBtn.textContent = isDone(m.id) ? "Ya completado ✓" : "Marcar como completado";
-  doneBtn.style.display = session ? "inline-flex" : "none";
-  document.getElementById("playerOverlay").classList.add("open");
-}
-function closePlayer(){
-  document.getElementById("playerOverlay").classList.remove("open");
-  document.getElementById("playerVideoWrap").innerHTML = "";
-}
-
-/* =========================================================
-   ADMIN — MÓDULOS + PREGUNTAS CLAVE (helpers de formulario)
-   ========================================================= */
-let qaRows = [];
-
-function openLevelModal(level){
-  document.getElementById("levelModalTitle").textContent = level ? "Editar nivel" : "Nuevo nivel";
-  document.getElementById("levelId").value = level ? level.id : "";
-  document.getElementById("levelTitle").value = level ? level.title : "";
-  document.getElementById("levelTag").value = level ? (level.tag || "") : "";
-  document.getElementById("levelSort").value = level ? level.sort_order : (LEVELS.length);
-  document.getElementById("deleteLevelBtn").style.display = level ? "inline-flex" : "none";
-  document.getElementById("levelModal").classList.add("open");
-}
-
-function openModuleModal(module, levelId){
-  document.getElementById("moduleModalTitle").textContent = module ? "Editar módulo" : "Nuevo módulo";
-  document.getElementById("moduleId").value = module ? module.id : "";
-  document.getElementById("moduleLevelId").value = levelId;
-  document.getElementById("moduleTitle").value = module ? module.title : "";
-  document.getElementById("moduleDesc").value = module ? (module.description || "") : "";
-  document.getElementById("moduleYoutube").value = module ? (module.youtube_id || "") : "";
-  document.getElementById("moduleDuration").value = module ? (module.duration || "") : "";
-  document.getElementById("moduleSort").value = module ? module.sort_order : 0;
-  document.getElementById("moduleIsPreview").checked = module ? !!module.is_preview : false;
-  document.getElementById("deleteModuleBtn").style.display = module ? "inline-flex" : "none";
-
-  qaRows = module && module.questions ? module.questions.map(q => ({ id: q.id, question: q.question })) : [];
-  renderQaRows();
-
-  document.getElementById("moduleModal").classList.add("open");
-}
-
-function renderQaRows(){
-  const list = document.getElementById("qaList");
-  list.innerHTML = "";
-  qaRows.forEach((row, i) => {
-    const div = document.createElement("div");
-    div.className = "qa-row";
-    div.innerHTML = `
-      <input type="text" value="${escapeHtml(row.question)}" data-qa-index="${i}" placeholder="¿Pregunta clave del módulo?">
-      <button class="icon-btn" type="button" data-remove-qa="${i}">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-      </button>
-    `;
-    list.appendChild(div);
-  });
-  list.querySelectorAll("[data-qa-index]").forEach(input => {
-    input.addEventListener("input", (e) => {
-      qaRows[Number(e.target.dataset.qaIndex)].question = e.target.value;
+  const formWrap = $("commentFormWrap");
+  if(currentUser){
+    formWrap.innerHTML = `
+      <div class="comment-form">
+        <div class="avatar">${initials(currentUser.email)}</div>
+        <textarea id="newCommentText" placeholder="Escribe un comentario…"></textarea>
+        <button class="pill-btn primary" id="sendCommentBtn">Enviar</button>
+      </div>`;
+    $("sendCommentBtn").addEventListener("click", async ()=>{
+      const text = $("newCommentText").value.trim();
+      if(!text) return;
+      $("sendCommentBtn").disabled = true;
+      const { error } = await sb.from("comments").insert({
+        module_id: moduleId, content: text, author_id: currentUser.id, author_email: currentUser.email
+      });
+      $("sendCommentBtn").disabled = false;
+      if(!error){ $("newCommentText").value = ""; await loadComments(moduleId); }
     });
-  });
-  list.querySelectorAll("[data-remove-qa]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      qaRows.splice(Number(btn.dataset.removeQa), 1);
-      renderQaRows();
-    });
-  });
+  } else {
+    formWrap.innerHTML = `<p style="color:var(--text-faint);font-size:13px;">Inicia sesión para comentar.</p>`;
+  }
 }
 
-/* =========================================================
-   ARRANQUE
-   Orden importante:
-   1. Conectar UI estática (siempre funciona, pase lo que pase)
-   2. Intentar inicializar Supabase
-   3. Si Supabase quedó listo, recién ahí cargar sesión y datos
-   ========================================================= */
+/* ============================================================
+   INIT
+============================================================ */
 (async function init(){
-  wireStaticUI();
-  initSupabaseClient();
-  if(supabaseReady){
-    await initAuth();
-    await loadEverything();
-  }
+  await refreshSession();
+  await loadModules();
 })();
 </script>
 </body>
