@@ -511,6 +511,96 @@ footer p{max-width:640px;margin:6px auto;}
 }
 .login-submit:hover{transform:translateY(-1px);}
 .login-note{margin-top:14px;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);text-align:center;line-height:1.5;}
+
+/* =========================================================
+   HOTBAR MÓVIL (bottom tab bar tipo app)
+   ========================================================= */
+.mobile-hotbar{
+  display:none;
+  position:fixed;left:0;bottom:0;width:100%;z-index:600;
+  background:#04141af0;backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+  transform:translateY(100%);transition:transform .35s ease;
+}
+.mobile-hotbar.visible{transform:translateY(0);}
+.hotbar-row{display:flex;align-items:stretch;justify-content:space-between;max-width:560px;margin:0 auto;}
+.hotbar-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  padding:7px 2px;border-radius:12px;color:var(--text-dim);
+  font-family:var(--ff-mono);font-size:.6rem;letter-spacing:.01em;
+  transition:color .18s ease, background .18s ease, transform .15s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.hotbar-item svg{width:21px;height:21px;stroke-width:1.8;}
+.hotbar-item.active,.hotbar-item:active{color:var(--primary);background:var(--primary-dim);transform:translateY(-1px);}
+.hotbar-item.buy{color:#03181c;}
+.hotbar-item.buy .hotbar-icon-wrap{
+  width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(140deg,var(--primary),var(--gold));margin-top:-16px;
+  box-shadow:0 6px 18px -4px var(--primary);
+}
+.hotbar-item.buy span{color:var(--gold);margin-top:1px;}
+@media(max-width:820px){
+  .mobile-hotbar{display:block;}
+  body{padding-bottom:64px;}
+}
+
+/* =========================================================
+   PANEL DE ADMINISTRADOR (editar imágenes y enlaces de compra)
+   ========================================================= */
+.admin-fab{
+  position:fixed;right:16px;bottom:80px;z-index:700;
+  width:46px;height:46px;border-radius:50%;
+  background:var(--panel);border:1px solid var(--line);color:var(--text-dim);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  box-shadow:0 10px 26px -10px #000;transition:color .2s ease,border-color .2s ease,transform .2s ease;
+}
+.admin-fab:hover{color:var(--primary);border-color:var(--primary);transform:rotate(35deg);}
+@media(max-width:820px){.admin-fab{bottom:76px;right:12px;width:42px;height:42px;}}
+.admin-overlay{
+  position:fixed;inset:0;z-index:3000;background:#020c10ee;display:none;
+  align-items:center;justify-content:center;padding:20px;overflow-y:auto;
+}
+.admin-overlay.open{display:flex;}
+.admin-box{
+  width:100%;max-width:460px;background:var(--bg-alt);border:1px solid var(--line);
+  border-radius:20px;padding:28px 24px 24px;position:relative;margin:auto;
+}
+.admin-box .close-btn{
+  position:absolute;top:16px;right:16px;background:var(--panel);border:1px solid var(--line);
+  color:var(--text-dim);width:30px;height:30px;border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;
+}
+.admin-box .close-btn:hover{color:var(--text);border-color:var(--primary);}
+.admin-box h2{font-size:1.2rem;margin-top:4px;}
+.admin-box p.sub{color:var(--text-dim);font-size:.84rem;margin-top:6px;}
+.admin-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--line);}
+.admin-section:first-of-type{border-top:none;margin-top:18px;padding-top:0;}
+.admin-section h4{font-family:var(--ff-mono);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin-bottom:12px;}
+.admin-field{margin-bottom:14px;}
+.admin-field label{display:block;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);margin-bottom:6px;}
+.admin-field input[type=text],.admin-field input[type=url]{
+  width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  padding:11px 13px;color:var(--text);font-family:var(--ff-body);font-size:.86rem;
+}
+.admin-field input:focus{outline:none;border-color:var(--primary);}
+.admin-preview{width:100%;height:90px;object-fit:cover;border-radius:10px;border:1px solid var(--line);margin-bottom:8px;background:var(--panel);}
+.admin-file-row{display:flex;gap:8px;align-items:center;}
+.admin-file-row input[type=file]{flex:1;font-size:.72rem;color:var(--text-dim);}
+.admin-actions{display:flex;gap:10px;margin-top:22px;}
+.admin-save{
+  flex:1;font-family:var(--ff-display);font-weight:600;font-size:.9rem;
+  background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;border:none;cursor:pointer;
+  padding:13px;border-radius:10px;transition:transform .15s ease;
+}
+.admin-save:hover{transform:translateY(-1px);}
+.admin-reset{
+  font-family:var(--ff-display);font-weight:600;font-size:.84rem;
+  background:transparent;color:var(--text-dim);border:1px solid var(--line);cursor:pointer;
+  padding:13px 16px;border-radius:10px;
+}
+.admin-reset:hover{color:var(--text);border-color:var(--text-dim);}
+.admin-status{margin-top:12px;font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);text-align:center;min-height:1em;}
 </style>
 
 </head>
@@ -709,6 +799,86 @@ footer p{max-width:640px;margin:6px auto;}
   </div>
 </div>
 
+<!-- ============ HOTBAR MÓVIL (navegación inferior tipo app) ============ -->
+<nav class="mobile-hotbar" id="mobileHotbar">
+  <div class="hotbar-row">
+    <a href="/plataforma" class="hotbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      <span>Plataforma</span>
+    </a>
+    <a href="/publicaciones" class="hotbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+      <span>Comunidad</span>
+    </a>
+    <a href="https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51" target="_blank" rel="noopener" class="hotbar-item buy buy-link" id="hotbarBuyLink">
+      <span class="hotbar-icon-wrap">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </span>
+      <span>Acceso</span>
+    </a>
+    <a href="/ia" class="hotbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="4"/></svg>
+      <span>IA</span>
+    </a>
+    <a href="/paquetes" class="hotbar-item">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1zM10 12h4"/></svg>
+      <span>Paquetes</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ============ ACCESO ADMIN (editar imágenes y links de compra) ============ -->
+<button class="admin-fab" id="adminFab" aria-label="Panel de administrador" title="Panel de administrador">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+</button>
+
+<div class="admin-overlay" id="adminOverlay">
+  <div class="admin-box">
+    <button class="close-btn" id="closeAdmin">✕</button>
+    <p class="eyebrow">Solo administrador</p>
+    <h2>Editar imágenes y enlaces</h2>
+    <p class="sub">Cambia las imágenes o pega la URL de otra. Actualiza el link de compra de Hotmart y se aplicará en todos los botones de acceso del sitio.</p>
+
+    <div class="admin-section">
+      <h4>Imagen principal (Hero)</h4>
+      <img class="admin-preview" id="adminHeroPreview" src="" alt="Vista previa hero">
+      <div class="admin-field">
+        <label>URL de la imagen</label>
+        <input type="url" id="adminHeroUrl" placeholder="https://...">
+      </div>
+      <div class="admin-file-row">
+        <input type="file" id="adminHeroFile" accept="image/*">
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h4>Imagen del autor</h4>
+      <img class="admin-preview" id="adminAuthorPreview" src="" alt="Vista previa autor">
+      <div class="admin-field">
+        <label>URL de la imagen</label>
+        <input type="url" id="adminAuthorUrl" placeholder="https://...">
+      </div>
+      <div class="admin-file-row">
+        <input type="file" id="adminAuthorFile" accept="image/*">
+      </div>
+    </div>
+
+    <div class="admin-section">
+      <h4>Enlace de compra (Hotmart)</h4>
+      <div class="admin-field">
+        <label>Aplica a: botón del Hero, CTA final, hotbar de "Acceso" y link de compra en el login</label>
+        <input type="text" id="adminBuyLink" placeholder="https://pay.hotmart.com/...">
+      </div>
+    </div>
+
+    <div class="admin-actions">
+      <button class="admin-reset" id="adminReset" type="button">Restaurar original</button>
+      <button class="admin-save" id="adminSave" type="button">Guardar cambios</button>
+    </div>
+    <p class="admin-status" id="adminStatus"></p>
+  </div>
+</div>
+
 <!-- HERO -->
 <header class="hero">
   <div class="wrap">
@@ -717,7 +887,7 @@ footer p{max-width:640px;margin:6px auto;}
       <h1>Sube de nivel tu negocio con <span class="grad-text">Inteligencia Artificial</span></h1>
       <p class="lead">Proyectum IA es la ruta paso a paso para identificar, dominar y aplicar herramientas de IA en proyectos reales que impulsan tus ventas online y hacen crecer tu negocio de forma sostenible.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51" target="_blank" rel="noopener">
+        <a class="btn btn-primary buy-link" id="heroCtaLink" href="https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51" target="_blank" rel="noopener">
           Quiero mi acceso
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
@@ -727,7 +897,7 @@ footer p{max-width:640px;margin:6px auto;}
     <div class="hero-art">
       <div class="glow-ring"></div>
       <div class="frame">
-        <img src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA">
+        <img id="heroImg" src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA">
       </div>
     </div>
   </div>
@@ -852,7 +1022,7 @@ footer p{max-width:640px;margin:6px auto;}
   <section class="author-section">
     <div class="wrap">
       <div class="author-img">
-        <img src="//static-public.pages.hotmart.com/uploads/media/file/7176922/group_10288.png" alt="Autor de Proyectum IA">
+        <img id="authorImg" src="//static-public.pages.hotmart.com/uploads/media/file/7176922/group_10288.png" alt="Autor de Proyectum IA">
       </div>
       <div>
         <div class="eyebrow">Creador del programa</div>
@@ -868,7 +1038,7 @@ footer p{max-width:640px;margin:6px auto;}
       <div class="level-final">🔓 Nivel final · Desbloquea el programa completo</div>
       <h2>Tu negocio, un nivel más digital, más inteligente y más rentable</h2>
       <p>Accede a Proyectum IA y comienza tu ruta hoy mismo.</p>
-      <a class="btn btn-primary" href="https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51" target="_blank" rel="noopener">
+      <a class="btn btn-primary buy-link" id="finalCtaLink" href="https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51" target="_blank" rel="noopener">
         Quiero mi acceso ahora
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </a>
@@ -944,6 +1114,8 @@ revealTargets.forEach(el=>io.observe(el));
     document.querySelectorAll('#ttStage video').forEach(function(v){ v.pause(); });
     const nav = document.getElementById('siteNav');
     if(nav) nav.classList.add('visible');
+    const hotbar = document.getElementById('mobileHotbar');
+    if(hotbar) hotbar.classList.add('visible');
   }
 
   /* ---- Sonidos generados con Web Audio API (sin archivos externos) ---- */
@@ -1770,6 +1942,136 @@ revealTargets.forEach(el=>io.observe(el));
   if(isLoggedIn()){
     navLoginBtn.innerHTML = 'Ir a mi plataforma <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
   }
+
+  // Resalta el ítem activo del hotbar según la ruta actual
+  document.querySelectorAll('.hotbar-item:not(.buy)').forEach(function(a){
+    if(a.getAttribute('href') === window.location.pathname){
+      a.classList.add('active');
+    }
+  });
+})();
+</script>
+
+<!-- ============ PANEL DE ADMINISTRADOR ============ -->
+<!-- Permite cambiar, sin tocar código: la imagen del hero, la imagen del autor
+     y el enlace de compra de Hotmart (se aplica a todos los botones "buy-link":
+     CTA del hero, CTA final, hotbar de Acceso y el link de compra dentro del login).
+     Los cambios se guardan en localStorage de este navegador. -->
+<script>
+(function(){
+  const DEFAULTS = {
+    heroImg: document.getElementById('heroImg') ? document.getElementById('heroImg').getAttribute('src') : '',
+    authorImg: document.getElementById('authorImg') ? document.getElementById('authorImg').getAttribute('src') : '',
+    buyLink: "https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51"
+  };
+  const STORAGE_KEY = 'proyectumia_admin_settings';
+
+  function loadSettings(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? Object.assign({}, DEFAULTS, JSON.parse(raw)) : Object.assign({}, DEFAULTS);
+    }catch(e){ return Object.assign({}, DEFAULTS); }
+  }
+  function saveSettings(settings){
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  }
+
+  function applySettings(settings){
+    const heroImg = document.getElementById('heroImg');
+    const authorImg = document.getElementById('authorImg');
+    if(heroImg && settings.heroImg) heroImg.src = settings.heroImg;
+    if(authorImg && settings.authorImg) authorImg.src = settings.authorImg;
+    if(settings.buyLink){
+      document.querySelectorAll('.buy-link').forEach(function(a){
+        a.setAttribute('href', settings.buyLink);
+      });
+      // también actualiza el enlace de Hotmart usado dentro de la intro/login por JS
+      window.PROYECTUM_BUY_LINK = settings.buyLink;
+      const loginBuyLink = document.getElementById('loginBuyLink');
+      if(loginBuyLink) loginBuyLink.setAttribute('href', settings.buyLink);
+    }
+  }
+
+  let current = loadSettings();
+  applySettings(current);
+
+  // ---- UI del panel ----
+  const adminFab = document.getElementById('adminFab');
+  const adminOverlay = document.getElementById('adminOverlay');
+  const closeAdmin = document.getElementById('closeAdmin');
+  const adminHeroUrl = document.getElementById('adminHeroUrl');
+  const adminAuthorUrl = document.getElementById('adminAuthorUrl');
+  const adminBuyLink = document.getElementById('adminBuyLink');
+  const adminHeroPreview = document.getElementById('adminHeroPreview');
+  const adminAuthorPreview = document.getElementById('adminAuthorPreview');
+  const adminHeroFile = document.getElementById('adminHeroFile');
+  const adminAuthorFile = document.getElementById('adminAuthorFile');
+  const adminSave = document.getElementById('adminSave');
+  const adminReset = document.getElementById('adminReset');
+  const adminStatus = document.getElementById('adminStatus');
+
+  function fillFormFromSettings(settings){
+    adminHeroUrl.value = settings.heroImg || '';
+    adminAuthorUrl.value = settings.authorImg || '';
+    adminBuyLink.value = settings.buyLink || '';
+    adminHeroPreview.src = settings.heroImg || '';
+    adminAuthorPreview.src = settings.authorImg || '';
+  }
+
+  adminFab.addEventListener('click', function(){
+    fillFormFromSettings(current);
+    adminStatus.textContent = '';
+    adminOverlay.classList.add('open');
+  });
+  closeAdmin.addEventListener('click', function(){ adminOverlay.classList.remove('open'); });
+  adminOverlay.addEventListener('click', function(e){
+    if(e.target === adminOverlay) adminOverlay.classList.remove('open');
+  });
+
+  adminHeroUrl.addEventListener('input', function(){ adminHeroPreview.src = adminHeroUrl.value; });
+  adminAuthorUrl.addEventListener('input', function(){ adminAuthorPreview.src = adminAuthorUrl.value; });
+
+  function readFileAsDataUrl(file, cb){
+    const reader = new FileReader();
+    reader.onload = function(e){ cb(e.target.result); };
+    reader.readAsDataURL(file);
+  }
+  adminHeroFile.addEventListener('change', function(){
+    const f = adminHeroFile.files[0];
+    if(!f) return;
+    readFileAsDataUrl(f, function(dataUrl){
+      adminHeroUrl.value = dataUrl;
+      adminHeroPreview.src = dataUrl;
+    });
+  });
+  adminAuthorFile.addEventListener('change', function(){
+    const f = adminAuthorFile.files[0];
+    if(!f) return;
+    readFileAsDataUrl(f, function(dataUrl){
+      adminAuthorUrl.value = dataUrl;
+      adminAuthorPreview.src = dataUrl;
+    });
+  });
+
+  adminSave.addEventListener('click', function(){
+    current = {
+      heroImg: adminHeroUrl.value.trim() || DEFAULTS.heroImg,
+      authorImg: adminAuthorUrl.value.trim() || DEFAULTS.authorImg,
+      buyLink: adminBuyLink.value.trim() || DEFAULTS.buyLink
+    };
+    saveSettings(current);
+    applySettings(current);
+    adminStatus.textContent = '✅ Cambios guardados en este navegador';
+    setTimeout(function(){ adminOverlay.classList.remove('open'); }, 900);
+  });
+
+  adminReset.addEventListener('click', function(){
+    current = Object.assign({}, DEFAULTS);
+    localStorage.removeItem(STORAGE_KEY);
+    applySettings(current);
+    fillFormFromSettings(current);
+    adminStatus.textContent = 'Se restauraron los valores originales';
+  });
 })();
 </script>
 
