@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Proyectum IA · Plataforma de Módulos</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.45.0/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 :root{
   --bg:#060a14;
@@ -350,6 +350,15 @@ h3.block-title{font-size:14.5px;color:var(--text-dim);margin:0 0 12px;text-trans
 const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
 const ADMIN_EMAIL = "contact@proyectumia.com";
+
+if(typeof supabase === "undefined"){
+  document.addEventListener("DOMContentLoaded", ()=>{
+    document.getElementById("gridWrap").innerHTML =
+      '<div class="empty">No se pudo cargar la librería de Supabase (bloqueada por el navegador o sin conexión).<br>'
+      + 'Desactiva el bloqueo de rastreo/anuncios para este sitio, o recarga la página, e inténtalo de nuevo.</div>';
+  });
+  throw new Error("Supabase JS no se cargó.");
+}
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
