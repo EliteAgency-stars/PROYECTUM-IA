@@ -7,6 +7,22 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // Cliente único de Supabase, compartido por TODO el sitio (login del nav y panel admin).
+  // Se crea aquí, justo después de cargar la librería y antes que cualquier otro script,
+  // guardando la instancia como "window.sb" (nunca como "supabase": ese nombre ya lo usa
+  // la propia librería como variable global y redeclararlo rompía toda la página).
+  window.SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
+  window.SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
+  window.ADMIN_EMAIL = "contact@proyectumia.com";
+  try{
+    window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+  } catch(err){
+    console.error("[Proyectum IA] No se pudo inicializar Supabase:", err);
+    window.sb = null;
+  }
+</script>
 <style>
 :root{
   --bg:#04141a; --bg-alt:#071f27; --panel:#0a2933;
@@ -511,6 +527,7 @@ footer p{max-width:640px;margin:6px auto;}
 }
 .login-submit:hover{transform:translateY(-1px);}
 .login-note{margin-top:14px;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);text-align:center;line-height:1.5;}
+.login-error{margin-top:10px;font-family:var(--ff-mono);font-size:.72rem;color:#ff8a80;text-align:center;min-height:1em;}
 
 /* =========================================================
    HOTBAR MÓVIL (bottom tab bar tipo app)
@@ -779,19 +796,20 @@ footer p{max-width:640px;margin:6px auto;}
     <button class="close-btn" id="closeLogin">✕</button>
     <p class="eyebrow">Acceso a la plataforma</p>
     <h2>Entra a tu cuenta</h2>
-    <p class="sub">Ingresa tu nombre y correo para entrar a tu plataforma de módulos.</p>
+    <p class="sub">Inicia sesión con tu correo y contraseña.</p>
     <form id="loginForm">
       <div class="login-field">
-        <label for="loginName">Nombre</label>
-        <input type="text" id="loginName" required placeholder="Tu nombre">
+        <label for="loginEmail">Correo</label>
+        <input type="email" id="loginEmail" required placeholder="tucorreo@email.com" autocomplete="username">
       </div>
       <div class="login-field">
-        <label for="loginEmail">Correo</label>
-        <input type="email" id="loginEmail" required placeholder="tucorreo@email.com">
+        <label for="loginPassword">Contraseña</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" autocomplete="current-password">
       </div>
-      <button type="submit" class="login-submit">Entrar a la plataforma</button>
+      <p class="login-error" id="loginError"></p>
+      <button type="submit" class="login-submit" id="loginSubmitBtn">Entrar a la plataforma</button>
     </form>
-    <p class="login-note">¿Aún no tienes acceso? <a href="#comprar" id="loginBuyLink" style="color:var(--primary);">Consigue tu cupo aquí</a>.</p>
+    <p class="login-note">📩 Revisa tu correo electrónico: ahí te enviamos el usuario y la contraseña para entrar a tu plataforma.<br><br>¿Aún no tienes acceso? <a href="#comprar" id="loginBuyLink" style="color:var(--primary);">Consigue tu cupo aquí</a>.</p>
   </div>
 </div>
 
@@ -918,7 +936,7 @@ footer p{max-width:640px;margin:6px auto;}
     <div class="hero-art">
       <div class="glow-ring"></div>
       <div class="frame">
-        <img id="heroImg" src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA">
+        <img id="heroImg" src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA" referrerpolicy="no-referrer" loading="eager">
       </div>
     </div>
   </div>
@@ -1043,7 +1061,7 @@ footer p{max-width:640px;margin:6px auto;}
   <section class="author-section">
     <div class="wrap">
       <div class="author-img">
-        <img id="authorImg" src="//static-public.pages.hotmart.com/uploads/media/file/7176922/group_10288.png" alt="Autor de Proyectum IA">
+        <img id="authorImg" src="//static-public.pages.hotmart.com/uploads/media/file/7176922/group_10288.png" alt="Autor de Proyectum IA" referrerpolicy="no-referrer" loading="eager">
       </div>
       <div>
         <div class="eyebrow">Creador del programa</div>
@@ -1843,24 +1861,36 @@ revealTargets.forEach(el=>io.observe(el));
   const navLoginBtn = document.getElementById('navLoginBtn');
   const closeLogin = document.getElementById('closeLogin');
   const loginForm = document.getElementById('loginForm');
+  const loginError = document.getElementById('loginError');
+  const loginSubmitBtn = document.getElementById('loginSubmitBtn');
   const loginBuyLink = document.getElementById('loginBuyLink');
   loginBuyLink.href = HOTMART_URL;
   loginBuyLink.target = "_blank";
   loginBuyLink.rel = "noopener";
 
-  function isLoggedIn(){
-    return !!localStorage.getItem('proyectumia_username');
-  }
   function goToPlatform(){
     window.location.href = '/plataforma';
   }
 
-  navLoginBtn.addEventListener('click', function(){
-    if(isLoggedIn()){
-      goToPlatform();
-    } else {
-      loginOverlay.classList.add('open');
+  async function refreshLoginButtonLabel(){
+    if(!window.sb){ return; }
+    try{
+      const { data } = await window.sb.auth.getSession();
+      if(data && data.session){
+        navLoginBtn.innerHTML = 'Ir a mi plataforma <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+      }
+    }catch(e){}
+  }
+  refreshLoginButtonLabel();
+
+  navLoginBtn.addEventListener('click', async function(){
+    if(window.sb){
+      try{
+        const { data } = await window.sb.auth.getSession();
+        if(data && data.session){ goToPlatform(); return; }
+      }catch(e){}
     }
+    loginOverlay.classList.add('open');
   });
   closeLogin.addEventListener('click', function(){
     loginOverlay.classList.remove('open');
@@ -1869,20 +1899,32 @@ revealTargets.forEach(el=>io.observe(el));
     if(e.target === loginOverlay) loginOverlay.classList.remove('open');
   });
 
-  loginForm.addEventListener('submit', function(e){
+  loginForm.addEventListener('submit', async function(e){
     e.preventDefault();
-    const name = document.getElementById('loginName').value.trim();
+    loginError.textContent = '';
     const email = document.getElementById('loginEmail').value.trim();
-    if(!name || !email) return;
-    localStorage.setItem('proyectumia_username', name);
-    localStorage.setItem('proyectumia_email', email);
-    goToPlatform();
-  });
+    const password = document.getElementById('loginPassword').value;
+    if(!email || !password) return;
 
-  // Si ya inició sesión antes, cambia el texto del botón para que sea directo
-  if(isLoggedIn()){
-    navLoginBtn.innerHTML = 'Ir a mi plataforma <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-  }
+    if(!window.sb){
+      loginError.textContent = 'No se pudo conectar con el servidor. Recarga la página e inténtalo de nuevo.';
+      return;
+    }
+
+    loginSubmitBtn.disabled = true;
+    loginSubmitBtn.textContent = 'Entrando...';
+    const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
+    loginSubmitBtn.disabled = false;
+    loginSubmitBtn.textContent = 'Entrar a la plataforma';
+
+    if(error){
+      loginError.textContent = 'Correo o contraseña incorrectos. Revisa el correo que te enviamos con tus datos de acceso.';
+      return;
+    }
+    if(data && data.session){
+      goToPlatform();
+    }
+  });
 
   // Resalta el ítem activo del hotbar según la ruta actual
   document.querySelectorAll('.hotbar-item:not(.buy)').forEach(function(a){
@@ -1898,23 +1940,12 @@ revealTargets.forEach(el=>io.observe(el));
      hero, la imagen del autor y el link de compra sin iniciar sesión: ese era el bug.
      Ahora el panel exige iniciar sesión con Supabase Auth, y solo la cuenta cuyo correo
      coincide con ADMIN_EMAIL puede ver y usar el formulario de edición. Cualquier otra
-     persona (o alguien no autenticado) solo ve el formulario de inicio de sesión. -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+     persona (o alguien no autenticado) solo ve el formulario de inicio de sesión.
+     Usa el mismo cliente compartido "window.sb" creado al principio del documento
+     (ya no crea su propio cliente aquí, para evitar cargar la librería dos veces). -->
 <script>
 (function(){
-  // === CONFIGURA ESTOS 3 VALORES CON LOS DE TU PROYECTO DE SUPABASE ===
-  // 1. SUPABASE_URL y SUPABASE_ANON_KEY: Project Settings -> API, en supabase.com
-  // 2. ADMIN_EMAIL: el correo (ya debe existir como usuario en Supabase Auth) que
-  //    tendrá permiso de editar el sitio. Por ahora se dejó tu correo de contacto.
-  const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
-  const ADMIN_EMAIL = "contact@proyectumia.com";
-
-  let supabaseClient = null;
-  let configured = SUPABASE_URL.indexOf('TU-PROYECTO') === -1 && SUPABASE_ANON_KEY.indexOf('TU-ANON-KEY') === -1;
-  if (configured && window.supabase) {
-    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-  }
+  const ADMIN_EMAIL = window.ADMIN_EMAIL;
 
   const DEFAULTS = {
     heroImg: document.getElementById('heroImg') ? document.getElementById('heroImg').getAttribute('src') : '',
@@ -1994,16 +2025,16 @@ revealTargets.forEach(el=>io.observe(el));
   }
 
   async function checkAdminSession(){
-    if(!supabaseClient) return false;
-    const { data } = await supabaseClient.auth.getSession();
+    if(!window.sb) return false;
+    const { data } = await window.sb.auth.getSession();
     const session = data && data.session;
     return !!(session && session.user && session.user.email && session.user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase());
   }
 
   adminFab.addEventListener('click', async function(){
     adminOverlay.classList.add('open');
-    if(!configured){
-      showLoginView('Falta configurar Supabase (SUPABASE_URL / SUPABASE_ANON_KEY) en el código para poder iniciar sesión.');
+    if(!window.sb){
+      showLoginView('No se pudo conectar con el servidor. Recarga la página e inténtalo de nuevo.');
       return;
     }
     const isAdmin = await checkAdminSession();
@@ -2016,7 +2047,7 @@ revealTargets.forEach(el=>io.observe(el));
   });
 
   adminLoginSubmit.addEventListener('click', async function(){
-    if(!supabaseClient) return;
+    if(!window.sb) return;
     const email = (adminLoginEmail.value || '').trim();
     const password = adminLoginPassword.value || '';
     if(!email || !password){
@@ -2024,7 +2055,7 @@ revealTargets.forEach(el=>io.observe(el));
       return;
     }
     adminLoginError.textContent = 'Verificando...';
-    const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+    const { data, error } = await window.sb.auth.signInWithPassword({ email: email, password: password });
     if(error){
       adminLoginError.textContent = 'No se pudo iniciar sesión: ' + error.message;
       return;
@@ -2032,7 +2063,7 @@ revealTargets.forEach(el=>io.observe(el));
     const sessionEmail = data && data.user && data.user.email;
     if(!sessionEmail || sessionEmail.toLowerCase() !== ADMIN_EMAIL.toLowerCase()){
       adminLoginError.textContent = 'Esta cuenta no tiene permiso de administrador.';
-      await supabaseClient.auth.signOut();
+      await window.sb.auth.signOut();
       return;
     }
     adminLoginPassword.value = '';
@@ -2041,7 +2072,7 @@ revealTargets.forEach(el=>io.observe(el));
 
   adminLogoutLink.addEventListener('click', async function(e){
     e.preventDefault();
-    if(supabaseClient) await supabaseClient.auth.signOut();
+    if(window.sb) await window.sb.auth.signOut();
     adminOverlay.classList.remove('open');
   });
 
