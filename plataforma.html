@@ -467,3 +467,577 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 </div>
 
 <div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
+const ADMIN_EMAIL = "contact@proyectumia.com";
+
+let session = null;
+let isAdmin = false;
+let LEVELS = [];
+let allModules = [];
+let completedIds = new Set();
+let supabase = null;
+let supabaseReady = false;
+
+const LOCAL_KEY = "proyectumia_progress_anon";
+
+/* ---------- Toast (definida primero: la usan los mensajes de error) ---------- */
+let toastTimer = null;
+function showToast(msg){
+  const t = document.getElementById("toast");
+  if(!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 3600);
+}
+
+/* =========================================================
+   0) CONEXIÓN A SUPABASE — AHORA PROTEGIDA
+   Si esto falla (CDN bloqueado, red caída, key inválida),
+   ya NO detiene el resto del script. Solo desactiva las
+   funciones que dependen de la base de datos y avisa al usuario.
+   ========================================================= */
+function initSupabaseClient(){
+  try{
+    if(!window.supabase || typeof window.supabase.createClient !== "function"){
+      throw new Error("La librería de Supabase (supabase-js) no se cargó desde el CDN.");
+    }
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    supabaseReady = true;
+  } catch(err){
+    console.error("[Proyectum IA] Error inicializando Supabase:", err);
+    supabaseReady = false;
+    showToast("⚠️ No se pudo conectar con el servidor. Revisa tu conexión o desactiva el bloqueador de anuncios y recarga la página.");
+  }
+}
+
+/* =========================================================
+   WIRING DE UI QUE **NO** DEPENDE DE SUPABASE
+   Esto se conecta primero y siempre, así los modales
+   (abrir/cerrar) funcionan aunque falle la conexión.
+   ========================================================= */
+function wireStaticUI(){
+  document.getElementById("closeLogin").addEventListener("click", () => document.getElementById("loginModal").classList.remove("open"));
+  document.getElementById("anonLoginBtn").addEventListener("click", openLoginModal);
+  document.getElementById("authBtn").addEventListener("click", async () => {
+    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía. Recarga la página."); return; }
+    if(session){
+      await supabase.auth.signOut();
+      showToast("Sesión cerrada");
+    } else {
+      openLoginModal();
+    }
+  });
+
+  document.getElementById("closePlayer").addEventListener("click", closePlayer);
+  document.getElementById("closePlayer2").addEventListener("click", closePlayer);
+  document.getElementById("playerOverlay").addEventListener("click", (e) => {
+    if(e.target.id === "playerOverlay") closePlayer();
+  });
+  document.getElementById("markDone").addEventListener("click", async () => {
+    if(!currentModule) return;
+    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
+    const wasDone = isDone(currentModule.id);
+    await markModuleComplete(currentModule.id);
+    render();
+    if(!wasDone) showToast("✨ Módulo completado — ¡siguiente nivel desbloqueado!");
+    closePlayer();
+  });
+
+  let signupMode = false;
+  document.getElementById("showSignup").addEventListener("click", (e) => {
+    e.preventDefault();
+    signupMode = !signupMode;
+    document.getElementById("loginSubmit").textContent = signupMode ? "Crear cuenta" : "Entrar";
+    e.target.textContent = signupMode ? "Ya tengo cuenta" : "Regístrate";
+  });
+
+  document.getElementById("loginSubmit").addEventListener("click", async () => {
+    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía. Recarga la página."); return; }
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    if(!email || !password){ showToast("Completa correo y contraseña"); return; }
+
+    const { error } = signupMode
+      ? await supabase.auth.signUp({ email, password })
+      : await supabase.auth.signInWithPassword({ email, password });
+
+    if(error){ showToast("⚠️ " + error.message); return; }
+
+    document.getElementById("loginModal").classList.remove("open");
+    showToast(signupMode ? "Cuenta creada. Revisa tu correo si se requiere confirmación." : "Sesión iniciada ✨");
+  });
+
+  document.getElementById("adminNavBtn").addEventListener("click", () => {
+    document.getElementById("adminBar").scrollIntoView({ behavior: "smooth" });
+  });
+  document.getElementById("addLevelBtn").addEventListener("click", () => openLevelModal(null));
+  document.getElementById("closeLevelModal").addEventListener("click", () => document.getElementById("levelModal").classList.remove("open"));
+
+  document.getElementById("saveLevelBtn").addEventListener("click", async () => {
+    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
+    const id = document.getElementById("levelId").value;
+    const payload = {
+      title: document.getElementById("levelTitle").value.trim(),
+      tag: document.getElementById("levelTag").value.trim(),
+      sort_order: Number(document.getElementById("levelSort").value) || 0
+    };
+    if(!payload.title){ showToast("El nivel necesita un título"); return; }
+
+    const { error } = id
+      ? await supabase.from("levels").update(payload).eq("id", id)
+      : await supabase.from("levels").insert(payload);
+
+    if(error){ showToast("⚠️ " + error.message); return; }
+    document.getElementById("levelModal").classList.remove("open");
+    showToast("Nivel guardado");
+    await loadEverything();
+  });
+
+  document.getElementById("deleteLevelBtn").addEventListener("click", async () => {
+    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
+    const id = document.getElementById("levelId").value;
+    if(!id) return;
+    if(!confirm("Esto también eliminará todos los módulos de este nivel. ¿Continuar?")) return;
+    const { error } = await supabase.from("levels").delete().eq("id", id);
+    if(error){ showToast("⚠️ " + error.message); return; }
+    document.getElementById("levelModal").classList.remove("open");
+    showToast("Nivel eliminado");
+    await loadEverything();
+  });
+
+  document.getElementById("closeModuleModal").addEventListener("click", () => document.getElementById("moduleModal").classList.remove("open"));
+  document.getElementById("addQuestionRow").addEventListener("click", () => {
+    qaRows.push({ question: "" });
+    renderQaRows();
+  });
+
+  document.getElementById("saveModuleBtn").addEventListener("click", async () => {
+    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
+    const id = document.getElementById("moduleId").value;
+    const levelId = document.getElementById("moduleLevelId").value;
+    const payload = {
+      level_id: levelId,
+      title: document.getElementById("moduleTitle").value.trim(),
+      description: document.getElementById("moduleDesc").value.trim(),
+      youtube_id: document.getElementById("moduleYoutube").value.trim(),
+      duration: document.getElementById("moduleDuration").value.trim(),
+      sort_order: Number(document.getElementById("moduleSort").value) || 0,
+      is_preview: document.getElementById("moduleIsPreview").checked
+    };
+    if(!payload.title){ showToast("El módulo necesita un título"); return; }
+
+    let moduleId = id;
+    if(id){
+      const { error } = await supabase.from("modules").update(payload).eq("id", id);
+      if(error){ showToast("⚠️ " + error.message); return; }
+    } else {
+      const { data, error } = await supabase.from("modules").insert(payload).select().single();
+      if(error){ showToast("⚠️ " + error.message); return; }
+      moduleId = data.id;
+    }
+
+    await supabase.from("module_questions").delete().eq("module_id", moduleId);
+    const questionsToInsert = qaRows
+      .filter(r => r.question.trim())
+      .map((r, i) => ({ module_id: moduleId, question: r.question.trim(), sort_order: i }));
+    if(questionsToInsert.length){
+      const { error: qErr } = await supabase.from("module_questions").insert(questionsToInsert);
+      if(qErr){ showToast("⚠️ " + qErr.message); }
+    }
+
+    document.getElementById("moduleModal").classList.remove("open");
+    showToast("Módulo guardado");
+    await loadEverything();
+  });
+
+  document.getElementById("deleteModuleBtn").addEventListener("click", async () => {
+    if(!supabaseReady){ showToast("⚠️ Conexión no disponible todavía."); return; }
+    const id = document.getElementById("moduleId").value;
+    if(!id) return;
+    if(!confirm("¿Eliminar este módulo y sus preguntas clave?")) return;
+    const { error } = await supabase.from("modules").delete().eq("id", id);
+    if(error){ showToast("⚠️ " + error.message); return; }
+    document.getElementById("moduleModal").classList.remove("open");
+    showToast("Módulo eliminado");
+    await loadEverything();
+  });
+}
+
+function openLoginModal(){ document.getElementById("loginModal").classList.add("open"); }
+
+/* =========================================================
+   AUTENTICACIÓN
+   ========================================================= */
+async function initAuth(){
+  if(!supabaseReady) return;
+  try{
+    const { data } = await supabase.auth.getSession();
+    session = data.session;
+    applyAuthState();
+    supabase.auth.onAuthStateChange((_event, newSession) => {
+      session = newSession;
+      applyAuthState();
+      loadEverything();
+    });
+  } catch(err){
+    console.error("[Proyectum IA] Error en initAuth:", err);
+    showToast("⚠️ Error verificando la sesión.");
+  }
+}
+
+function applyAuthState(){
+  const authBtn = document.getElementById("authBtn");
+  const userChip = document.getElementById("userChip");
+  const adminNavBtn = document.getElementById("adminNavBtn");
+  const adminBadge = document.getElementById("adminBadge");
+
+  if(session && session.user){
+    const email = session.user.email || "";
+    isAdmin = email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+    userChip.style.display = "flex";
+    document.getElementById("userName").textContent = email.split("@")[0];
+    document.getElementById("userEmail").textContent = email;
+    document.getElementById("avatarInitial").textContent = email.charAt(0).toUpperCase();
+    adminBadge.style.display = isAdmin ? "inline-block" : "none";
+    adminNavBtn.style.display = isAdmin ? "flex" : "none";
+    authBtn.textContent = "Cerrar sesión";
+  } else {
+    isAdmin = false;
+    userChip.style.display = "none";
+    adminNavBtn.style.display = "none";
+    authBtn.textContent = "Iniciar sesión";
+  }
+}
+
+/* =========================================================
+   CARGA DE DATOS
+   ========================================================= */
+async function loadEverything(){
+  if(!supabaseReady){
+    showToast("⚠️ No se puede cargar el contenido: sin conexión al servidor.");
+    return;
+  }
+  try{
+    const { data: levelsData, error: e1 } = await supabase
+      .from("levels").select("*").order("sort_order", { ascending: true });
+    const { data: modulesData, error: e2 } = await supabase
+      .from("modules").select("*").order("sort_order", { ascending: true });
+    const { data: questionsData, error: e3 } = await supabase
+      .from("module_questions").select("*").order("sort_order", { ascending: true });
+
+    if(e1 || e2 || e3){
+      showToast("⚠️ Error cargando la plataforma. Revisa la consola.");
+      console.error(e1 || e2 || e3);
+      return;
+    }
+
+    const questionsByModule = {};
+    (questionsData || []).forEach(q => {
+      (questionsByModule[q.module_id] ||= []).push(q);
+    });
+
+    LEVELS = (levelsData || []).map(lvl => ({
+      ...lvl,
+      modules: (modulesData || [])
+        .filter(m => m.level_id === lvl.id)
+        .map(m => ({ ...m, questions: questionsByModule[m.id] || [] }))
+    }));
+
+    allModules = LEVELS.flatMap(l => l.modules);
+
+    await loadProgress();
+    render();
+  } catch(err){
+    console.error("[Proyectum IA] Error en loadEverything:", err);
+    showToast("⚠️ Error inesperado cargando la plataforma.");
+  }
+}
+
+async function loadProgress(){
+  completedIds = new Set();
+  if(session && session.user){
+    const { data, error } = await supabase
+      .from("user_progress").select("module_id").eq("user_id", session.user.id);
+    if(!error){
+      (data || []).forEach(row => completedIds.add(row.module_id));
+    }
+  } else {
+    try{
+      const stored = JSON.parse(localStorage.getItem(LOCAL_KEY)) || [];
+      stored.forEach(id => completedIds.add(id));
+    }catch(e){}
+  }
+}
+
+async function markModuleComplete(moduleId){
+  completedIds.add(moduleId);
+  if(session && session.user){
+    const { error } = await supabase
+      .from("user_progress")
+      .insert({ user_id: session.user.id, module_id: moduleId });
+    if(error && error.code !== "23505"){
+      console.error(error);
+    }
+  } else {
+    const arr = Array.from(completedIds);
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(arr));
+  }
+}
+
+/* =========================================================
+   LÓGICA DE DESBLOQUEO
+   ========================================================= */
+function isDone(id){ return completedIds.has(id); }
+
+function isUnlocked(index){
+  const mod = allModules[index];
+  if(!session){
+    return !!mod.is_preview;
+  }
+  if(index === 0) return true;
+  return isDone(allModules[index-1].id);
+}
+
+/* =========================================================
+   RENDER
+   ========================================================= */
+function youtubeThumb(youtubeId){
+  return youtubeId ? `https://img.youtube.com/vi/${youtubeId}/hqdefault.jpg` : "";
+}
+
+function render(){
+  document.getElementById("anonBanner").style.display = session ? "none" : "flex";
+  document.getElementById("adminBar").style.display = isAdmin ? "flex" : "none";
+
+  const root = document.getElementById("levelsRoot");
+  root.innerHTML = "";
+  let flatIndex = 0;
+
+  LEVELS.forEach(level => {
+    const section = document.createElement("section");
+    section.className = "level-section";
+
+    const someUnlocked = level.modules.some((m, i) => isUnlocked(flatIndex + i));
+    section.innerHTML = `
+      <div class="level-head">
+        <span class="num ${someUnlocked ? '' : 'locked'}">${LEVELS.indexOf(level)+1}</span>
+        <h2>${escapeHtml(level.title)}</h2>
+        <span class="tag">${escapeHtml(level.tag || "")}</span>
+        <div class="level-line"></div>
+        ${isAdmin ? `<button class="level-edit-btn" data-level="${level.id}">Editar nivel</button>` : ""}
+      </div>
+      <div class="module-grid"></div>
+    `;
+    const grid = section.querySelector(".module-grid");
+
+    level.modules.forEach((m) => {
+      const idx = flatIndex;
+      const unlocked = isUnlocked(idx);
+      const done = isDone(m.id);
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "module-card" + (done ? " done" : "") + (unlocked ? "" : " locked");
+      const thumbUrl = youtubeThumb(m.youtube_id);
+      card.innerHTML = `
+        ${isAdmin ? `<div class="admin-tools">
+          <button class="icon-btn" data-edit-module="${m.id}" title="Editar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+          </button>
+        </div>` : ""}
+        <div class="thumb">
+          ${!session && m.is_preview ? `<span class="preview-pill">Vista previa</span>` : ""}
+          ${thumbUrl ? `<img src="${thumbUrl}" alt="">` : ""}
+          ${done
+            ? `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>`
+            : unlocked
+              ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`
+              : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>`
+          }
+          <span class="duration">${escapeHtml(m.duration || "")}</span>
+        </div>
+        <div class="body">
+          <p class="m-tag">${done ? "Completado" : unlocked ? "Disponible" : "Bloqueado"}</p>
+          <h3>${escapeHtml(m.title)}</h3>
+          <p class="desc">${escapeHtml(m.description || "")}</p>
+          <div class="status">${done ? "✓ Visto" : unlocked ? "▶ Ver módulo" : (session ? "🔒 Completa el anterior" : "🔒 Inicia sesión")}</div>
+        </div>
+        ${unlocked ? "" : `<div class="lockband">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+          <span>${session ? "Completa el módulo anterior para desbloquear" : "Inicia sesión para desbloquear la plataforma"}</span>
+        </div>`}
+      `;
+      card.addEventListener("click", (e) => {
+        if(e.target.closest("[data-edit-module]")) return;
+        if(!unlocked){
+          if(!session){ openLoginModal(); showToast("🔒 Inicia sesión para ver este módulo"); }
+          else showToast("🔒 Todavía no has desbloqueado este módulo");
+          return;
+        }
+        openPlayer(m);
+      });
+      grid.appendChild(card);
+      flatIndex++;
+    });
+
+    if(isAdmin){
+      const addBtn = document.createElement("button");
+      addBtn.type = "button";
+      addBtn.className = "add-card";
+      addBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg><span>Agregar módulo</span>`;
+      addBtn.addEventListener("click", () => openModuleModal(null, level.id));
+      grid.appendChild(addBtn);
+    }
+
+    root.appendChild(section);
+  });
+
+  root.querySelectorAll("[data-edit-module]").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const mod = allModules.find(m => m.id === btn.dataset.editModule);
+      openModuleModal(mod, mod.level_id);
+    });
+  });
+  root.querySelectorAll(".level-edit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const lvl = LEVELS.find(l => l.id === btn.dataset.level);
+      openLevelModal(lvl);
+    });
+  });
+
+  updateProgressBar();
+}
+
+function updateProgressBar(){
+  const total = allModules.length;
+  const done = allModules.filter(m => isDone(m.id)).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+  document.getElementById("progressFill").style.width = pct + "%";
+  document.getElementById("progressLabel").textContent = pct + "%";
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[s]));
+}
+
+/* =========================================================
+   REPRODUCTOR
+   ========================================================= */
+let currentModule = null;
+function openPlayer(m){
+  currentModule = m;
+  document.getElementById("playerTag").textContent = isDone(m.id) ? "Completado" : "Módulo";
+  document.getElementById("playerTitle").textContent = m.title;
+  document.getElementById("playerDesc").textContent = m.description || "";
+
+  const wrap = document.getElementById("playerVideoWrap");
+  wrap.innerHTML = "";
+  if(!m.youtube_id){
+    wrap.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-family:var(--ff-mono);font-size:.8rem;text-align:center;padding:20px;">
+      Todavía no se ha cargado el video de este módulo.
+    </div>`;
+  } else {
+    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${m.youtube_id}" allow="autoplay; encrypted-media" allowfullscreen></iframe>`;
+  }
+
+  const qWrap = document.getElementById("playerQuestionsWrap");
+  const qList = document.getElementById("playerQuestionsList");
+  if(m.questions && m.questions.length){
+    qList.innerHTML = m.questions.map(q => `<li>${escapeHtml(q.question)}</li>`).join("");
+    qWrap.style.display = "block";
+  } else {
+    qWrap.style.display = "none";
+  }
+
+  const doneBtn = document.getElementById("markDone");
+  doneBtn.textContent = isDone(m.id) ? "Ya completado ✓" : "Marcar como completado";
+  doneBtn.style.display = session ? "inline-flex" : "none";
+  document.getElementById("playerOverlay").classList.add("open");
+}
+function closePlayer(){
+  document.getElementById("playerOverlay").classList.remove("open");
+  document.getElementById("playerVideoWrap").innerHTML = "";
+}
+
+/* =========================================================
+   ADMIN — MÓDULOS + PREGUNTAS CLAVE (helpers de formulario)
+   ========================================================= */
+let qaRows = [];
+
+function openLevelModal(level){
+  document.getElementById("levelModalTitle").textContent = level ? "Editar nivel" : "Nuevo nivel";
+  document.getElementById("levelId").value = level ? level.id : "";
+  document.getElementById("levelTitle").value = level ? level.title : "";
+  document.getElementById("levelTag").value = level ? (level.tag || "") : "";
+  document.getElementById("levelSort").value = level ? level.sort_order : (LEVELS.length);
+  document.getElementById("deleteLevelBtn").style.display = level ? "inline-flex" : "none";
+  document.getElementById("levelModal").classList.add("open");
+}
+
+function openModuleModal(module, levelId){
+  document.getElementById("moduleModalTitle").textContent = module ? "Editar módulo" : "Nuevo módulo";
+  document.getElementById("moduleId").value = module ? module.id : "";
+  document.getElementById("moduleLevelId").value = levelId;
+  document.getElementById("moduleTitle").value = module ? module.title : "";
+  document.getElementById("moduleDesc").value = module ? (module.description || "") : "";
+  document.getElementById("moduleYoutube").value = module ? (module.youtube_id || "") : "";
+  document.getElementById("moduleDuration").value = module ? (module.duration || "") : "";
+  document.getElementById("moduleSort").value = module ? module.sort_order : 0;
+  document.getElementById("moduleIsPreview").checked = module ? !!module.is_preview : false;
+  document.getElementById("deleteModuleBtn").style.display = module ? "inline-flex" : "none";
+
+  qaRows = module && module.questions ? module.questions.map(q => ({ id: q.id, question: q.question })) : [];
+  renderQaRows();
+
+  document.getElementById("moduleModal").classList.add("open");
+}
+
+function renderQaRows(){
+  const list = document.getElementById("qaList");
+  list.innerHTML = "";
+  qaRows.forEach((row, i) => {
+    const div = document.createElement("div");
+    div.className = "qa-row";
+    div.innerHTML = `
+      <input type="text" value="${escapeHtml(row.question)}" data-qa-index="${i}" placeholder="¿Pregunta clave del módulo?">
+      <button class="icon-btn" type="button" data-remove-qa="${i}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    `;
+    list.appendChild(div);
+  });
+  list.querySelectorAll("[data-qa-index]").forEach(input => {
+    input.addEventListener("input", (e) => {
+      qaRows[Number(e.target.dataset.qaIndex)].question = e.target.value;
+    });
+  });
+  list.querySelectorAll("[data-remove-qa]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      qaRows.splice(Number(btn.dataset.removeQa), 1);
+      renderQaRows();
+    });
+  });
+}
+
+/* =========================================================
+   ARRANQUE
+   Orden importante:
+   1. Conectar UI estática (siempre funciona, pase lo que pase)
+   2. Intentar inicializar Supabase
+   3. Si Supabase quedó listo, recién ahí cargar sesión y datos
+   ========================================================= */
+(async function init(){
+  wireStaticUI();
+  initSupabaseClient();
+  if(supabaseReady){
+    await initAuth();
+    await loadEverything();
+  }
+})();
+</script>
+</body>
+</html>
