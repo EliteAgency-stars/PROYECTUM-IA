@@ -1071,18 +1071,223 @@ footer p{max-width:640px;margin:6px auto;}
     </div>
   </section>
 
-  <!-- CTA FINAL -->
-  <section class="final">
-    <div class="wrap">
-      <div class="level-final">🔓 Nivel final · Desbloquea el programa completo</div>
-      <h2>Tu negocio, un nivel más digital, más inteligente y más rentable</h2>
-      <p>Accede a Proyectum IA y comienza tu ruta hoy mismo.</p>
-      <a class="btn btn-primary buy-link" id="finalCtaLink" href="https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51" target="_blank" rel="noopener">
-        Quiero mi acceso ahora
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </a>
+<style>
+/* =========================================================
+   LANDING FINAL MANUS — reemplaza el CTA final sin tocar el embudo
+   ========================================================= */
+.manus-landing{position:relative;background:#050908;color:#fff;overflow:hidden;border-top:1px solid rgba(255,255,255,.08);font-family:'Inter',sans-serif;}
+.manus-landing *{box-sizing:border-box}.manus-landing .wrap{max-width:1360px;margin:auto;padding-left:24px;padding-right:24px}.ml-glow{position:absolute;width:420px;height:420px;border-radius:50%;filter:blur(110px);opacity:.11;pointer-events:none}.ml-glow-1{background:#00d8be;right:-160px;top:520px}.ml-glow-2{background:#00d8be;left:-220px;top:1600px}
+.ml-hero{position:relative;min-height:760px;display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);overflow:hidden}.ml-hero-bg{position:absolute;inset:0;background:radial-gradient(60% 80% at 80% 30%,rgba(0,216,190,.14),transparent 65%),radial-gradient(50% 70% at 15% 80%,rgba(0,216,190,.07),transparent 70%)}.ml-hero-content{position:relative;z-index:2;padding-top:90px;padding-bottom:90px}.ml-kicker{display:inline-flex;padding:9px 13px;border:1px solid rgba(0,216,190,.35);background:rgba(0,216,190,.08);border-radius:999px;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.08em;color:#00d8be;text-transform:uppercase}.ml-hero h1{font-size:clamp(3rem,7vw,6.4rem);line-height:.93;letter-spacing:-.075em;max-width:850px;margin:28px 0 24px}.ml-hero h1 span,.ml-section h2 span,.ml-final h2 span{color:#00d8be}.ml-hero p{max-width:650px;color:rgba(255,255,255,.67);font-size:1.08rem;line-height:1.8}.ml-actions{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:34px}.ml-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#00d8be;color:#03100e;padding:16px 24px;border-radius:12px;font-weight:800;letter-spacing:-.02em;transition:transform .2s,box-shadow .2s}.ml-btn:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,216,190,.22)}.ml-link{color:rgba(255,255,255,.6);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:3px}.ml-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:48px;color:rgba(255,255,255,.45);font-family:'IBM Plex Mono',monospace;font-size:.72rem}
+.ml-section{position:relative;padding:110px 0;border-bottom:1px solid rgba(255,255,255,.08)}.ml-alt{background:#07110f}.ml-two-col{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}.ml-label{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;color:#00d8be;text-transform:uppercase;margin-bottom:18px}.ml-section h2{font-size:clamp(2.2rem,4.4vw,4rem);line-height:1;letter-spacing:-.055em;margin:0 0 24px}.ml-section p{color:rgba(255,255,255,.62);line-height:1.8}.ml-system-card{border:1px solid rgba(255,255,255,.12);background:#09100f;border-radius:20px;overflow:hidden}.ml-system-image{aspect-ratio:16/10;overflow:hidden}.ml-system-image img{width:100%;height:100%;object-fit:cover}.ml-system-caption{padding:22px}.ml-system-caption small{display:block;font-family:'IBM Plex Mono',monospace;font-size:.64rem;color:#00d8be;letter-spacing:.1em;margin-bottom:8px}.ml-system-caption strong{font-size:1.1rem}.ml-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.ml-steps>div{border:1px solid rgba(255,255,255,.1);padding:16px;border-radius:14px}.ml-steps b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.65rem}.ml-steps strong{display:block;margin-top:8px}.ml-steps p{font-size:.75rem;margin:7px 0 0;color:rgba(255,255,255,.45);line-height:1.5}
+.ml-section-head{display:flex;justify-content:space-between;gap:60px;align-items:end;margin-bottom:55px}.ml-section-head>div{max-width:720px}.ml-section-head>p{max-width:420px;margin:0}.ml-modules{border-top:1px solid rgba(255,255,255,.12)}.ml-modules>div{display:grid;grid-template-columns:90px 1fr;gap:25px;padding:25px 0;border-bottom:1px solid rgba(255,255,255,.1);align-items:start}.ml-modules>div>b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.78rem;padding-top:4px}.ml-modules article h3{font-size:1.2rem;margin:0 0 6px;letter-spacing:-.02em}.ml-modules article p{margin:0;color:rgba(255,255,255,.48);font-size:.84rem;line-height:1.6}
+.ml-skill-image{position:relative;border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden}.ml-skill-image img{width:100%;aspect-ratio:4/3;object-fit:cover}.ml-image-tag{position:absolute;left:18px;bottom:18px;background:rgba(5,9,8,.85);backdrop-filter:blur(10px);padding:12px 15px;border:1px solid rgba(0,216,190,.25);border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:.64rem;color:#00d8be}.ml-image-tag strong{font-family:'Inter',sans-serif;font-size:.9rem;color:#fff}.ml-capabilities{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}.ml-capabilities>div{border-top:1px solid rgba(255,255,255,.1);padding-top:15px}.ml-capabilities i{font-style:normal;color:#00d8be}.ml-capabilities h3{display:inline;margin-left:8px;font-size:.95rem}.ml-capabilities p{font-size:.78rem;margin:6px 0 0}
+.ml-bonus{background:radial-gradient(60% 80% at 80% 30%,rgba(0,216,190,.08),transparent 65%)}.ml-bonus-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ml-bonus-grid>div{display:flex;gap:14px;align-items:center;border:1px solid rgba(255,255,255,.1);padding:17px;border-radius:13px}.ml-bonus-grid b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.65rem}.ml-bonus-grid span{font-size:.83rem;color:rgba(255,255,255,.78)}
+.ml-offer{background:#07110f}.ml-offer-grid{display:grid;grid-template-columns:1fr 430px;gap:90px;align-items:center}.ml-payment{margin-top:25px;color:#00d8be;font-family:'IBM Plex Mono',monospace;font-size:.72rem}.ml-price-card{background:#0a1512;border:1px solid rgba(0,216,190,.3);border-radius:22px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.ml-price-top{display:flex;justify-content:space-between;gap:15px;align-items:start;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:20px}.ml-price-top small{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.6rem;letter-spacing:.1em}.ml-price-top h3{font-size:1.35rem;margin-top:5px}.ml-price-top em{font-style:normal;font-size:.65rem;color:rgba(255,255,255,.4)}.ml-price{display:flex;align-items:start;margin:22px 0}.ml-price small{font-family:'IBM Plex Mono',monospace;margin-top:18px;color:rgba(255,255,255,.5)}.ml-price strong{font-size:6rem;line-height:.8;letter-spacing:-.08em}.ml-price-card>p{font-size:.78rem;color:rgba(255,255,255,.5);line-height:1.6}.ml-price-card ul{list-style:none;padding:0;margin:22px 0;display:grid;gap:9px}.ml-price-card li{font-size:.78rem;color:rgba(255,255,255,.72)}.ml-btn-wide{width:100%;margin-top:6px}.ml-note{text-align:center!important;font-family:'IBM Plex Mono',monospace;font-size:.62rem!important;margin-top:15px}.ml-disclaimer{max-width:850px;margin:45px auto 0;text-align:center;color:rgba(255,255,255,.35)!important;font-size:.68rem!important;line-height:1.7!important}
+.ml-faq{border-top:1px solid rgba(255,255,255,.12)}.ml-faq details{border-bottom:1px solid rgba(255,255,255,.1);padding:20px 0}.ml-faq summary{cursor:pointer;font-weight:700;font-size:.9rem;list-style:none}.ml-faq summary::-webkit-details-marker{display:none}.ml-faq summary:after{content:'+';float:right;color:#00d8be;font-size:1.2rem}.ml-faq details[open] summary:after{content:'−'}.ml-faq details p{font-size:.8rem;margin:12px 25px 0 0;color:rgba(255,255,255,.5)}
+.ml-final{position:relative;padding:130px 0;text-align:center;background:radial-gradient(60% 100% at 50% 0%,rgba(0,216,190,.13),transparent 65%);overflow:hidden}.ml-final-mark{font-size:2rem;color:#00d8be;margin-bottom:20px}.ml-final h2{font-size:clamp(2.8rem,6vw,5.5rem);line-height:.95;letter-spacing:-.07em;margin-bottom:25px}.ml-final p{max-width:520px;margin:0 auto 30px;color:rgba(255,255,255,.55)}@media(max-width:850px){.ml-two-col,.ml-offer-grid{grid-template-columns:1fr;gap:45px}.ml-section-head{display:block}.ml-section-head>p{margin-top:20px}.ml-offer-grid{gap:40px}}@media(max-width:600px){.ml-hero{min-height:680px}.ml-hero-content{padding-top:80px;padding-bottom:70px}.ml-hero h1{font-size:3.1rem}.ml-hero p{font-size:.94rem}.ml-actions{flex-direction:column;align-items:stretch}.ml-actions .ml-btn,.ml-actions .ml-link{text-align:center;width:100%}.ml-meta{gap:12px;flex-direction:column}.ml-section{padding:60px 0}.ml-section h2{font-size:2.5rem}.ml-modules>div{grid-template-columns:50px 1fr;gap:10px;padding:21px 0}.ml-modules article h3{font-size:1.05rem}.ml-modules article p{font-size:.76rem}.ml-bonus-grid,.ml-capabilities{grid-template-columns:1fr}.ml-price-card{padding:25px 20px}.ml-price strong{font-size:5rem}.ml-price-card ul{grid-template-columns:1fr}.ml-final{padding:85px 0}.ml-final h2{font-size:3rem}}
+</style>
+
+<section class="manus-landing" id="manusLanding">
+  <div class="ml-glow ml-glow-1"></div>
+  <div class="ml-glow ml-glow-2"></div>
+
+  <div class="ml-hero">
+    <div class="ml-hero-bg"></div>
+    <div class="ml-hero-content wrap">
+      <div class="ml-kicker">✦ Formación práctica en IA</div>
+      <h1>Aprende la IA.<br><span>Activa tu ruta</span><br>digital.</h1>
+      <p>Proyectum IA reúne formación, herramientas y una secuencia de acción para que conviertas la inteligencia artificial en habilidades aplicables a un negocio digital.</p>
+
+      <div class="ml-actions">
+        <a class="ml-btn buy-link" href="https://pay.hotmart.com/O106580846O" target="_blank" rel="noopener">Conocer el acceso por US$95 ↗</a>
+        <a class="ml-link" href="#ml-programa">Explorar el programa ↓</a>
+      </div>
+
+      <div class="ml-meta">
+        <span>◷ 12–15 horas estimadas</span>
+        <span>▣ 51 lecciones en video</span>
+        <span>✦ PDFs + ejercicios</span>
+      </div>
+    </div>
+  </div>
+
+  <section class="ml-section" id="ml-modelo">
+    <div class="wrap ml-two-col">
+      <div>
+        <div class="ml-label">01 / El sistema</div>
+        <h2>Una ruta para pasar de <span>curiosidad a ejecución.</span></h2>
+        <p>La IA no tiene valor por acumular herramientas. Tiene valor cuando puedes convertirla en una habilidad que se aplica, se organiza y se lleva al mercado.</p>
+      </div>
+
+      <div>
+        <div class="ml-system-card">
+          <div class="ml-system-image">
+            <img src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA" loading="lazy">
+          </div>
+          <div class="ml-system-caption">
+            <small>UNA RUTA, CINCO MOVIMIENTOS</small>
+            <strong>Entender. Crear. Ofrecer. Automatizar. Activar.</strong>
+          </div>
+        </div>
+
+        <div class="ml-steps">
+          <div><b>01</b><strong>Aprende</strong><p>Fundamentos y herramientas de IA.</p></div>
+          <div><b>02</b><strong>Aplica</strong><p>Contenido, edición y propuesta de servicio.</p></div>
+          <div><b>03</b><strong>Activa</strong><p>Estructura comercial y próximos pasos.</p></div>
+        </div>
+      </div>
     </div>
   </section>
+
+  <section class="ml-section ml-alt" id="ml-programa">
+    <div class="wrap">
+      <div class="ml-section-head">
+        <div>
+          <div class="ml-label">02 / El programa</div>
+          <h2>Diez módulos para construir una <span>práctica digital.</span></h2>
+        </div>
+        <p>51 lecciones en video, acompañadas de PDFs y ejercicios para trasladar cada bloque a una acción concreta.</p>
+      </div>
+
+      <div class="ml-modules">
+        <div><b>00</b><article><h3>Bienvenida</h3><p>Conoce la ruta, el método de estudio y cómo empezar con foco.</p></article></div>
+        <div><b>01</b><article><h3>Mentalidad de CEO digital</h3><p>Ordena tus prioridades, tu historia y tus hábitos de ejecución.</p></article></div>
+        <div><b>02</b><article><h3>El modelo que cambia todo</h3><p>Entiende la franquicia digital, su estructura y el plan de activación.</p></article></div>
+        <div><b>03</b><article><h3>Edición profesional con CapCut</h3><p>Crea piezas de video claras y publicables desde tu celular.</p></article></div>
+        <div><b>04</b><article><h3>Tu arsenal de herramientas IA</h3><p>Aplica IA a contenido, estrategia, diseño, voz y guiones.</p></article></div>
+        <div><b>05</b><article><h3>Edición con IA para conseguir clientes</h3><p>Construye un portafolio y una propuesta de servicio inicial.</p></article></div>
+        <div><b>06</b><article><h3>El sistema de ventas</h3><p>Estructura conversaciones, contenido y seguimiento con propósito.</p></article></div>
+        <div><b>07</b><article><h3>Automatizaciones con IA</h3><p>Diseña flujos para mensajes, leads y atención más ordenada.</p></article></div>
+        <div><b>08</b><article><h3>Tu influencer IA</h3><p>Crea una presencia digital con avatar, voz y contenido escalable.</p></article></div>
+        <div><b>09</b><article><h3>Activa tu franquicia hoy</h3><p>Reúne tus recursos, define tu lanzamiento y pasa a la acción.</p></article></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ml-section">
+    <div class="wrap ml-two-col ml-skill">
+      <div class="ml-skill-image">
+        <img src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Herramientas de inteligencia artificial" loading="lazy">
+        <div class="ml-image-tag">MÓDULO 08<br><strong>Tu influencer IA</strong></div>
+      </div>
+
+      <div>
+        <div class="ml-label">Una habilidad que se multiplica</div>
+        <h2>Tu contenido no tiene que depender de <span>estar siempre frente a cámara.</span></h2>
+        <p>Dentro del programa exploras cómo dar forma a una presencia digital con herramientas de avatar, voz y video asistido por IA. El objetivo es entender el proceso y usarlo con intención.</p>
+
+        <div class="ml-capabilities">
+          <div><i>◉</i><h3>Crea</h3><p>Un personaje digital y una línea de contenido.</p></div>
+          <div><i>◉</i><h3>Expresa</h3><p>Ideas con formatos de video y voz asistidos.</p></div>
+          <div><i>◉</i><h3>Organiza</h3><p>Un flujo para producir con más consistencia.</p></div>
+          <div><i>◉</i><h3>Ajusta</h3><p>Tu mensaje y recursos a tu propio contexto.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ml-section ml-bonus" id="ml-incluye">
+    <div class="wrap ml-two-col">
+      <div>
+        <div class="ml-label">Bonus incluido</div>
+        <h2>Recursos para no quedarte en la <span>teoría.</span></h2>
+        <p>Además de las lecciones, recibes un kit de piezas y guías que puedes adaptar a tu propio punto de partida.</p>
+      </div>
+
+      <div class="ml-bonus-grid">
+        <div><b>01</b><span>30 ideas de posts para Instagram</span></div>
+        <div><b>02</b><span>15 guiones de stories con CTA</span></div>
+        <div><b>03</b><span>10 scripts para TikTok</span></div>
+        <div><b>04</b><span>Prompts y recursos de apoyo</span></div>
+        <div><b>05</b><span>Guión de ventas por WhatsApp</span></div>
+        <div><b>06</b><span>Kit de lanzamiento y materiales de acción</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="ml-section ml-offer" id="ml-oferta">
+    <div class="wrap ml-offer-grid">
+      <div>
+        <div class="ml-label">03 / Tu acceso</div>
+        <h2>La ruta está aquí. El avance empieza cuando decides <span>usarla.</span></h2>
+        <p>Accede al programa completo, revisa el material a tu ritmo y aplica cada etapa en el orden que tenga sentido para ti.</p>
+        <div class="ml-payment">◉ Un pago único. Acceso digital.</div>
+      </div>
+
+      <div class="ml-price-card">
+        <div class="ml-price-top">
+          <div>
+            <small>ACCESO COMPLETO</small>
+            <h3>Proyectum IA</h3>
+          </div>
+          <em>Pago único</em>
+        </div>
+
+        <div class="ml-price">
+          <small>US$</small>
+          <strong>95</strong>
+        </div>
+
+        <p>Programa de 51 lecciones con video, PDFs, ejercicios y kit de recursos de apoyo.</p>
+
+        <ul>
+          <li>✓ Los 10 módulos de la ruta</li>
+          <li>✓ Recursos y ejercicios prácticos</li>
+          <li>✓ Kit de contenido y guiones</li>
+          <li>✓ Guía para tu activación inicial</li>
+        </ul>
+
+        <a class="ml-btn ml-btn-wide buy-link" href="https://pay.hotmart.com/O106580846O" target="_blank" rel="noopener">Activar mi acceso por US$95 ↗</a>
+
+        <p class="ml-note">Pago procesado de forma segura a través de Hotmart.</p>
+      </div>
+    </div>
+
+    <p class="ml-disclaimer">Proyectum IA ofrece formación y recursos. El avance, las ventas o cualquier resultado económico dependen de la implementación individual y de las condiciones vigentes de las plataformas aplicables; no se garantizan resultados.</p>
+  </section>
+
+  <section class="ml-section ml-alt" id="ml-preguntas">
+    <div class="wrap ml-two-col">
+      <div>
+        <div class="ml-label">Preguntas claras</div>
+        <h2>Antes de activar, vale la pena <span>entender bien.</span></h2>
+        <p>Las decisiones informadas son mejores. Aquí tienes respuestas directas sobre el alcance del programa.</p>
+      </div>
+
+      <div class="ml-faq">
+        <details>
+          <summary>¿Necesito experiencia previa en IA o negocios digitales?</summary>
+          <p>No es un requisito. La ruta empieza con fundamentos, herramientas y una secuencia de práctica.</p>
+        </details>
+
+        <details>
+          <summary>¿Qué tipo de materiales incluye el acceso?</summary>
+          <p>El programa reúne lecciones en video, PDFs, ejercicios y recursos de apoyo, además de materiales de contenido y guiones.</p>
+        </details>
+
+        <details>
+          <summary>¿Esto garantiza ingresos o resultados de ventas?</summary>
+          <p>No. Los resultados dependen de factores individuales, el trabajo aplicado, el mercado y las condiciones de las plataformas que se utilicen.</p>
+        </details>
+
+        <details>
+          <summary>¿En qué consiste la parte de franquicia digital?</summary>
+          <p>El módulo explica el modelo, la activación de recursos y el proceso de afiliación o reventa descrito por el programa, sujeto a los términos vigentes.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="ml-final">
+    <div class="wrap">
+      <div class="ml-final-mark">✦</div>
+      <div class="ml-label">PROYECTUM IA</div>
+      <h2>No esperes una señal.<br><span>Construye tu siguiente paso.</span></h2>
+      <p>Revisa el programa, entiende la propuesta y activa una ruta que puedas ejecutar con enfoque.</p>
+      <a class="ml-btn buy-link" href="https://pay.hotmart.com/O106580846O" target="_blank" rel="noopener">Ver acceso por US$95 ↗</a>
+    </div>
+  </section>
+</section>
 </main>
 
 <footer>
