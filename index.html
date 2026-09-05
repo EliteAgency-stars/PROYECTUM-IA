@@ -566,6 +566,28 @@ footer p{max-width:640px;margin:6px auto;}
   body{padding-bottom:64px;}
 }
 
+/* Enlaces "sin acceso": se muestran en gris mientras no haya sesión iniciada */
+.nav-links a.auth-locked,
+.hotbar-item.auth-locked{
+  color:#5a6b6e !important;
+  opacity:.55;
+}
+.hotbar-item.auth-locked svg{ color:#5a6b6e; }
+.hotbar-item.auth-locked:active{
+  color:#5a6b6e !important;
+  background:transparent !important;
+  transform:none !important;
+}
+.nav-links a.auth-locked:hover{
+  color:#5a6b6e !important;
+  background:transparent !important;
+}
+.hotbar-item.auth-locked .hotbar-icon-wrap{
+  background:linear-gradient(140deg,#4a565a,#3a4346) !important;
+  box-shadow:none !important;
+}
+.hotbar-item.auth-locked span{ color:#5a6b6e !important; }
+
 /* =========================================================
    PANEL DE ADMINISTRADOR (editar imágenes y enlaces de compra)
    ========================================================= */
@@ -1389,6 +1411,23 @@ revealTargets.forEach(el=>io.observe(el));
     }
   }
 
+  // Si un video con sonido no logra reproducirse (bloqueo de autoplay del
+  // navegador), en vez de saltar el paso directamente probamos primero en
+  // silencio: así el usuario al menos ve el video, y puede activar el
+  // sonido con un toque si aparece el aviso.
+  function safePlayWithMutedFallback(video, onHardFail){
+    safePlay(video, function(){
+      if(!video.muted){
+        video.muted = true;
+        video.currentTime = 0;
+        safePlay(video, onHardFail);
+        showTtUnmuteHint(video);
+      } else if(onHardFail){
+        onHardFail();
+      }
+    });
+  }
+
   startBtn.addEventListener('click', function(){
     ctx(); // desbloquea audio con el primer gesto del usuario
     ['ttVideo0','ttVideo1','ttVideo2'].forEach(function(id){
@@ -1397,9 +1436,10 @@ revealTargets.forEach(el=>io.observe(el));
     voiceAudios.forEach(unlockAudioForMobile);
     videoGate.style.display = 'none';
     introVideo.style.display = 'block';
-    safePlay(introVideo, advanceFromVideo);
-    // Si el video no puede cargar, no se traba la experiencia
-    setTimeout(function(){ if(introVideo.readyState === 0) advanceFromVideo(); }, 6000);
+    safePlayWithMutedFallback(introVideo, advanceFromVideo);
+    // Si el video no puede cargar en absoluto (no solo bloqueo de autoplay),
+    // no se traba la experiencia
+    setTimeout(function(){ if(introVideo.readyState === 0) advanceFromVideo(); }, 8000);
   });
   introVideo.addEventListener('ended', advanceFromVideo);
   introVideo.addEventListener('error', advanceFromVideo);
@@ -2029,6 +2069,22 @@ revealTargets.forEach(el=>io.observe(el));
     });
   }
   bindProtectedLinks();
+
+  // Pinta en gris los enlaces protegidos (Plataforma / Comunidad) mientras no
+  // haya sesión activa, tanto en el menú de escritorio como en la hotbar móvil.
+  async function refreshProtectedLinkStyles(){
+    const isAuthed = await hasActiveSession();
+    document.querySelectorAll('a').forEach(function(a){
+      const href = a.getAttribute('href');
+      if(!href || PROTECTED_PATHS.indexOf(href) === -1) return;
+      a.classList.toggle('auth-locked', !isAuthed);
+    });
+  }
+  refreshProtectedLinkStyles();
+  if(window.sb){
+    window.sb.auth.onAuthStateChange(function(){ refreshProtectedLinkStyles(); });
+  }
+
   closeLogin.addEventListener('click', function(){
     loginOverlay.classList.remove('open');
   });
