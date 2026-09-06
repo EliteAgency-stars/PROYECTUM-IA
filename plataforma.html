@@ -12,6 +12,9 @@
   window.SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
   window.SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
   window.ADMIN_EMAIL = "contact@proyectumia.com";
+  // Nombres de los buckets de Supabase Storage (créalos en el dashboard, ver notas al final)
+  window.VIDEO_BUCKET = "videos";
+  window.COVER_BUCKET = "covers";
   try{
     window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   } catch(err){
@@ -46,7 +49,6 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .eyebrow::before{content:"";width:7px;height:7px;border-radius:2px;background:var(--gold);display:inline-block;transform:rotate(45deg);}
 ::selection{background:var(--primary);color:#03181c;}
 
-/* ===== NAV (idéntico a la landing) ===== */
 .site-nav{
   position:sticky;top:0;left:0;width:100%;z-index:500;
   display:flex;align-items:center;justify-content:space-between;gap:20px;
@@ -80,6 +82,7 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
   transition:border-color .15s;
 }
 .pill-btn:hover{border-color:var(--primary);}
+.pill-btn:disabled{opacity:.5;cursor:not-allowed;}
 .pill-btn.primary{
   color:#03181c;background:linear-gradient(100deg,var(--primary),#7ff5f2);border:none;
   transition:transform .15s;
@@ -95,7 +98,6 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
   background:linear-gradient(100deg,var(--primary),var(--gold));padding:2px 8px;border-radius:100px;
 }
 
-/* ===== Layout general ===== */
 main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
 .hero-strip{padding:44px 0 30px;border-bottom:1px solid var(--line);margin-bottom:8px;}
 .hero-strip h1{font-size:clamp(1.6rem,3.6vw,2.3rem);margin-top:12px;}
@@ -109,7 +111,6 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
 .search::placeholder{color:var(--text-dim);}
 .search:focus{outline:none;border-color:var(--primary);}
 
-/* ===== Secciones de la plataforma ===== */
 .section-block{padding:38px 0 6px;}
 .section-head-row{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;}
 .section-head-row h2{font-size:clamp(1.15rem,2.4vw,1.5rem);display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;}
@@ -148,7 +149,6 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
 .empty{text-align:center;padding:50px 20px;color:var(--text-dim);border:1px dashed var(--line);border-radius:var(--radius);font-size:.88rem;}
 .loader{display:flex;justify-content:center;padding:50px 0;color:var(--text-dim);font-family:var(--ff-mono);font-size:.82rem;}
 
-/* ===== Modales (login / admin) ===== */
 .overlay{
   position:fixed;inset:0;background:#020c10ee;display:none;align-items:center;justify-content:center;
   z-index:2000;padding:20px;overflow-y:auto;
@@ -173,18 +173,33 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
   width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;
   padding:11px 13px;color:var(--text);font-family:var(--ff-body);font-size:.88rem;
 }
+.field input[type="file"]{padding:9px 10px;font-family:var(--ff-mono);font-size:.78rem;}
 .field textarea{resize:vertical;min-height:80px;}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--primary);}
 .field .hint{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);margin-top:6px;}
+
+.upload-status{
+  margin-top:8px;font-family:var(--ff-mono);font-size:.72rem;color:var(--text-dim);
+  display:flex;align-items:center;gap:8px;
+}
+.upload-bar{flex:1;height:6px;border-radius:100px;background:var(--panel);border:1px solid var(--line);overflow:hidden;}
+.upload-bar-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary),var(--gold));transition:width .15s;}
+.upload-status.ok{color:#8ff0be;}
+.upload-status.error{color:#ff9a9a;}
+.file-preview{
+  margin-top:8px;font-family:var(--ff-mono);font-size:.72rem;color:var(--primary);
+  background:var(--primary-dim);border:1px solid var(--line);padding:6px 10px;border-radius:8px;
+  display:none;align-items:center;justify-content:space-between;gap:8px;
+}
+.file-preview button{background:none;border:none;color:var(--text-dim);font-size:12px;}
 
 .form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;}
 .msg{font-family:var(--ff-mono);font-size:.74rem;padding:10px 12px;border-radius:9px;margin-top:14px;display:none;}
 .msg.error{background:#ff8a8022;border:1px solid #ff8a8055;color:#ff9a9a;display:block;}
 .msg.ok{background:#22fdf922;border:1px solid #22fdf955;color:#8ff0be;display:block;}
 
-/* ===== Detalle del módulo ===== */
 .player-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;}
-.player-wrap iframe{width:100%;height:100%;border:0;display:block;}
+.player-wrap video{width:100%;height:100%;display:block;background:#000;}
 .detail-body{padding:24px 26px 30px;}
 .detail-body h2{font-size:1.35rem;margin:2px 0 8px;}
 .detail-body .desc{color:var(--text-dim);font-size:.92rem;line-height:1.6;margin-bottom:22px;}
@@ -192,7 +207,6 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
 
 h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--primary);margin:0 0 14px;}
 
-/* subsecciones internas del módulo (contenido/temario) */
 .sections-list{display:flex;flex-direction:column;gap:10px;margin-bottom:26px;}
 .section-item{
   background:var(--panel);border:1px solid var(--line);border-radius:11px;
@@ -203,7 +217,6 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
 .sec-row input{flex:1;}
 .sec-row button{width:38px;flex-shrink:0;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text-dim);}
 
-/* comentarios */
 .comment{display:flex;gap:10px;margin-bottom:16px;}
 .avatar{
   width:34px;height:34px;border-radius:50%;flex-shrink:0;
@@ -217,7 +230,6 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
 .comment-form{display:flex;gap:10px;margin-top:6px;align-items:flex-start;}
 .comment-form textarea{min-height:44px;}
 
-/* ===== Hotbar móvil (idéntica a la landing) ===== */
 .mobile-hotbar{
   display:none;position:fixed;left:0;bottom:0;width:100%;z-index:600;
   background:#04141af0;backdrop-filter:blur(14px);border-top:1px solid var(--line);
@@ -286,7 +298,6 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
   <p class="small-note">PROYECTUM IA · Plataforma de módulos</p>
 </main>
 
-<!-- ============ HOTBAR MÓVIL ============ -->
 <nav class="mobile-hotbar" id="mobileHotbar">
   <div class="hotbar-row">
     <a href="/plataforma" class="hotbar-item active">
@@ -314,7 +325,6 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
   </div>
 </nav>
 
-<!-- ============ LOGIN ============ -->
 <div class="overlay" id="loginOverlay">
   <div class="modal">
     <button class="close-btn" data-close="loginOverlay">✕</button>
@@ -331,7 +341,6 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
   </div>
 </div>
 
-<!-- ============ NUEVA / EDITAR SECCIÓN (admin) ============ -->
 <div class="overlay" id="sectionOverlay">
   <div class="modal">
     <button class="close-btn" data-close="sectionOverlay">✕</button>
@@ -347,7 +356,6 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
   </div>
 </div>
 
-<!-- ============ NUEVO / EDITAR MÓDULO (admin) ============ -->
 <div class="overlay" id="moduleOverlay">
   <div class="modal">
     <button class="close-btn" data-close="moduleOverlay">✕</button>
@@ -361,15 +369,35 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
     </div>
     <div class="field"><label>Título</label><input type="text" id="mTitle" placeholder="Ej: Fundamentos de Prompt Engineering"></div>
     <div class="field"><label>Descripción</label><textarea id="mDesc" placeholder="De qué trata este módulo…"></textarea></div>
+
     <div class="field">
-      <label>Enlace de YouTube</label>
-      <input type="text" id="mYoutube" placeholder="https://www.youtube.com/watch?v=…">
-      <div class="hint">Se reproduce como vista previa de YouTube dentro de la plataforma.</div>
+      <label>Video del módulo</label>
+      <input type="file" id="mVideoFile" accept="video/mp4,video/webm,video/quicktime">
+      <div class="hint">Se sube directo a tu almacenamiento de Supabase. Acepta .mp4, .webm, .mov.</div>
+      <div class="upload-status" id="videoUploadStatus" style="display:none;">
+        <span id="videoUploadLabel">Subiendo…</span>
+        <div class="upload-bar"><div class="upload-bar-fill" id="videoUploadBar"></div></div>
+      </div>
+      <div class="file-preview" id="videoFilePreview">
+        <span id="videoFileName"></span>
+        <button type="button" id="clearVideoBtn">✕ Quitar</button>
+      </div>
+      <input type="hidden" id="mVideo">
     </div>
+
     <div class="field">
-      <label>URL de la imagen de portada</label>
-      <input type="text" id="mCover" placeholder="https://…imagen.jpg">
-      <div class="hint">Si la dejas vacía, se usa la miniatura automática del video.</div>
+      <label>Imagen de portada</label>
+      <input type="file" id="mCoverFile" accept="image/png,image/jpeg,image/webp">
+      <div class="hint">Miniatura que se ve en la tarjeta del módulo.</div>
+      <div class="upload-status" id="coverUploadStatus" style="display:none;">
+        <span id="coverUploadLabel">Subiendo…</span>
+        <div class="upload-bar"><div class="upload-bar-fill" id="coverUploadBar"></div></div>
+      </div>
+      <div class="file-preview" id="coverFilePreview">
+        <span id="coverFileName"></span>
+        <button type="button" id="clearCoverBtn">✕ Quitar</button>
+      </div>
+      <input type="hidden" id="mCover">
     </div>
 
     <div class="form-actions">
@@ -380,7 +408,6 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
   </div>
 </div>
 
-<!-- ============ DETALLE DEL MÓDULO ============ -->
 <div class="overlay" id="viewOverlay">
   <div class="modal wide">
     <button class="close-btn" data-close="viewOverlay" style="background:rgba(4,20,26,.6);">✕</button>
@@ -395,6 +422,7 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
         <div id="secRows"></div>
         <button class="pill-btn" id="addSecRow" style="margin-top:4px;">+ Añadir punto</button>
         <button class="pill-btn primary" id="saveSecBtn" style="margin-left:8px;">Guardar temario</button>
+        <button class="pill-btn" id="editModuleBtn" style="margin-left:8px;">Editar módulo</button>
         <button class="pill-btn" id="deleteModuleBtn" style="margin-left:8px;color:#ff9a9a;">Eliminar módulo</button>
       </div>
 
@@ -411,15 +439,19 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
 <script>
 const sb = window.sb;
 const ADMIN_EMAIL = window.ADMIN_EMAIL;
+const VIDEO_BUCKET = window.VIDEO_BUCKET;
+const COVER_BUCKET = window.COVER_BUCKET;
 
 let currentUser = null;
 let isAdmin = false;
-let platformSections = [];   // secciones de la plataforma (Bienvenida, Edición, ...)
+let platformSections = [];
 let modules = [];
 let authMode = "login";
 let activeModuleId = null;
 let editingSectionId = null;
 let editingModuleId = null;
+let pendingVideoFile = null;
+let pendingCoverFile = null;
 
 function $(id){ return document.getElementById(id); }
 function openModal(id){ $(id).classList.add("open"); }
@@ -434,12 +466,6 @@ document.querySelectorAll(".overlay").forEach(ov=>{
 const navToggle = $("navToggle"), navLinks = $("navLinks");
 navToggle.addEventListener("click", ()=> navLinks.classList.toggle("open"));
 
-function youtubeId(url){
-  if(!url) return null;
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
-  return m ? m[1] : null;
-}
-function youtubeThumb(url){ const id = youtubeId(url); return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : ""; }
 function escapeHtml(str){ return (str||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function timeAgo(dateStr){
   const diff = (Date.now() - new Date(dateStr).getTime())/1000;
@@ -449,14 +475,22 @@ function timeAgo(dateStr){
   return `hace ${Math.floor(diff/86400)} d`;
 }
 function initials(email){ return (email||"?").slice(0,2).toUpperCase(); }
+function formatBytes(bytes){
+  if(bytes < 1024) return bytes + " B";
+  if(bytes < 1024*1024) return (bytes/1024).toFixed(0) + " KB";
+  return (bytes/(1024*1024)).toFixed(1) + " MB";
+}
+function safeFileName(name){
+  const parts = name.split(".");
+  const ext = parts.length > 1 ? "." + parts.pop() : "";
+  const base = parts.join(".").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return `${Date.now()}-${base || "archivo"}${ext.toLowerCase()}`;
+}
 
 if(!sb){
   $("contentWrap").innerHTML = `<div class="empty">No se pudo cargar la conexión con la plataforma.<br>Recarga la página e inténtalo de nuevo.</div>`;
 }
 
-/* ============================================================
-   AUTH
-============================================================ */
 async function refreshSession(){
   if(!sb) return;
   const { data:{ session } } = await sb.auth.getSession();
@@ -519,9 +553,6 @@ $("authSubmit").addEventListener("click", async ()=>{
   $("authSubmit").disabled = false;
 });
 
-/* ============================================================
-   CARGA: secciones + módulos
-============================================================ */
 async function loadPlatform(){
   if(!sb) return;
   const [{ data: secData, error: secErr }, { data: modData, error: modErr }] = await Promise.all([
@@ -556,7 +587,7 @@ function renderContent(filter=""){
   let html = "";
   platformSections.forEach((sec, idx) => {
     const secModules = modules.filter(m => m.section_id === sec.id && (!q || m.title.toLowerCase().includes(q) || (m.description||"").toLowerCase().includes(q)));
-    if(!q && secModules.length === 0 && !isAdmin) return; // oculta secciones vacías para visitantes
+    if(!q && secModules.length === 0 && !isAdmin) return;
     html += `
       <div class="section-block">
         <div class="section-head-row">
@@ -605,7 +636,7 @@ function cardHtml(m){
   return `
     <div class="card" data-module-id="${m.id}">
       <div class="thumb">
-        <img src="${escapeHtml(m.cover_url || youtubeThumb(m.youtube_url))}" alt="" loading="lazy" onerror="this.style.display='none'">
+        <img src="${escapeHtml(m.cover_url || "")}" alt="" loading="lazy" onerror="this.style.display='none'">
         <div class="play"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="11" fill="rgba(4,20,26,.55)" stroke="rgba(255,255,255,.7)" stroke-width="1"/><path d="M10 8l6 4-6 4V8z"/></svg></div>
       </div>
       <div class="body">
@@ -618,9 +649,6 @@ function cardHtml(m){
 
 $("searchInput").addEventListener("input", (e)=> renderContent(e.target.value));
 
-/* ============================================================
-   SECCIONES DE LA PLATAFORMA (admin)
-============================================================ */
 $("newSectionBtn").addEventListener("click", ()=>{
   editingSectionId = null;
   $("sectionFormTitle").textContent = "Nueva sección";
@@ -658,43 +686,140 @@ $("saveSectionBtn").addEventListener("click", async ()=>{
   $("saveSectionBtn").disabled = false;
 });
 
-/* ============================================================
-   MÓDULOS (admin)
-============================================================ */
+function resetUploadUI(){
+  pendingVideoFile = null;
+  pendingCoverFile = null;
+  $("mVideoFile").value = "";
+  $("mCoverFile").value = "";
+  $("mVideo").value = "";
+  $("mCover").value = "";
+  ["video","cover"].forEach(k=>{
+    $(`${k}UploadStatus`).style.display = "none";
+    $(`${k}UploadStatus`).className = "upload-status";
+    $(`${k}UploadBar`).style.width = "0%";
+    $(`${k}FilePreview`).style.display = "none";
+  });
+}
+
+function wireFileInput(kind){
+  const fileInput = $(`m${kind === "video" ? "Video" : "Cover"}File`);
+  const previewEl = $(`${kind}FilePreview`);
+  const nameEl = $(`${kind}FileName`);
+  const clearBtn = $(`clear${kind === "video" ? "Video" : "Cover"}Btn`);
+  const hiddenInput = $(kind === "video" ? "mVideo" : "mCover");
+
+  fileInput.addEventListener("change", ()=>{
+    const file = fileInput.files[0];
+    if(!file) return;
+    if(kind === "video") pendingVideoFile = file; else pendingCoverFile = file;
+    previewEl.style.display = "flex";
+    nameEl.textContent = `${file.name} · ${formatBytes(file.size)}`;
+    hiddenInput.value = "";
+  });
+
+  clearBtn.addEventListener("click", ()=>{
+    fileInput.value = "";
+    previewEl.style.display = "none";
+    hiddenInput.value = "";
+    if(kind === "video") pendingVideoFile = null; else pendingCoverFile = null;
+  });
+}
+wireFileInput("video");
+wireFileInput("cover");
+
+async function uploadFileToBucket(kind, bucket, file){
+  const statusEl = $(`${kind}UploadStatus`);
+  const labelEl = $(`${kind}UploadLabel`);
+  const barEl = $(`${kind}UploadBar`);
+  statusEl.style.display = "flex"; statusEl.className = "upload-status";
+  labelEl.textContent = `Subiendo ${file.name}…`;
+  barEl.style.width = "10%";
+
+  const path = safeFileName(file.name);
+  const { data, error } = await sb.storage.from(bucket).upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type || undefined
+  });
+
+  if(error){
+    statusEl.className = "upload-status error";
+    labelEl.textContent = `Error subiendo: ${error.message}`;
+    barEl.style.width = "0%";
+    throw error;
+  }
+
+  barEl.style.width = "100%";
+  const { data: pub } = sb.storage.from(bucket).getPublicUrl(data.path);
+  statusEl.className = "upload-status ok";
+  labelEl.textContent = "Subida completa";
+  return pub.publicUrl;
+}
+
 $("newModuleBtn").addEventListener("click", ()=>{
   if(platformSections.length === 0){ alert("Crea al menos una sección antes de publicar un módulo."); return; }
   editingModuleId = null;
   $("moduleFormTitle").textContent = "Nuevo módulo";
-  $("mTitle").value = ""; $("mDesc").value = ""; $("mYoutube").value = ""; $("mCover").value = "";
+  $("mTitle").value = ""; $("mDesc").value = "";
+  resetUploadUI();
   populateSectionSelect();
   $("moduleMsg").className = "msg"; $("moduleMsg").textContent = "";
   openModal("moduleOverlay");
 });
-$("mYoutube").addEventListener("blur", ()=>{
-  if(!$("mCover").value.trim()){
-    const t = youtubeThumb($("mYoutube").value.trim());
-    if(t) $("mCover").value = t;
+
+function openModuleEditor(id){
+  const mod = modules.find(m => m.id === id);
+  if(!mod) return;
+  editingModuleId = id;
+  $("moduleFormTitle").textContent = "Editar módulo";
+  $("mTitle").value = mod.title || "";
+  $("mDesc").value = mod.description || "";
+  resetUploadUI();
+  $("mVideo").value = mod.video_url || "";
+  $("mCover").value = mod.cover_url || "";
+  if(mod.video_url){
+    $("videoFilePreview").style.display = "flex";
+    $("videoFileName").textContent = "Video actual guardado (sube uno nuevo para reemplazarlo)";
   }
-});
+  if(mod.cover_url){
+    $("coverFilePreview").style.display = "flex";
+    $("coverFileName").textContent = "Portada actual guardada (sube una nueva para reemplazarla)";
+  }
+  populateSectionSelect();
+  if(mod.section_id) $("mSection").value = mod.section_id;
+  $("moduleMsg").className = "msg"; $("moduleMsg").textContent = "";
+  closeModal("viewOverlay");
+  openModal("moduleOverlay");
+}
+
 $("saveModuleBtn").addEventListener("click", async ()=>{
   const title = $("mTitle").value.trim();
   const description = $("mDesc").value.trim();
-  const youtube_url = $("mYoutube").value.trim();
-  const cover_url = $("mCover").value.trim() || youtubeThumb(youtube_url);
   const section_id = $("mSection").value || null;
   const msgEl = $("moduleMsg");
   msgEl.className = "msg"; msgEl.textContent = "";
 
-  if(!title || !youtube_url){ msgEl.className = "msg error"; msgEl.textContent = "Título y enlace de YouTube son obligatorios."; return; }
-  if(!youtubeId(youtube_url)){ msgEl.className = "msg error"; msgEl.textContent = "Ese enlace de YouTube no parece válido."; return; }
+  if(!title){ msgEl.className = "msg error"; msgEl.textContent = "El título es obligatorio."; return; }
+  if(!pendingVideoFile && !$("mVideo").value){ msgEl.className = "msg error"; msgEl.textContent = "Selecciona un archivo de video."; return; }
+  if(!pendingCoverFile && !$("mCover").value){ msgEl.className = "msg error"; msgEl.textContent = "Selecciona una imagen de portada."; return; }
 
   $("saveModuleBtn").disabled = true;
   try{
+    let video_url = $("mVideo").value;
+    let cover_url = $("mCover").value;
+
+    if(pendingVideoFile){
+      video_url = await uploadFileToBucket("video", VIDEO_BUCKET, pendingVideoFile);
+    }
+    if(pendingCoverFile){
+      cover_url = await uploadFileToBucket("cover", COVER_BUCKET, pendingCoverFile);
+    }
+
     if(editingModuleId){
-      const { error } = await sb.from("modules").update({ title, description, youtube_url, cover_url, section_id }).eq("id", editingModuleId);
+      const { error } = await sb.from("modules").update({ title, description, video_url, cover_url, section_id }).eq("id", editingModuleId);
       if(error) throw error;
     } else {
-      const { error } = await sb.from("modules").insert({ title, description, youtube_url, cover_url, section_id, created_by: currentUser.id });
+      const { error } = await sb.from("modules").insert({ title, description, video_url, cover_url, section_id, created_by: currentUser.id });
       if(error) throw error;
     }
     closeModal("moduleOverlay");
@@ -703,9 +828,6 @@ $("saveModuleBtn").addEventListener("click", async ()=>{
   $("saveModuleBtn").disabled = false;
 });
 
-/* ============================================================
-   DETALLE DEL MÓDULO
-============================================================ */
 async function openModuleDetail(id){
   const mod = modules.find(m => m.id === id);
   if(!mod) return;
@@ -718,10 +840,9 @@ async function openModuleDetail(id){
 
   $("vTitle").textContent = mod.title;
   $("vDesc").textContent = mod.description || "";
-  const yid = youtubeId(mod.youtube_url);
-  $("playerWrap").innerHTML = yid
-    ? `<iframe src="https://www.youtube.com/embed/${yid}" title="${escapeHtml(mod.title)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`
-    : "";
+  $("playerWrap").innerHTML = mod.video_url
+    ? `<video controls controlsList="nodownload" playsinline preload="metadata" poster="${escapeHtml(mod.cover_url||"")}" src="${escapeHtml(mod.video_url)}"></video>`
+    : `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-dim);font-family:var(--ff-mono);font-size:.8rem;">Video no disponible</div>`;
 
   $("adminSectionEditor").style.display = isAdmin ? "block" : "none";
   if(isAdmin){
@@ -733,7 +854,10 @@ async function openModuleDetail(id){
   await Promise.all([ loadTemarioView(id), loadComments(id) ]);
 }
 
-/* --- temario interno del módulo (subsecciones/puntos) --- */
+$("editModuleBtn").addEventListener("click", ()=>{
+  if(activeModuleId) openModuleEditor(activeModuleId);
+});
+
 async function loadTemarioView(moduleId){
   const { data, error } = await sb.from("module_items").select("*").eq("module_id", moduleId).order("position", { ascending:true });
   const listEl = $("sectionsList"), heading = $("sectionsHeading");
@@ -773,7 +897,6 @@ $("deleteModuleBtn").addEventListener("click", async ()=>{
   await loadPlatform();
 });
 
-/* --- comentarios --- */
 async function loadComments(moduleId){
   const { data, error } = await sb.from("comments").select("*").eq("module_id", moduleId).order("created_at", { ascending:true });
   const listEl = $("commentsList");
@@ -811,9 +934,6 @@ async function loadComments(moduleId){
   }
 }
 
-/* ============================================================
-   INIT
-============================================================ */
 (async function init(){
   await refreshSession();
   await loadPlatform();
