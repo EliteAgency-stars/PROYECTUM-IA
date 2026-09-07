@@ -15,6 +15,7 @@
   // Nombres de los buckets de Supabase Storage (créalos en el dashboard, ver notas al final)
   window.VIDEO_BUCKET = "videos";
   window.COVER_BUCKET = "covers";
+  window.RESOURCES_BUCKET = "resources";
   try{
     window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   } catch(err){
@@ -216,6 +217,18 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
 .sec-row{display:flex;gap:8px;margin-bottom:8px;}
 .sec-row input{flex:1;}
 .sec-row button{width:38px;flex-shrink:0;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--text-dim);}
+
+.resource-item{
+  background:var(--panel);border:1px solid var(--line);border-radius:11px;
+  padding:12px 15px;display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
+.resource-item .rname{font-family:var(--ff-display);font-weight:600;font-size:.86rem;display:flex;align-items:center;gap:8px;}
+.resource-item .ractions{display:flex;align-items:center;gap:8px;flex:none;}
+.resource-download{
+  font-family:var(--ff-mono);font-size:.72rem;color:#03181c;
+  background:linear-gradient(100deg,var(--primary),var(--gold));
+  padding:7px 12px;border-radius:8px;font-weight:700;white-space:nowrap;
+}
 
 .comment{display:flex;gap:10px;margin-bottom:16px;}
 .avatar{
@@ -429,6 +442,23 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
       <h3 class="block-title" id="sectionsHeading" style="display:none;">Contenido del módulo</h3>
       <div class="sections-list" id="sectionsList"></div>
 
+      <h3 class="block-title" id="resourcesHeading" style="display:none;">Archivos de apoyo</h3>
+      <div class="sections-list" id="resourcesList"></div>
+
+      <div id="adminResourcesUploader" style="display:none;margin-bottom:26px;">
+        <div class="field" style="margin-top:0;">
+          <label>Subir archivo(s) de apoyo (admin)</label>
+          <input type="file" id="resourceFileInput" multiple>
+          <div class="hint">Puedes seleccionar varios archivos a la vez (PDF, Word, ZIP, imágenes, etc.).</div>
+        </div>
+        <button class="pill-btn primary" id="uploadResourceBtn" style="margin-top:10px;">Subir archivo(s)</button>
+        <div class="upload-status" id="resourceUploadStatus" style="display:none;">
+          <span id="resourceUploadLabel">Subiendo…</span>
+          <div class="upload-bar"><div class="upload-bar-fill" id="resourceUploadBar"></div></div>
+        </div>
+        <div class="msg" id="resourceMsg"></div>
+      </div>
+
       <h3 class="block-title">Comentarios</h3>
       <div id="commentsList"></div>
       <div id="commentFormWrap"></div>
@@ -441,6 +471,7 @@ const sb = window.sb;
 const ADMIN_EMAIL = window.ADMIN_EMAIL;
 const VIDEO_BUCKET = window.VIDEO_BUCKET;
 const COVER_BUCKET = window.COVER_BUCKET;
+const RESOURCES_BUCKET = window.RESOURCES_BUCKET;
 
 let currentUser = null;
 let isAdmin = false;
@@ -845,13 +876,14 @@ async function openModuleDetail(id){
     : `<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-dim);font-family:var(--ff-mono);font-size:.8rem;">Video no disponible</div>`;
 
   $("adminSectionEditor").style.display = isAdmin ? "block" : "none";
+  $("adminResourcesUploader").style.display = isAdmin ? "block" : "none";
   if(isAdmin){
     $("secRows").innerHTML = "";
     await loadTemarioIntoEditor(id);
   }
 
   openModal("viewOverlay");
-  await Promise.all([ loadTemarioView(id), loadComments(id) ]);
+  await Promise.all([ loadTemarioView(id), loadComments(id), loadResources(id) ]);
 }
 
 $("editModuleBtn").addEventListener("click", ()=>{
@@ -895,6 +927,88 @@ $("deleteModuleBtn").addEventListener("click", async ()=>{
   await sb.from("modules").delete().eq("id", activeModuleId);
   closeModal("viewOverlay");
   await loadPlatform();
+});
+
+// ---------- Archivos de apoyo (module_resources) ----------
+async function loadResources(moduleId){
+  const { data, error } = await sb.from("module_resources").select("*").eq("module_id", moduleId).order("created_at", { ascending:true });
+  const listEl = $("resourcesList"), heading = $("resourcesHeading");
+  if(error || !data || data.length === 0){
+    heading.style.display = "none";
+    listEl.innerHTML = "";
+    return;
+  }
+  heading.style.display = "block";
+  listEl.innerHTML = data.map(r => `
+    <div class="resource-item" data-resource-id="${r.id}">
+      <div class="rname">📎 ${escapeHtml(r.name)}</div>
+      <div class="ractions">
+        <a class="resource-download" href="${escapeHtml(r.url)}" target="_blank" rel="noopener" download>Descargar</a>
+        ${isAdmin ? `<button class="icon-btn danger" data-del-resource="${r.id}" title="Eliminar">✕</button>` : ""}
+      </div>
+    </div>`).join("");
+
+  listEl.querySelectorAll("[data-del-resource]").forEach(btn=>{
+    btn.addEventListener("click", async ()=>{
+      if(!confirm("¿Eliminar este archivo de apoyo?")) return;
+      await sb.from("module_resources").delete().eq("id", btn.dataset.delResource);
+      await loadResources(moduleId);
+    });
+  });
+}
+
+$("uploadResourceBtn").addEventListener("click", async ()=>{
+  if(!activeModuleId) return;
+  const files = [...$("resourceFileInput").files];
+  const msgEl = $("resourceMsg");
+  const statusEl = $("resourceUploadStatus");
+  const labelEl = $("resourceUploadLabel");
+  const barEl = $("resourceUploadBar");
+  msgEl.className = "msg"; msgEl.textContent = "";
+
+  if(files.length === 0){ msgEl.className = "msg error"; msgEl.textContent = "Selecciona al menos un archivo."; return; }
+
+  $("uploadResourceBtn").disabled = true;
+  statusEl.style.display = "flex"; statusEl.className = "upload-status";
+
+  try{
+    for(let i = 0; i < files.length; i++){
+      const file = files[i];
+      labelEl.textContent = `Subiendo ${file.name} (${i+1}/${files.length})…`;
+      barEl.style.width = "10%";
+
+      const path = safeFileName(file.name);
+      const { data, error } = await sb.storage.from(RESOURCES_BUCKET).upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type || undefined
+      });
+      if(error) throw error;
+
+      barEl.style.width = "70%";
+      const { data: pub } = sb.storage.from(RESOURCES_BUCKET).getPublicUrl(data.path);
+
+      const { error: insertErr } = await sb.from("module_resources").insert({
+        module_id: activeModuleId,
+        name: file.name,
+        url: pub.publicUrl
+      });
+      if(insertErr) throw insertErr;
+
+      barEl.style.width = "100%";
+    }
+
+    statusEl.className = "upload-status ok";
+    labelEl.textContent = "Subida completa";
+    msgEl.className = "msg ok"; msgEl.textContent = "Archivo(s) subido(s) correctamente.";
+    $("resourceFileInput").value = "";
+    await loadResources(activeModuleId);
+  }catch(err){
+    statusEl.className = "upload-status error";
+    labelEl.textContent = `Error subiendo: ${err.message}`;
+    msgEl.className = "msg error"; msgEl.textContent = err.message || "No se pudo subir el archivo.";
+  }
+  $("uploadResourceBtn").disabled = false;
 });
 
 async function loadComments(moduleId){
