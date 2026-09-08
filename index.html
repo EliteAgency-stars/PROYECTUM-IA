@@ -1046,7 +1046,7 @@ footer p{max-width:640px;margin:6px auto;}
       <div>
         <div class="ml-system-card">
           <div class="ml-system-image">
-            <img src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA" loading="lazy">
+            <img id="heroImg" src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Proyectum IA" loading="lazy">
           </div>
           <div class="ml-system-caption">
             <small>UNA RUTA, CINCO MOVIMIENTOS</small>
@@ -1091,7 +1091,7 @@ footer p{max-width:640px;margin:6px auto;}
   <section class="ml-section">
     <div class="wrap ml-two-col ml-skill">
       <div class="ml-skill-image">
-        <img src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Herramientas de inteligencia artificial" loading="lazy">
+        <img id="authorImg" src="https://hotmart.s3.amazonaws.com/product_pictures/1a2d7c5d-216a-413b-967e-9c5bbef7a7b6/ChatGPTImage21jul202623_11_12.png" alt="Herramientas de inteligencia artificial" loading="lazy">
         <div class="ml-image-tag">MÓDULO 08<br><strong>Tu influencer IA</strong></div>
       </div>
 
@@ -1251,10 +1251,20 @@ revealTargets.forEach(el=>io.observe(el));
   3) mediaEngine.play(el) es el único método que el resto del código debe usar
      para arrancar un audio/video del embudo (en vez de llamar el .play() nativo
      directo), así toda reproducción pasa siempre por el mismo control.
+  4) mediaEngine.register(el) permite registrar elementos <audio>/<video>
+     creados con "new Audio()" que NUNCA se insertan en el DOM (como las notas
+     de voz del chat). Sin esto, querySelectorAll('audio, video') no los ve
+     y el motor no puede pausarlos al arrancar otro medio: esa era la causa
+     de que todo sonara/reprodujera a la vez.
 */
 window.mediaEngine = (function(){
+  const registered = new Set();
   function allMedia(){
-    return Array.prototype.slice.call(document.querySelectorAll('audio, video'));
+    return Array.prototype.slice.call(document.querySelectorAll('audio, video'))
+      .concat(Array.from(registered));
+  }
+  function register(el){
+    if(el) registered.add(el);
   }
   function stopAllExcept(exceptEl){
     allMedia().forEach(function(m){
@@ -1287,7 +1297,7 @@ window.mediaEngine = (function(){
     (root || document).querySelectorAll('video').forEach(observe);
   }
 
-  return { stopAllExcept: stopAllExcept, play: play, observe: observe, observeAllVideos: observeAllVideos };
+  return { stopAllExcept: stopAllExcept, play: play, observe: observe, observeAllVideos: observeAllVideos, register: register };
 })();
 </script>
 
@@ -1606,6 +1616,7 @@ window.mediaEngine = (function(){
   const voiceAudios = VOICE_AUDIOS.map(function(v){
     const a = new Audio(v.src);
     a.preload = 'auto';
+    window.mediaEngine.register(a); // clave: registra este <audio> "invisible" en el motor de medios
     return a;
   });
 
@@ -2306,7 +2317,11 @@ window.mediaEngine = (function(){
      imágenes/videos subidos por el admin nunca le cargaran a un visitante nuevo,
      porque localStorage es exclusivo de cada navegador. Ahora la fuente de verdad
      es la tabla "site_settings" en Supabase (ver instrucciones de configuración),
-     y localStorage se usa solo como caché para evitar parpadeos mientras carga. -->
+     y localStorage se usa solo como caché para evitar parpadeos mientras carga.
+
+     TAMBIÉN CORREGIDO: heroImg y authorImg ahora SÍ existen en el HTML (con sus
+     id="heroImg" e id="authorImg"), así que este script encuentra los elementos
+     y las imágenes cargadas/editadas desde el panel sí se aplican en la página. -->
 <script>
 (function(){
   const ADMIN_EMAIL = window.ADMIN_EMAIL;
