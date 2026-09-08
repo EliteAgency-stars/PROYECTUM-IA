@@ -16,6 +16,12 @@
   window.SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
   window.SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
   window.ADMIN_EMAIL = "contact@proyectumia.com";
+  // CORRECCIÓN #1: bandera global de "configuración lista". Antes, si el visitante
+  // tocaba "Reproducir" antes de que Supabase respondiera con las URLs de los
+  // videos, el embudo saltaba directo de TikTok a WhatsApp porque los <video>
+  // se quedaban sin "src" asignado. Este flag se pone en true SOLO cuando ya
+  // sabemos con certeza (éxito o fallo) qué URLs usar.
+  window.PROYECTUM_MEDIA_READY = false;
   try{
     window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   } catch(err){
@@ -92,6 +98,7 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--primary), 0 14px 34px -8px var(--primary);}
 .btn-primary svg{transition:transform .18s ease;}
 .btn-primary:hover svg{transform:translateX(3px);}
+.btn-primary:disabled{opacity:.55;cursor:progress;transform:none !important;box-shadow:0 0 0 1px #0e565766, 0 8px 30px -8px var(--primary) !important;}
 .micro{font-family:var(--ff-mono);font-size:.75rem;color:var(--text-dim);}
 .hero-art{position:relative;}
 .hero-art .frame{
@@ -666,7 +673,7 @@ footer p{max-width:640px;margin:6px auto;}
       <div class="gate-badge">🔊 Activa el sonido para la mejor experiencia</div>
       <h1 style="font-size:clamp(1.5rem,3.4vw,2.2rem);">Toca para comenzar tu <span class="grad-text">ruta</span></h1>
       <p class="micro" style="max-width:38ch;">Verás un video corto, luego un feed estilo TikTok, un chat de WhatsApp y un reto para desbloquear tu acceso.</p>
-      <button class="btn btn-primary" id="startBtn">Reproducir
+      <button class="btn btn-primary" id="startBtn" disabled>Cargando...
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
     </div>
@@ -1466,10 +1473,10 @@ window.mediaEngine = (function(){
 
   /* ---- Ajustes dinámicos (imágenes, links y medios subidos desde el panel admin).
      window.PROYECTUM_MEDIA lo llena el script del panel admin en cuanto Supabase
-     responde. Si aún no ha llegado (por ejemplo la persona hizo clic muy rápido en
-     "Reproducir"), se usa el fallback vacío escrito aquí (los videos principal
-     y de TikTok ya no traen una URL de Cloudinary fija: se cargan solo cuando
-     el administrador sube el archivo desde el panel). ---- */
+     responde. CORRECCIÓN #1: ya no se lee una sola vez en el clic de "Reproducir".
+     mediaUrl() siempre devuelve el valor MÁS RECIENTE de window.PROYECTUM_MEDIA,
+     y cada paso que necesita un video vuelve a llamar a esta función justo antes
+     de reproducir, en vez de depender de una copia guardada minutos antes. ---- */
   function mediaUrl(key, fallback){
     return (window.PROYECTUM_MEDIA && window.PROYECTUM_MEDIA[key]) || fallback;
   }
@@ -1488,6 +1495,27 @@ window.mediaEngine = (function(){
     // Ya no se arranca solo: se espera el toque en "Continuar" (tiktokStartBtn)
     // para que el navegador trate la reproducción como iniciada por el usuario
     // y no se trabe/reintente en loop (esa espera es lo que causaba el "trabado").
+  }
+
+  /* CORRECCIÓN #1 (parte central): el botón "Reproducir" empieza deshabilitado
+     ("Cargando...") y solo se activa cuando SABEMOS con certeza qué URLs de
+     video usar -- ya sea porque Supabase respondió (éxito o error) o porque
+     pasó un tiempo máximo de espera. Antes, si la persona tocaba "Reproducir"
+     de inmediato, la consulta a Supabase todavía no había llegado y el paso
+     de TikTok se quedaba sin video -> saltaba directo a WhatsApp. */
+  function enableStartButton(){
+    if(startBtn.dataset.enabled === '1') return;
+    startBtn.dataset.enabled = '1';
+    startBtn.disabled = false;
+    startBtn.innerHTML = 'Reproducir <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  }
+  if(window.PROYECTUM_MEDIA_READY){
+    enableStartButton();
+  } else {
+    document.addEventListener('proyectumMediaReady', enableStartButton);
+    // Red de seguridad: si por alguna razón Supabase nunca responde (sin
+    // conexión, error de red), no dejamos a la persona atascada en "Cargando...".
+    setTimeout(enableStartButton, 4000);
   }
 
   /* ---- Paso: notificación de WhatsApp cae desde arriba y abre el grupo ---- */
@@ -1583,18 +1611,13 @@ window.mediaEngine = (function(){
       introVideo.querySelector('source').src = videoMainUrl;
       introVideo.load();
     }
-    const tk1 = mediaUrl('videoTiktok1', '');
-    const tk2 = mediaUrl('videoTiktok2', '');
-    const tk3 = mediaUrl('videoTiktok3', '');
-    if(tk1) ttVideos[0].src = tk1;
-    if(tk2) ttVideos[1].src = tk2;
-    if(tk3) ttVideos[2].src = tk3;
+    // CORRECCIÓN #1: los 3 clips de TikTok YA NO se asignan aquí. Se asignan
+    // justo antes de reproducirse, dentro de startTiktokSequence(), que se
+    // vuelve a leer mediaUrl() en ese momento -- así usan siempre el valor
+    // más reciente aunque Supabase haya tardado en responder.
     VOICE_AUDIOS[1].src = mediaUrl('audio1', VOICE_AUDIOS[1].src);
     voiceAudios[1].src = VOICE_AUDIOS[1].src;
 
-    ['ttVideo0','ttVideo1','ttVideo2'].forEach(function(id){
-      unlockVideoForMobile(document.getElementById(id));
-    });
     voiceAudios.forEach(unlockAudioForMobile);
     videoGate.style.display = 'none';
     if(videoMainUrl){
@@ -1946,9 +1969,22 @@ window.mediaEngine = (function(){
   }
 
   function startTiktokSequence(){
+    // CORRECCIÓN #1 (parte clave): se vuelven a leer las URLs justo aquí,
+    // en el momento real de reproducir, en vez de confiar en lo que se leyó
+    // minutos antes en el clic de "Reproducir". Si el admin ya subió los
+    // clips y Supabase ya respondió (lo normal a estas alturas del embudo),
+    // esto SIEMPRE encuentra las URLs correctas.
+    const tk1 = mediaUrl('videoTiktok1', '');
+    const tk2 = mediaUrl('videoTiktok2', '');
+    const tk3 = mediaUrl('videoTiktok3', '');
+    if(tk1 && ttVideos[0].src !== tk1) ttVideos[0].src = tk1;
+    if(tk2 && ttVideos[1].src !== tk2) ttVideos[1].src = tk2;
+    if(tk3 && ttVideos[2].src !== tk3) ttVideos[2].src = tk3;
+
     if(!ttVideos[0].src){
-      // No hay clips cargados todavía (el admin no ha subido ninguno): se
-      // pasa directo al siguiente paso en vez de quedarse en negro.
+      // Solo llegamos aquí si de verdad no hay NINGÚN clip configurado
+      // (ni en caché ni en la respuesta de Supabase): se pasa directo al
+      // siguiente paso en vez de quedarse en negro.
       advanceFromTiktok();
       return;
     }
@@ -1996,9 +2032,14 @@ window.mediaEngine = (function(){
   }
   // Este toque SÍ cuenta como gesto directo del usuario, así que aquí es
   // seguro arrancar los videos de TikTok sin que el navegador los trabe.
+  // También reforzamos el "desbloqueo" de los 3 videos justo antes de
+  // arrancar la secuencia, con las URLs ya actualizadas.
   tiktokStartBtn.addEventListener('click', function(){
     ctx();
     tiktokGate.style.display = 'none';
+    ['ttVideo0','ttVideo1','ttVideo2'].forEach(function(id){
+      unlockVideoForMobile(document.getElementById(id));
+    });
     runTiktokRise();
   });
   /* ---- Bichos "Envidia" (ya no se disparan automáticamente: quedaban ligados
@@ -2362,6 +2403,14 @@ window.mediaEngine = (function(){
      es la tabla "site_settings" en Supabase (ver instrucciones de configuración),
      y localStorage se usa solo como caché para evitar parpadeos mientras carga.
 
+     RECORDATORIO IMPORTANTE PARA TI (no es código, es configuración en Supabase):
+     para que tus subidas como admin se vean para TODOS los visitantes nuevos,
+     la tabla "site_settings" necesita una política de RLS que permita SELECT
+     al rol "anon" (lectura pública). Si esa política no existe, cada visitante
+     sin sesión recibe null al consultar la tabla y el sitio cae a los valores
+     por defecto, aunque tú sí veas tus cambios con tu sesión de admin. Revisa
+     Supabase → Table Editor → site_settings → Policies.
+
      TAMBIÉN CORREGIDO: heroImg y authorImg ahora SÍ existen en el HTML (con sus
      id="heroImg" e id="authorImg"), así que este script encuentra los elementos
      y las imágenes cargadas/editadas desde el panel sí se aplican en la página. -->
@@ -2460,12 +2509,19 @@ window.mediaEngine = (function(){
   let current = loadCachedSettings();
   applySettings(current); // aplica la caché de inmediato, sin parpadeo
 
-  // En cuanto llega la respuesta real de Supabase, se sobreescribe con la verdad
+  // CORRECCIÓN #1: en cuanto llega la respuesta real de Supabase (con éxito
+  // o sin él), se sobreescribe con la verdad Y se marca PROYECTUM_MEDIA_READY
+  // = true, avisando al script de la intro (evento "proyectumMediaReady") de
+  // que ya es seguro habilitar el botón "Reproducir". Antes esto no existía
+  // y el botón quedaba activo desde el principio, permitiendo tocarlo antes
+  // de que las URLs de video estuvieran disponibles.
   fetchSettingsFromSupabase().then(function(remote){
     if(remote){
       current = remote;
       applySettings(current);
     }
+    window.PROYECTUM_MEDIA_READY = true;
+    document.dispatchEvent(new Event('proyectumMediaReady'));
   });
 
   // ---- UI del panel ----
