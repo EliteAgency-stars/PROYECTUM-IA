@@ -678,7 +678,7 @@ footer p{max-width:640px;margin:6px auto;}
       </button>
     </div>
     <video id="introVideo" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow">
-      <source src="" type="video/mp4">
+      <source type="video/mp4">
     </video>
   </div>
 
@@ -695,13 +695,13 @@ footer p{max-width:640px;margin:6px auto;}
       <div class="phone-notch"></div>
       <div class="tt-stage" id="ttStage">
         <div class="tt-video-wrap tt-active" data-i="0">
-          <video id="ttVideo0" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow" src=""></video>
+          <video id="ttVideo0" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
         </div>
         <div class="tt-video-wrap" data-i="1">
-          <video id="ttVideo1" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow" src=""></video>
+          <video id="ttVideo1" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
         </div>
         <div class="tt-video-wrap" data-i="2">
-          <video id="ttVideo2" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow" src=""></video>
+          <video id="ttVideo2" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
         </div>
         <div class="tt-caption">@proyectum.ia · Así fue el antes y después 🚀</div>
         <div class="tt-side-icons">
@@ -1611,6 +1611,7 @@ window.mediaEngine = (function(){
     const videoMainUrl = mediaUrl('videoMain', '');
     if(videoMainUrl){
       introVideo.querySelector('source').src = videoMainUrl;
+      introVideo.dataset.realSrcAssigned = '1';
       introVideo.load();
     }
     // CORRECCIÓN #1: los 3 clips de TikTok YA NO se asignan aquí. Se asignan
@@ -1635,7 +1636,13 @@ window.mediaEngine = (function(){
     }
   });
   introVideo.addEventListener('ended', advanceFromVideo);
-  introVideo.addEventListener('error', advanceFromVideo);
+  // Mismo blindaje que en TikTok: solo cuenta como error real si ya se le
+  // asignó una URL de verdad (bandera puesta en el clic de "Reproducir").
+  introVideo.addEventListener('error', function(){
+    if(introVideo.dataset.realSrcAssigned === '1'){
+      advanceFromVideo();
+    }
+  });
 
   /* ---- Paso: audios estilo WhatsApp (audios reales) ---- */
   const waBody = document.getElementById('waBody');
@@ -1981,7 +1988,7 @@ window.mediaEngine = (function(){
     const tk3 = mediaUrl('videoTiktok3', '');
     if(tk1 && ttVideos[0].src !== tk1) ttVideos[0].src = tk1;
     if(tk2 && ttVideos[1].src !== tk2) ttVideos[1].src = tk2;
-    if(tk3 && ttVideos[2].src !== tk3) ttVideos[2].src = tk3;
+    if(tk3 && ttVideos[2].src !== tk3){ ttVideos[2].src = tk3; ttVideos[2].dataset.realSrcAssigned = '1'; }
 
     if(!ttVideos[0].src){
       // Solo llegamos aquí si de verdad no hay NINGÚN clip configurado
@@ -2039,7 +2046,20 @@ window.mediaEngine = (function(){
   });
 
   ttVideos[2].addEventListener('ended', advanceFromTiktok);
-  ttVideos[2].addEventListener('error', advanceFromTiktok);
+  // CORRECCIÓN #4 (la causa raíz real): antes, este listener de 'error'
+  // estaba activo desde que cargaba la página, mientras el <video> todavía
+  // tenía src="" en el HTML. Los navegadores tratan un src vacío como una
+  // URL inválida y disparan un error automático casi al instante, ANTES de
+  // que el usuario tocara nada -- eso disparaba advanceFromTiktok() y
+  // saltaba a WhatsApp de la nada. Ya se quitó el src="" del HTML, pero
+  // además se blinda aquí: el error solo cuenta como real si YA se le asignó
+  // una URL de verdad al video (bandera realSrcAssigned, puesta en
+  // startTiktokSequence). Cualquier error anterior a eso se ignora.
+  ttVideos[2].addEventListener('error', function(){
+    if(ttVideos[2].dataset.realSrcAssigned === '1'){
+      advanceFromTiktok();
+    }
+  });
 
   function runTiktokRise(){
     tiktokShell.style.display = 'block';
