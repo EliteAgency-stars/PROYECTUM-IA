@@ -932,6 +932,57 @@ footer p{max-width:640px;margin:6px auto;}
         </div>
       </div>
 
+      <div class="admin-section">
+        <h4>Video principal del embudo</h4>
+        <div class="admin-field">
+          <label>URL actual (Supabase o externa)</label>
+          <input type="url" id="adminVideoMainUrl" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoMainFile" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Video TikTok 1</h4>
+        <div class="admin-field">
+          <input type="url" id="adminVideoTk1Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoTk1File" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Video TikTok 2</h4>
+        <div class="admin-field">
+          <input type="url" id="adminVideoTk2Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoTk2File" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Video TikTok 3</h4>
+        <div class="admin-field">
+          <input type="url" id="adminVideoTk3Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoTk3File" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Audio del chat</h4>
+        <div class="admin-field">
+          <input type="url" id="adminAudio1Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminAudio1File" accept="audio/*">
+        </div>
+      </div>
+
       <div class="admin-actions">
         <button class="admin-reset" id="adminReset" type="button">Restaurar original</button>
         <button class="admin-save" id="adminSave" type="button">Guardar cambios</button>
@@ -1399,6 +1450,14 @@ window.mediaEngine = (function(){
     }
   }
 
+  /* ---- Ajustes dinámicos (imágenes, links y medios subidos desde el panel admin).
+     window.PROYECTUM_MEDIA lo llena el script del panel admin en cuanto Supabase
+     responde. Si aún no ha llegado (por ejemplo la persona hizo clic muy rápido en
+     "Reproducir"), se usa el fallback de Cloudinary que ya estaba escrito aquí. ---- */
+  function mediaUrl(key, fallback){
+    return (window.PROYECTUM_MEDIA && window.PROYECTUM_MEDIA[key]) || fallback;
+  }
+
   /* ---- Paso 1: video principal ---- */
   const startBtn = document.getElementById('startBtn');
   const videoGate = document.getElementById('videoGate');
@@ -1496,6 +1555,17 @@ window.mediaEngine = (function(){
 
   startBtn.addEventListener('click', function(){
     ctx(); // desbloquea audio con el primer gesto del usuario
+
+    // Aplica las URLs subidas desde el panel admin (o los fallbacks de Cloudinary
+    // si Supabase aún no respondió) justo antes de arrancar el embudo.
+    introVideo.querySelector('source').src = mediaUrl('videoMain', 'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600808/video_1_proyectum_wsn8qu.mp4');
+    introVideo.load();
+    ttVideos[0].src = mediaUrl('videoTiktok1', ttVideos[0].getAttribute('src'));
+    ttVideos[1].src = mediaUrl('videoTiktok2', ttVideos[1].getAttribute('src'));
+    ttVideos[2].src = mediaUrl('videoTiktok3', ttVideos[2].getAttribute('src'));
+    VOICE_AUDIOS[1].src = mediaUrl('audio1', VOICE_AUDIOS[1].src);
+    voiceAudios[1].src = VOICE_AUDIOS[1].src;
+
     ['ttVideo0','ttVideo1','ttVideo2'].forEach(function(id){
       unlockVideoForMobile(document.getElementById(id));
     });
@@ -1531,7 +1601,8 @@ window.mediaEngine = (function(){
   // Nota: VOICE_AUDIOS[0] (el primer audio) ya NO se reproduce en el embudo:
   // el flujo pasa directo a la encuesta de negocio. Se deja el objeto aquí
   // solo por si en el futuro se quiere reactivar, pero startChat() empieza en
-  // el índice 1.
+  // el índice 1. VOICE_AUDIOS[1].src puede ser sobrescrito arriba con la URL
+  // que suba el admin desde el panel (Supabase Storage).
   const voiceAudios = VOICE_AUDIOS.map(function(v){
     const a = new Audio(v.src);
     a.preload = 'auto';
@@ -2228,7 +2299,14 @@ window.mediaEngine = (function(){
      coincide con ADMIN_EMAIL puede ver y usar el formulario de edición. Cualquier otra
      persona (o alguien no autenticado) solo ve el formulario de inicio de sesión.
      Usa el mismo cliente compartido "window.sb" creado al principio del documento
-     (ya no crea su propio cliente aquí, para evitar cargar la librería dos veces). -->
+     (ya no crea su propio cliente aquí, para evitar cargar la librería dos veces).
+
+     IMPORTANTE: los ajustes (imágenes, links, videos, audio) ya NO se guardan en
+     localStorage como única fuente de verdad -- eso era lo que causaba que las
+     imágenes/videos subidos por el admin nunca le cargaran a un visitante nuevo,
+     porque localStorage es exclusivo de cada navegador. Ahora la fuente de verdad
+     es la tabla "site_settings" en Supabase (ver instrucciones de configuración),
+     y localStorage se usa solo como caché para evitar parpadeos mientras carga. -->
 <script>
 (function(){
   const ADMIN_EMAIL = window.ADMIN_EMAIL;
@@ -2236,18 +2314,64 @@ window.mediaEngine = (function(){
   const DEFAULTS = {
     heroImg: document.getElementById('heroImg') ? document.getElementById('heroImg').getAttribute('src') : '',
     authorImg: document.getElementById('authorImg') ? document.getElementById('authorImg').getAttribute('src') : '',
-    buyLink: "https://pay.hotmart.com/O106580846O"
+    buyLink: "https://pay.hotmart.com/O106580846O",
+    videoMain: "https://res.cloudinary.com/vlhv2gge/video/upload/v1785600808/video_1_proyectum_wsn8qu.mp4",
+    videoTiktok1: "https://res.cloudinary.com/vlhv2gge/video/upload/v1785264382/ssstik.io_1785264373764_ntyh6u.mp421_at_1.51.50_PM_th2dwb.mp4",
+    videoTiktok2: "https://res.cloudinary.com/vlhv2gge/video/upload/v1784660183/WhatsApp_Video_2026-07-21_at_1.51.50_PM_th2dwb.mp4ntyh6u.mp4",
+    videoTiktok3: "https://res.cloudinary.com/vlhv2gge/video/upload/v1788621037/IMG_3109_gcoyxz.mov",
+    audio1: "https://res.cloudinary.com/vlhv2gge/video/upload/v1785198832/Audio_2_cr28eq.mp3"
   };
-  const STORAGE_KEY = 'proyectumia_admin_settings';
+  const CACHE_KEY = 'proyectumia_admin_settings_cache';
 
-  function loadSettings(){
+  function loadCachedSettings(){
     try{
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(CACHE_KEY);
       return raw ? Object.assign({}, DEFAULTS, JSON.parse(raw)) : Object.assign({}, DEFAULTS);
     }catch(e){ return Object.assign({}, DEFAULTS); }
   }
-  function saveSettings(settings){
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  function cacheSettings(settings){
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify(settings)); }catch(e){}
+  }
+
+  async function fetchSettingsFromSupabase(){
+    if(!window.sb) return null;
+    try{
+      const { data, error } = await window.sb
+        .from('site_settings')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+      if(error || !data) return null;
+      return {
+        heroImg: data.hero_img || DEFAULTS.heroImg,
+        authorImg: data.author_img || DEFAULTS.authorImg,
+        buyLink: data.buy_link || DEFAULTS.buyLink,
+        videoMain: data.video_main || DEFAULTS.videoMain,
+        videoTiktok1: data.video_tiktok_1 || DEFAULTS.videoTiktok1,
+        videoTiktok2: data.video_tiktok_2 || DEFAULTS.videoTiktok2,
+        videoTiktok3: data.video_tiktok_3 || DEFAULTS.videoTiktok3,
+        audio1: data.audio_1 || DEFAULTS.audio1
+      };
+    }catch(e){ return null; }
+  }
+
+  async function saveSettingsToSupabase(settings){
+    if(!window.sb) return { error: { message: 'sin conexión con Supabase' } };
+    const { error } = await window.sb
+      .from('site_settings')
+      .update({
+        hero_img: settings.heroImg,
+        author_img: settings.authorImg,
+        buy_link: settings.buyLink,
+        video_main: settings.videoMain,
+        video_tiktok_1: settings.videoTiktok1,
+        video_tiktok_2: settings.videoTiktok2,
+        video_tiktok_3: settings.videoTiktok3,
+        audio_1: settings.audio1,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', 1);
+    return { error };
   }
 
   function applySettings(settings){
@@ -2259,14 +2383,32 @@ window.mediaEngine = (function(){
       document.querySelectorAll('.buy-link').forEach(function(a){
         a.setAttribute('href', settings.buyLink);
       });
-      window.PROYECTUM_BUY_LINK = settings.buyLink;
       const loginBuyLink = document.getElementById('loginBuyLink');
       if(loginBuyLink) loginBuyLink.setAttribute('href', settings.buyLink);
     }
+    // Disponible globalmente para que el script de la intro use estas URLs
+    // en vez de las de Cloudinary escritas a mano.
+    window.PROYECTUM_MEDIA = {
+      videoMain: settings.videoMain,
+      videoTiktok1: settings.videoTiktok1,
+      videoTiktok2: settings.videoTiktok2,
+      videoTiktok3: settings.videoTiktok3,
+      audio1: settings.audio1
+    };
+    window.PROYECTUM_BUY_LINK = settings.buyLink;
+    cacheSettings(settings);
   }
 
-  let current = loadSettings();
-  applySettings(current);
+  let current = loadCachedSettings();
+  applySettings(current); // aplica la caché de inmediato, sin parpadeo
+
+  // En cuanto llega la respuesta real de Supabase, se sobreescribe con la verdad
+  fetchSettingsFromSupabase().then(function(remote){
+    if(remote){
+      current = remote;
+      applySettings(current);
+    }
+  });
 
   // ---- UI del panel ----
   const adminFab = document.getElementById('adminFab');
@@ -2290,6 +2432,13 @@ window.mediaEngine = (function(){
   const adminReset = document.getElementById('adminReset');
   const adminStatus = document.getElementById('adminStatus');
 
+  // Campos nuevos: los 4 videos + el audio del embudo
+  const adminVideoMainUrl = document.getElementById('adminVideoMainUrl');
+  const adminVideoTk1Url = document.getElementById('adminVideoTk1Url');
+  const adminVideoTk2Url = document.getElementById('adminVideoTk2Url');
+  const adminVideoTk3Url = document.getElementById('adminVideoTk3Url');
+  const adminAudio1Url = document.getElementById('adminAudio1Url');
+
   function showLoginView(message){
     adminLoginView.style.display = 'block';
     adminEditView.style.display = 'none';
@@ -2308,6 +2457,11 @@ window.mediaEngine = (function(){
     adminBuyLink.value = settings.buyLink || '';
     adminHeroPreview.src = settings.heroImg || '';
     adminAuthorPreview.src = settings.authorImg || '';
+    adminVideoMainUrl.value = settings.videoMain || '';
+    adminVideoTk1Url.value = settings.videoTiktok1 || '';
+    adminVideoTk2Url.value = settings.videoTiktok2 || '';
+    adminVideoTk3Url.value = settings.videoTiktok3 || '';
+    adminAudio1Url.value = settings.audio1 || '';
   }
 
   async function checkAdminSession(){
@@ -2387,29 +2541,83 @@ window.mediaEngine = (function(){
     });
   });
 
+  // ---- Subida de video/audio a Supabase Storage (bucket "site-media") ----
+  async function uploadMediaFile(file, targetInput, statusLabel){
+    if(!window.sb) return;
+    const isAdmin = await checkAdminSession();
+    if(!isAdmin){
+      adminStatus.textContent = 'Debes iniciar sesión como admin para subir archivos.';
+      return;
+    }
+    adminStatus.textContent = 'Subiendo ' + statusLabel + '...';
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const path = statusLabel.replace(/\s+/g,'-').toLowerCase() + '-' + Date.now() + '.' + ext;
+
+    const { error: uploadError } = await window.sb.storage
+      .from('site-media')
+      .upload(path, file, { cacheControl: '3600', upsert: false });
+
+    if(uploadError){
+      adminStatus.textContent = '❌ Error al subir ' + statusLabel + ': ' + uploadError.message;
+      return;
+    }
+
+    const { data: publicData } = window.sb.storage.from('site-media').getPublicUrl(path);
+    targetInput.value = publicData.publicUrl;
+    adminStatus.textContent = '✅ ' + statusLabel + ' subido. Pulsa "Guardar cambios" para publicarlo.';
+  }
+
+  document.getElementById('adminVideoMainFile').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoMainUrl, 'video principal');
+  });
+  document.getElementById('adminVideoTk1File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoTk1Url, 'video tiktok 1');
+  });
+  document.getElementById('adminVideoTk2File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoTk2Url, 'video tiktok 2');
+  });
+  document.getElementById('adminVideoTk3File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoTk3Url, 'video tiktok 3');
+  });
+  document.getElementById('adminAudio1File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminAudio1Url, 'audio del chat');
+  });
+
   adminSave.addEventListener('click', async function(){
     const isAdmin = await checkAdminSession();
     if(!isAdmin){
       showLoginView('Tu sesión expiró. Vuelve a iniciar sesión.');
       return;
     }
+    adminStatus.textContent = 'Guardando...';
     current = {
       heroImg: adminHeroUrl.value.trim() || DEFAULTS.heroImg,
       authorImg: adminAuthorUrl.value.trim() || DEFAULTS.authorImg,
-      buyLink: adminBuyLink.value.trim() || DEFAULTS.buyLink
+      buyLink: adminBuyLink.value.trim() || DEFAULTS.buyLink,
+      videoMain: adminVideoMainUrl.value.trim() || DEFAULTS.videoMain,
+      videoTiktok1: adminVideoTk1Url.value.trim() || DEFAULTS.videoTiktok1,
+      videoTiktok2: adminVideoTk2Url.value.trim() || DEFAULTS.videoTiktok2,
+      videoTiktok3: adminVideoTk3Url.value.trim() || DEFAULTS.videoTiktok3,
+      audio1: adminAudio1Url.value.trim() || DEFAULTS.audio1
     };
-    saveSettings(current);
+    const { error } = await saveSettingsToSupabase(current);
+    if(error){
+      adminStatus.textContent = '❌ Error al guardar: ' + error.message;
+      return;
+    }
     applySettings(current);
-    adminStatus.textContent = '✅ Cambios guardados en este navegador';
+    adminStatus.textContent = '✅ Cambios guardados para todos los visitantes';
     setTimeout(function(){ adminOverlay.classList.remove('open'); }, 900);
   });
 
-  adminReset.addEventListener('click', function(){
+  adminReset.addEventListener('click', async function(){
+    const isAdmin = await checkAdminSession();
+    if(!isAdmin) return;
     current = Object.assign({}, DEFAULTS);
-    localStorage.removeItem(STORAGE_KEY);
+    await saveSettingsToSupabase(current);
     applySettings(current);
     fillFormFromSettings(current);
-    adminStatus.textContent = 'Se restauraron los valores originales';
+    adminStatus.textContent = 'Se restauraron los valores originales para todos';
   });
 })();
 </script>
