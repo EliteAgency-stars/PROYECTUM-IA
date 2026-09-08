@@ -2022,6 +2022,22 @@ window.mediaEngine = (function(){
     ttVideos[2].pause();
     runNotificationSequence();
   }
+  // CORRECCIÓN #3: antes, si un clip de TikTok fallaba al cargar (formato no
+  // soportado, archivo corrupto, red), el error pasaba en silencio: el reloj
+  // fijo (500ms/1000ms) seguía corriendo igual y el paso avanzaba como si
+  // nada. Esto hacía que, si los 3 clips fallaban en cadena, el embudo
+  // "saltara" a WhatsApp en 1-2 segundos sin que se notara la razón. Ahora
+  // cada error se registra en la consola del navegador con el nombre del
+  // archivo que falló, para poder diagnosticarlo (F12 -> pestaña Console).
+  ttVideos.forEach(function(v, idx){
+    v.addEventListener('error', function(){
+      console.error('[Proyectum IA] Error al cargar el video TikTok ' + (idx+1) + ':', v.currentSrc || v.src, v.error);
+    });
+  });
+  introVideo.addEventListener('error', function(){
+    console.error('[Proyectum IA] Error al cargar el video principal:', introVideo.currentSrc, introVideo.error);
+  });
+
   ttVideos[2].addEventListener('ended', advanceFromTiktok);
   ttVideos[2].addEventListener('error', advanceFromTiktok);
 
