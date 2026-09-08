@@ -16,6 +16,8 @@
   window.VIDEO_BUCKET = "videos";
   window.COVER_BUCKET = "covers";
   window.RESOURCES_BUCKET = "resources";
+  // Enlace de compra al que se redirige a quien no tenga sesión iniciada
+  window.PURCHASE_URL = "https://pay.hotmart.com/I106868575N?off=zq2e4dr7&hotfeature=51";
   try{
     window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   } catch(err){
@@ -104,6 +106,16 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
 .hero-strip h1{font-size:clamp(1.6rem,3.6vw,2.3rem);margin-top:12px;}
 .hero-strip p{color:var(--text-dim);margin-top:10px;max-width:52ch;font-size:.98rem;}
 
+.locked-banner{
+  display:none;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  margin:22px 0 0;padding:16px 18px;border-radius:14px;
+  background:linear-gradient(100deg,#1a160a,#0a2933);border:1px solid #4a3d1f;
+}
+.locked-banner.show{display:flex;}
+.locked-banner .lb-text{font-size:.86rem;color:var(--text-dim);}
+.locked-banner .lb-text strong{color:var(--text);}
+.locked-banner .pill-btn{white-space:nowrap;}
+
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:26px 0 8px;flex-wrap:wrap;}
 .search{
   flex:1;min-width:200px;background:var(--panel);border:1px solid var(--line);border-radius:11px;
@@ -131,6 +143,7 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
 .card{
   background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
   overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .15s;
+  position:relative;
 }
 .card:hover{border-color:var(--primary);transform:translateY(-2px);}
 .card .thumb{aspect-ratio:16/9;background:var(--bg-alt);position:relative;overflow:hidden;}
@@ -146,6 +159,20 @@ main{max-width:1180px;margin:0 auto;padding:0 24px 90px;}
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .card .meta{margin-top:auto;padding-top:10px;display:flex;justify-content:space-between;align-items:center;
   font-family:var(--ff-mono);font-size:.66rem;color:var(--text-dim);}
+
+/* Estado bloqueado (sin sesión) */
+.card.locked .thumb img{filter:blur(3px) brightness(.55) saturate(.7);}
+.card.locked .thumb .play{background:rgba(4,20,26,.55);backdrop-filter:blur(1px);}
+.card.locked .thumb .lock-icon{
+  width:44px;height:44px;border-radius:50%;background:rgba(4,20,26,.65);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+}
+.card.locked .thumb .lock-icon svg{width:19px;height:19px;filter:none;}
+.card .locked-tag{
+  position:absolute;top:10px;right:10px;z-index:2;
+  font-family:var(--ff-mono);font-size:.62rem;font-weight:700;color:#03181c;
+  background:linear-gradient(100deg,var(--gold),#ffdf94);padding:3px 9px;border-radius:100px;
+}
 
 .empty{text-align:center;padding:50px 20px;color:var(--text-dim);border:1px dashed var(--line);border-radius:var(--radius);font-size:.88rem;}
 .loader{display:flex;justify-content:center;padding:50px 0;color:var(--text-dim);font-family:var(--ff-mono);font-size:.82rem;}
@@ -296,6 +323,11 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
     <div class="eyebrow">Tu ruta de aprendizaje</div>
     <h1>Módulos de <span class="grad-text">Proyectum IA</span></h1>
     <p>Contenido organizado por secciones, en video, para avanzar nivel a nivel.</p>
+  </div>
+
+  <div class="locked-banner" id="lockedBanner">
+    <div class="lb-text"><strong>Acceso bloqueado.</strong> Inicia sesión con una cuenta que tenga el curso, o compra tu acceso para desbloquear todos los módulos.</div>
+    <a class="pill-btn primary" href="#" id="lockedBannerBuy">Comprar acceso</a>
   </div>
 
   <div class="toolbar">
@@ -472,6 +504,7 @@ const ADMIN_EMAIL = window.ADMIN_EMAIL;
 const VIDEO_BUCKET = window.VIDEO_BUCKET;
 const COVER_BUCKET = window.COVER_BUCKET;
 const RESOURCES_BUCKET = window.RESOURCES_BUCKET;
+const PURCHASE_URL = window.PURCHASE_URL;
 
 let currentUser = null;
 let isAdmin = false;
@@ -496,6 +529,11 @@ document.querySelectorAll(".overlay").forEach(ov=>{
 
 const navToggle = $("navToggle"), navLinks = $("navLinks");
 navToggle.addEventListener("click", ()=> navLinks.classList.toggle("open"));
+
+$("lockedBannerBuy").addEventListener("click", (e)=>{
+  e.preventDefault();
+  window.location.href = PURCHASE_URL;
+});
 
 function escapeHtml(str){ return (str||"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function timeAgo(dateStr){
@@ -528,14 +566,20 @@ async function refreshSession(){
   currentUser = session?.user || null;
   isAdmin = !!currentUser && currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
   renderHeader();
+  renderLockedBanner();
 }
 if(sb){
   sb.auth.onAuthStateChange((_e, session)=>{
     currentUser = session?.user || null;
     isAdmin = !!currentUser && currentUser.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase();
     renderHeader();
+    renderLockedBanner();
     renderContent();
   });
+}
+
+function renderLockedBanner(){
+  $("lockedBanner").classList.toggle("show", !currentUser);
 }
 
 function renderHeader(){
@@ -647,7 +691,13 @@ function renderContent(filter=""){
   wrap.innerHTML = html || `<div class="empty">No se encontraron módulos.</div>`;
 
   wrap.querySelectorAll("[data-module-id]").forEach(card=>{
-    card.addEventListener("click", ()=> openModuleDetail(card.dataset.moduleId));
+    card.addEventListener("click", ()=>{
+      if(!currentUser){
+        window.location.href = PURCHASE_URL;
+        return;
+      }
+      openModuleDetail(card.dataset.moduleId);
+    });
   });
   wrap.querySelectorAll("[data-edit-sec]").forEach(btn=>{
     btn.addEventListener("click", (e)=>{ e.stopPropagation(); openSectionEditor(btn.dataset.editSec); });
@@ -664,16 +714,20 @@ function renderContent(filter=""){
 }
 
 function cardHtml(m){
+  const locked = !currentUser;
   return `
-    <div class="card" data-module-id="${m.id}">
+    <div class="card ${locked ? "locked" : ""}" data-module-id="${m.id}">
       <div class="thumb">
         <img src="${escapeHtml(m.cover_url || "")}" alt="" loading="lazy" onerror="this.style.display='none'">
-        <div class="play"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="11" fill="rgba(4,20,26,.55)" stroke="rgba(255,255,255,.7)" stroke-width="1"/><path d="M10 8l6 4-6 4V8z"/></svg></div>
+        ${locked
+          ? `<div class="locked-tag">🔒 Bloqueado</div>
+             <div class="play"><div class="lock-icon"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div></div>`
+          : `<div class="play"><svg viewBox="0 0 24 24" fill="white"><circle cx="12" cy="12" r="11" fill="rgba(4,20,26,.55)" stroke="rgba(255,255,255,.7)" stroke-width="1"/><path d="M10 8l6 4-6 4V8z"/></svg></div>`}
       </div>
       <div class="body">
         <h3>${escapeHtml(m.title)}</h3>
         <p>${escapeHtml(m.description || "")}</p>
-        <div class="meta"><span>Módulo</span><span>${new Date(m.created_at).toLocaleDateString()}</span></div>
+        <div class="meta"><span>${locked ? "Inicia sesión para ver" : "Módulo"}</span><span>${new Date(m.created_at).toLocaleDateString()}</span></div>
       </div>
     </div>`;
 }
@@ -860,6 +914,10 @@ $("saveModuleBtn").addEventListener("click", async ()=>{
 });
 
 async function openModuleDetail(id){
+  if(!currentUser){
+    window.location.href = PURCHASE_URL;
+    return;
+  }
   const mod = modules.find(m => m.id === id);
   if(!mod) return;
   activeModuleId = id;
