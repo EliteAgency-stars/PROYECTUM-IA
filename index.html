@@ -671,26 +671,30 @@ footer p{max-width:640px;margin:6px auto;}
       </button>
     </div>
     <video id="introVideo" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow">
-      <source src="https://res.cloudinary.com/vlhv2gge/video/upload/v1785600808/video_1_proyectum_wsn8qu.mp4" type="video/mp4">
+      <source src="" type="video/mp4">
     </video>
   </div>
 
   <!-- PASO 2: EMBUDO TIKTOK: 2 clips cortos con scroll + video completo -->
   <div class="intro-step" id="stepTiktok">
-    <div class="phone-shell tiktok-shell" id="tiktokShell">
+    <div class="video-gate" id="tiktokGate">
+      <div class="gate-badge">📱 Sigue la ruta</div>
+      <h1 style="font-size:clamp(1.4rem,3.2vw,2rem);">Toca para ver el siguiente clip</h1>
+      <button class="btn btn-primary" id="tiktokStartBtn">Continuar
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="phone-shell tiktok-shell" id="tiktokShell" style="display:none;">
       <div class="phone-notch"></div>
       <div class="tt-stage" id="ttStage">
         <div class="tt-video-wrap tt-active" data-i="0">
-          <video id="ttVideo0" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"
-            src="https://res.cloudinary.com/vlhv2gge/video/upload/v1785264382/ssstik.io_1785264373764_ntyh6u.mp421_at_1.51.50_PM_th2dwb.mp4"></video>
+          <video id="ttVideo0" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow" src=""></video>
         </div>
         <div class="tt-video-wrap" data-i="1">
-          <video id="ttVideo1" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"
-            src="https://res.cloudinary.com/vlhv2gge/video/upload/v1784660183/WhatsApp_Video_2026-07-21_at_1.51.50_PM_th2dwb.mp4ntyh6u.mp4"></video>
+          <video id="ttVideo1" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow" src=""></video>
         </div>
         <div class="tt-video-wrap" data-i="2">
-          <video id="ttVideo2" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"
-            src="https://res.cloudinary.com/vlhv2gge/video/upload/v1788621037/IMG_3109_gcoyxz.mov"></video>
+          <video id="ttVideo2" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow" src=""></video>
         </div>
         <div class="tt-caption">@proyectum.ia · Así fue el antes y después 🚀</div>
         <div class="tt-side-icons">
@@ -1463,7 +1467,9 @@ window.mediaEngine = (function(){
   /* ---- Ajustes dinámicos (imágenes, links y medios subidos desde el panel admin).
      window.PROYECTUM_MEDIA lo llena el script del panel admin en cuanto Supabase
      responde. Si aún no ha llegado (por ejemplo la persona hizo clic muy rápido en
-     "Reproducir"), se usa el fallback de Cloudinary que ya estaba escrito aquí. ---- */
+     "Reproducir"), se usa el fallback vacío escrito aquí (los videos principal
+     y de TikTok ya no traen una URL de Cloudinary fija: se cargan solo cuando
+     el administrador sube el archivo desde el panel). ---- */
   function mediaUrl(key, fallback){
     return (window.PROYECTUM_MEDIA && window.PROYECTUM_MEDIA[key]) || fallback;
   }
@@ -1479,7 +1485,9 @@ window.mediaEngine = (function(){
     introVideo.dataset.introFinished = '1';
     introVideo.pause();
     goTo('tiktok');
-    runTiktokRise();
+    // Ya no se arranca solo: se espera el toque en "Continuar" (tiktokStartBtn)
+    // para que el navegador trate la reproducción como iniciada por el usuario
+    // y no se trabe/reintente en loop (esa espera es lo que causaba el "trabado").
   }
 
   /* ---- Paso: notificación de WhatsApp cae desde arriba y abre el grupo ---- */
@@ -1566,13 +1574,21 @@ window.mediaEngine = (function(){
   startBtn.addEventListener('click', function(){
     ctx(); // desbloquea audio con el primer gesto del usuario
 
-    // Aplica las URLs subidas desde el panel admin (o los fallbacks de Cloudinary
-    // si Supabase aún no respondió) justo antes de arrancar el embudo.
-    introVideo.querySelector('source').src = mediaUrl('videoMain', 'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600808/video_1_proyectum_wsn8qu.mp4');
-    introVideo.load();
-    ttVideos[0].src = mediaUrl('videoTiktok1', ttVideos[0].getAttribute('src'));
-    ttVideos[1].src = mediaUrl('videoTiktok2', ttVideos[1].getAttribute('src'));
-    ttVideos[2].src = mediaUrl('videoTiktok3', ttVideos[2].getAttribute('src'));
+    // Aplica las URLs subidas desde el panel admin. El video principal y los 3
+    // clips de TikTok ya NO tienen una URL de Cloudinary fija por defecto: si
+    // el admin aún no subió nada, mediaUrl() devuelve cadena vacía y el video
+    // simplemente no reproduce (en vez de arrastrar el clip viejo con problemas).
+    const videoMainUrl = mediaUrl('videoMain', '');
+    if(videoMainUrl){
+      introVideo.querySelector('source').src = videoMainUrl;
+      introVideo.load();
+    }
+    const tk1 = mediaUrl('videoTiktok1', '');
+    const tk2 = mediaUrl('videoTiktok2', '');
+    const tk3 = mediaUrl('videoTiktok3', '');
+    if(tk1) ttVideos[0].src = tk1;
+    if(tk2) ttVideos[1].src = tk2;
+    if(tk3) ttVideos[2].src = tk3;
     VOICE_AUDIOS[1].src = mediaUrl('audio1', VOICE_AUDIOS[1].src);
     voiceAudios[1].src = VOICE_AUDIOS[1].src;
 
@@ -1581,11 +1597,17 @@ window.mediaEngine = (function(){
     });
     voiceAudios.forEach(unlockAudioForMobile);
     videoGate.style.display = 'none';
-    introVideo.style.display = 'block';
-    safePlayWithMutedFallback(introVideo, advanceFromVideo);
-    // Si el video no puede cargar en absoluto (no solo bloqueo de autoplay),
-    // no se traba la experiencia
-    setTimeout(function(){ if(introVideo.readyState === 0) advanceFromVideo(); }, 8000);
+    if(videoMainUrl){
+      introVideo.style.display = 'block';
+      safePlayWithMutedFallback(introVideo, advanceFromVideo);
+      // Si el video no puede cargar en absoluto (no solo bloqueo de autoplay),
+      // no se traba la experiencia
+      setTimeout(function(){ if(introVideo.readyState === 0) advanceFromVideo(); }, 8000);
+    } else {
+      // No hay video principal cargado todavía (el admin no ha subido ninguno):
+      // se pasa directo al siguiente paso en vez de quedarse esperando.
+      advanceFromVideo();
+    }
   });
   introVideo.addEventListener('ended', advanceFromVideo);
   introVideo.addEventListener('error', advanceFromVideo);
@@ -1856,8 +1878,15 @@ window.mediaEngine = (function(){
   }
 
 
-  /* ---- Paso 2b -> TikTok: se cierra WhatsApp y se abre el video corto ---- */
+  /* ---- Paso 2b -> TikTok: se cierra WhatsApp y se abre el video corto ----
+     Ahora este paso empieza SOLO cuando el usuario toca "Continuar" en
+     tiktokGate (ver listener de tiktokStartBtn más abajo), en vez de arrancar
+     automáticamente apenas termina el video 1. Ese autoarranque "sin gesto"
+     era la causa más probable del trabado/pausa: el navegador no deja
+     reproducir con fluidez algo que no vino de un toque directo del usuario. ---- */
   const tiktokShell = document.getElementById('tiktokShell');
+  const tiktokGate = document.getElementById('tiktokGate');
+  const tiktokStartBtn = document.getElementById('tiktokStartBtn');
   const ttVideos = [
     document.getElementById('ttVideo0'),
     document.getElementById('ttVideo1'),
@@ -1917,6 +1946,12 @@ window.mediaEngine = (function(){
   }
 
   function startTiktokSequence(){
+    if(!ttVideos[0].src){
+      // No hay clips cargados todavía (el admin no ha subido ninguno): se
+      // pasa directo al siguiente paso en vez de quedarse en negro.
+      advanceFromTiktok();
+      return;
+    }
     ttGoTo(0);
     ttVideos[0].currentTime = 0;
     ttVideos[0].muted = true;
@@ -1953,11 +1988,19 @@ window.mediaEngine = (function(){
   ttVideos[2].addEventListener('error', advanceFromTiktok);
 
   function runTiktokRise(){
+    tiktokShell.style.display = 'block';
     requestAnimationFrame(function(){
       setTimeout(function(){ tiktokShell.classList.add('risen'); }, 40);
     });
     startTiktokSequence();
   }
+  // Este toque SÍ cuenta como gesto directo del usuario, así que aquí es
+  // seguro arrancar los videos de TikTok sin que el navegador los trabe.
+  tiktokStartBtn.addEventListener('click', function(){
+    ctx();
+    tiktokGate.style.display = 'none';
+    runTiktokRise();
+  });
   /* ---- Bichos "Envidia" (ya no se disparan automáticamente: quedaban ligados
      al primer audio, que se omitió). Se deja la función disponible por si se
      reactiva en otro punto del embudo más adelante. ---- */
@@ -2330,10 +2373,10 @@ window.mediaEngine = (function(){
     heroImg: document.getElementById('heroImg') ? document.getElementById('heroImg').getAttribute('src') : '',
     authorImg: document.getElementById('authorImg') ? document.getElementById('authorImg').getAttribute('src') : '',
     buyLink: "https://pay.hotmart.com/O106580846O",
-    videoMain: "https://res.cloudinary.com/vlhv2gge/video/upload/v1785600808/video_1_proyectum_wsn8qu.mp4",
-    videoTiktok1: "https://res.cloudinary.com/vlhv2gge/video/upload/v1785264382/ssstik.io_1785264373764_ntyh6u.mp421_at_1.51.50_PM_th2dwb.mp4",
-    videoTiktok2: "https://res.cloudinary.com/vlhv2gge/video/upload/v1784660183/WhatsApp_Video_2026-07-21_at_1.51.50_PM_th2dwb.mp4ntyh6u.mp4",
-    videoTiktok3: "https://res.cloudinary.com/vlhv2gge/video/upload/v1788621037/IMG_3109_gcoyxz.mov",
+    videoMain: "",
+    videoTiktok1: "",
+    videoTiktok2: "",
+    videoTiktok3: "",
     audio1: "https://res.cloudinary.com/vlhv2gge/video/upload/v1785198832/Audio_2_cr28eq.mp3"
   };
   const CACHE_KEY = 'proyectumia_admin_settings_cache';
