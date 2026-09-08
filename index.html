@@ -1514,8 +1514,10 @@ window.mediaEngine = (function(){
   } else {
     document.addEventListener('proyectumMediaReady', enableStartButton);
     // Red de seguridad: si por alguna razón Supabase nunca responde (sin
-    // conexión, error de red), no dejamos a la persona atascada en "Cargando...".
-    setTimeout(enableStartButton, 4000);
+    // conexión, error de red persistente incluso tras los reintentos), no
+    // dejamos a la persona atascada en "Cargando...". Se amplía a 10s porque
+    // ahora la consulta puede reintentar hasta 3 veces con pausas entre sí.
+    setTimeout(enableStartButton, 10000);
   }
 
   /* ---- Paso: notificación de WhatsApp cae desde arriba y abre el grupo ---- */
@@ -2440,7 +2442,7 @@ window.mediaEngine = (function(){
     try{ localStorage.setItem(CACHE_KEY, JSON.stringify(settings)); }catch(e){}
   }
 
-  async function fetchSettingsFromSupabase(){
+  async function fetchSettingsFromSupabaseOnce(){
     if(!window.sb) return null;
     try{
       const { data, error } = await window.sb
@@ -2460,6 +2462,26 @@ window.mediaEngine = (function(){
         audio1: data.audio_1 || DEFAULTS.audio1
       };
     }catch(e){ return null; }
+  }
+
+  // CORRECCIÓN #2: en 4G, la primera consulta a Supabase puede fallar o
+  // tardarse por un hipo de red momentáneo. Antes, un solo intento fallido
+  // dejaba el sitio con los valores vacíos por defecto para TODA esa visita
+  // (nunca se reintentaba) -- eso explica por qué a veces al recargar
+  // funcionaba bien y otras veces no: dependía de si esa única consulta
+  // tenía suerte con la red. Ahora se reintenta varias veces, con una
+  // pequeña espera entre cada intento, antes de darse por vencido.
+  async function fetchSettingsFromSupabase(maxAttempts, delayMs){
+    maxAttempts = maxAttempts || 3;
+    delayMs = delayMs || 1200;
+    for(let attempt = 1; attempt <= maxAttempts; attempt++){
+      const result = await fetchSettingsFromSupabaseOnce();
+      if(result) return result;
+      if(attempt < maxAttempts){
+        await new Promise(function(resolve){ setTimeout(resolve, delayMs); });
+      }
+    }
+    return null;
   }
 
   async function saveSettingsToSupabase(settings){
