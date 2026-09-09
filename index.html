@@ -17,6 +17,12 @@
   window.SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
   window.SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
   window.ADMIN_EMAIL = "contact@proyectumia.com";
+  // CORRECCIÓN #1: bandera global de "configuración lista". Antes, si el visitante
+  // tocaba "Reproducir" antes de que Supabase respondiera con las URLs de los
+  // videos, el embudo saltaba directo de TikTok a WhatsApp porque los <video>
+  // se quedaban sin "src" asignado. Este flag se pone en true SOLO cuando ya
+  // sabemos con certeza (éxito o fallo) qué URLs usar.
+  window.PROYECTUM_MEDIA_READY = false;
   try{
     window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
   } catch(err){
@@ -232,6 +238,235 @@ footer p{max-width:640px;margin:6px auto;}
 :focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
 
 /* =========================================================
+   INTRO INTERACTIVA: video -> audios WhatsApp -> minijuego -> candado
+   ========================================================= */
+.intro-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:block;overflow:hidden;}
+.intro-overlay.closed{display:none;}
+.intro-step{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;}
+.intro-step.active{display:flex;}
+.skip-intro{position:absolute;top:18px;right:18px;z-index:10;background:transparent;border:1px solid var(--line);color:var(--text-dim);font-family:var(--ff-mono);font-size:.72rem;padding:8px 14px;border-radius:100px;cursor:pointer;}
+.skip-intro:hover{color:var(--primary);border-color:var(--primary);}
+.intro-progress{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:20;display:flex;gap:7px;}
+.intro-progress .dot{width:7px;height:7px;border-radius:50%;background:var(--line);transition:background .3s ease, transform .3s ease;}
+.intro-progress .dot.done{background:var(--gold);}
+.intro-progress .dot.active{background:var(--primary);transform:scale(1.5);}
+
+/* paso 1: video */
+.video-gate{display:flex;flex-direction:column;align-items:center;gap:18px;max-width:520px;}
+.gate-badge{font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:6px 14px;border-radius:100px;}
+#introVideo{display:none;max-width:min(92vw,720px);max-height:min(78vh,78dvh);border-radius:18px;border:1px solid var(--line);box-shadow:0 30px 70px -30px #000;width:100%;}
+
+/* paso: el teléfono "sale", recibe la notificación y abre WhatsApp */
+.phone-shell{
+  width:min(92vw,420px);height:min(82vh,82dvh,720px);
+  background:#050d12;border:1px solid var(--line);border-radius:28px;overflow:hidden;
+  box-shadow:0 30px 70px -30px #000;position:relative;
+  transform:translateY(130%);
+  transition:transform .7s cubic-bezier(.16,.9,.24,1.05);
+}
+.phone-shell.risen{transform:translateY(0);}
+.phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:34%;height:18px;background:#050d12;border-radius:0 0 14px 14px;z-index:8;}
+.phone-screen{position:relative;width:100%;height:100%;}
+.lock-layer{
+  position:absolute;inset:0;z-index:6;padding:44px 18px 20px;
+  background:linear-gradient(165deg,#0a2933,#04141a 62%);
+  display:flex;flex-direction:column;align-items:center;
+  opacity:1;transition:opacity .4s ease, transform .4s ease;
+}
+.lock-layer.hide{opacity:0;transform:scale(1.06);pointer-events:none;}
+.lock-time{font-family:var(--ff-display);font-weight:600;font-size:2.6rem;color:var(--text);}
+.lock-date{font-family:var(--ff-mono);font-size:.78rem;color:var(--text-dim);margin-top:6px;}
+.wa-notif{
+  position:absolute;top:16px;left:12px;right:12px;z-index:9;
+  display:flex;gap:12px;align-items:flex-start;
+  background:#0d2027ee;border:1px solid var(--line);border-radius:16px;padding:12px 14px;
+  box-shadow:0 14px 30px -10px #000;
+  transform:translateY(-160%);opacity:0;
+  transition:transform .5s cubic-bezier(.2,.9,.25,1.05), opacity .3s ease;
+}
+.wa-notif.show{transform:translateY(0);opacity:1;}
+.wa-notif.tapped{transform:translateY(0) scale(.95);}
+.wa-notif-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(140deg,#22c26b,#0c8a45);display:flex;align-items:center;justify-content:center;font-size:1.05rem;flex:none;}
+.wa-notif-title{font-family:var(--ff-mono);font-size:.66rem;color:var(--text-dim);}
+.wa-notif-body{font-size:.8rem;color:var(--text);margin-top:2px;line-height:1.3;}
+.wa-app{position:absolute;inset:0;z-index:4;display:flex;flex-direction:column;opacity:0;transition:opacity .35s ease;}
+.wa-app.show{opacity:1;z-index:7;}
+.wa-header{display:flex;align-items:center;gap:12px;padding:16px 18px;background:var(--panel);border-bottom:1px solid var(--line);}
+.wa-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));display:flex;align-items:center;justify-content:center;font-family:var(--ff-display);font-weight:700;font-size:1.05rem;color:#03181c;flex:none;}
+.wa-name{font-family:var(--ff-display);font-size:.92rem;color:var(--text);text-align:left;}
+.wa-status{font-family:var(--ff-mono);font-size:.66rem;color:var(--primary);text-align:left;}
+.wa-body{flex:1;padding:18px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;background:radial-gradient(circle at 20% 10%, #0a2933 0%, transparent 40%), #04141a;}
+.wa-typing{align-self:flex-start;background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:12px 16px;display:flex;gap:4px;}
+.wa-typing span{width:6px;height:6px;border-radius:50%;background:var(--text-dim);animation:waBlink 1.2s infinite;display:inline-block;}
+.wa-typing span:nth-child(2){animation-delay:.2s;}
+.wa-typing span:nth-child(3){animation-delay:.4s;}
+@keyframes waBlink{0%,80%,100%{opacity:.3;transform:translateY(0);}40%{opacity:1;transform:translateY(-3px);}}
+.voice-msg{align-self:flex-start;max-width:86%;background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:12px 14px;display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(10px);animation:msgIn .4s ease forwards;}
+@keyframes msgIn{to{opacity:1;transform:translateY(0);}}
+.voice-play{width:36px;height:36px;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));border:none;display:flex;align-items:center;justify-content:center;flex:none;color:#03181c;font-size:.85rem;cursor:pointer;}
+.voice-wave{flex:1;display:flex;align-items:center;gap:2px;height:24px;}
+.voice-wave i{width:3px;border-radius:2px;background:var(--text-dim);flex:none;display:inline-block;transition:background .2s;}
+.voice-msg.playing .voice-wave i{background:var(--primary);animation:waveMove .6s ease-in-out infinite;}
+.voice-wave i:nth-child(odd){animation-delay:.15s;}
+@keyframes waveMove{0%,100%{transform:scaleY(.4);}50%{transform:scaleY(1);}}
+.voice-time{font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);flex:none;}
+.wa-msg-text{align-self:flex-start;max-width:82%;background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:9px 12px;opacity:0;transform:translateY(10px);animation:msgIn .4s ease forwards;}
+.wa-msg-sender{font-family:var(--ff-display);font-weight:600;font-size:.76rem;margin-bottom:2px;}
+.wa-msg-text p{margin:0;font-size:.86rem;color:var(--text);line-height:1.35;}
+.biz-card{max-width:92%;}
+.biz-question{margin:2px 0 10px;font-size:.86rem;color:var(--text);line-height:1.35;}
+.biz-options{display:flex;flex-direction:column;gap:8px;}
+.biz-options button{
+  font-family:var(--ff-display);font-weight:600;font-size:.8rem;
+  background:var(--bg-alt);border:1px solid var(--line);color:var(--text);
+  border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;
+  transition:border-color .2s ease,background .2s ease,transform .15s ease;
+}
+.biz-options button:hover{border-color:var(--primary);background:#0a2933;}
+.biz-options button:active{transform:scale(.97);}
+.biz-chosen{margin:8px 0 0;font-family:var(--ff-mono);font-size:.76rem;color:var(--gold);}
+.wa-video-msg{align-self:flex-start;max-width:78%;background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:9px;opacity:0;transform:translateY(10px);animation:msgIn .4s ease forwards;}
+.wa-video-msg video{width:100%;max-width:230px;border-radius:10px;display:block;background:#000;}
+
+/* bichos de envidia (minijuego dentro del audio 1) */
+.bug-layer{position:fixed;inset:0;z-index:60;pointer-events:none;}
+.bug-counter{position:fixed;top:18px;left:18px;z-index:61;font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160aee;padding:7px 14px;border-radius:100px;opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;}
+.bug-counter.show{opacity:1;transform:translateY(0);}
+.bug{
+  position:absolute;width:52px;height:52px;display:flex;align-items:center;justify-content:center;
+  font-size:1.9rem;cursor:pointer;pointer-events:auto;user-select:none;touch-action:manipulation;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.55));
+  animation:bugFloat 2.6s ease-in-out infinite;
+  transition:transform .15s ease;
+}
+.bug:active{transform:scale(.9);}
+@keyframes bugFloat{
+  0%,100%{transform:translate(0,0) rotate(-6deg);}
+  50%{transform:translate(var(--fx,12px),var(--fy,-14px)) rotate(6deg);}
+}
+.bug.squish{animation:bugSquish .35s ease forwards !important;pointer-events:none;}
+@keyframes bugSquish{to{transform:scale(0) rotate(50deg);opacity:0;}}
+
+/* paso "tiktok": scroll de videos cortos + like + comentarios */
+.phone-shell.tiktok-shell{background:#000;}
+.tt-stage{position:relative;width:100%;height:100%;overflow:hidden;background:#000;}
+.tt-video-wrap{position:absolute;inset:0;transform:translateY(100%);transition:transform .5s cubic-bezier(.32,.9,.28,1);}
+.tt-video-wrap.tt-active{transform:translateY(0);}
+.tt-video-wrap.tt-leaving{transform:translateY(-100%);}
+.tt-video-wrap video{width:100%;height:100%;object-fit:cover;display:block;background:#000;}
+.tt-caption{position:absolute;left:16px;bottom:96px;z-index:5;color:#fff;font-size:.82rem;max-width:62%;text-shadow:0 1px 6px rgba(0,0,0,.7);}
+.tt-side-icons{position:absolute;right:12px;bottom:118px;z-index:5;display:flex;flex-direction:column;gap:18px;align-items:center;}
+.tt-icon{background:none;border:none;color:#fff;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:1.5rem;cursor:pointer;text-shadow:0 1px 6px rgba(0,0,0,.7);}
+.tt-icon span{font-family:var(--ff-mono);font-size:.62rem;}
+.tt-like.liked{color:#ff3b5c;transform:scale(1.05);}
+.tt-comment-box{position:absolute;left:12px;right:70px;bottom:16px;z-index:5;display:flex;gap:8px;}
+.tt-comment-box input{flex:1;background:#ffffff1a;border:1px solid #ffffff40;border-radius:100px;padding:9px 14px;color:#fff;font-size:.78rem;font-family:var(--ff-body);min-width:0;}
+.tt-comment-box input::placeholder{color:#ffffffa8;}
+.tt-comment-box button{background:var(--primary);border:none;border-radius:100px;padding:8px 14px;font-family:var(--ff-display);font-weight:600;font-size:.72rem;color:#03181c;cursor:pointer;flex:none;}
+.tt-unmute{position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:6;background:#000000cc;border:1px solid #ffffff40;color:#fff;font-family:var(--ff-mono);font-size:.72rem;padding:8px 14px;border-radius:100px;cursor:pointer;}
+
+/* paso: recompensa de tokens */
+.tokens-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:480px;}
+.token-row{display:flex;gap:16px;margin-top:28px;}
+.token-coin{font-size:2.8rem;display:inline-block;opacity:0;transform:translateY(-50px) rotate(-25deg);animation:coinDrop .65s cubic-bezier(.34,1.6,.4,1) forwards;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));}
+.token-coin:nth-child(1){animation-delay:.15s;}
+.token-coin:nth-child(2){animation-delay:.38s;}
+.token-coin:nth-child(3){animation-delay:.6s;}
+@keyframes coinDrop{to{opacity:1;transform:translateY(0) rotate(0);}}
+
+/* paso 3: minijuego */
+#stepGame .game-head{max-width:560px;margin-bottom:24px;}
+.token-bar{font-family:var(--ff-mono);font-size:.78rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:7px 16px;border-radius:100px;margin-top:16px;display:inline-flex;align-items:center;gap:6px;transition:transform .2s ease;}
+.token-bar.spend{animation:tokenSpend .35s ease;}
+@keyframes tokenSpend{0%{transform:scale(1);}40%{transform:scale(1.15);}100%{transform:scale(1);}}
+.game-board{position:relative;width:min(92vw,560px);height:min(58vh,58dvh,440px);}
+.node{position:absolute;transform:translate(-50%,-50%);border-radius:16px;border:2px solid var(--line);background:var(--panel);color:var(--text);font-family:var(--ff-display);font-weight:600;font-size:.85rem;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;cursor:pointer;user-select:none;touch-action:none;transition:border-color .3s,box-shadow .3s,background .3s;z-index:2;line-height:1.2;}
+.node-core{width:96px;height:96px;left:50%;top:50%;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));color:#03181c;font-size:1rem;cursor:grab;box-shadow:0 0 30px -6px var(--primary);}
+.node-target{width:120px;height:80px;}
+.node-target.connected{border-color:var(--primary);box-shadow:0 0 20px -4px var(--primary);background:#0a2933;}
+#gameLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;}
+#gameLines line{stroke:var(--line);stroke-width:3;}
+#gameLines line.done{stroke:url(#introTrackGrad);}
+.levelup-toast{position:fixed;top:12%;left:50%;transform:translate(-50%,-20px);background:linear-gradient(140deg,var(--primary),var(--gold));color:#03181c;font-family:var(--ff-display);font-weight:700;padding:12px 26px;border-radius:100px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:70;white-space:nowrap;max-width:88vw;text-align:center;}
+.levelup-toast.show{opacity:1;transform:translate(-50%,0);}
+
+/* paso 4: candado */
+.lock-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
+#lockSvg{width:110px;height:110px;color:var(--gold);}
+#lockSvg.shake{animation:shakeLock .5s ease;}
+@keyframes shakeLock{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px) rotate(-4deg);}40%{transform:translateX(8px) rotate(4deg);}60%{transform:translateX(-6px) rotate(-3deg);}80%{transform:translateX(6px) rotate(3deg);}}
+#lockSvg.broken{animation:lockBreak .6s ease forwards;}
+@keyframes lockBreak{to{opacity:0;transform:scale(1.7) rotate(18deg);filter:blur(3px);}}
+.lock-wrap h2{font-size:1.3rem;}
+.particle{position:fixed;width:8px;height:8px;border-radius:2px;z-index:9999;pointer-events:none;animation:particleFly .8s ease-out forwards;}
+@keyframes particleFly{to{transform:translate(var(--dx),var(--dy)) rotate(720deg);opacity:0;}}
+
+/* paso: carta manuscrita de Santiago (audio final) */
+.letter-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;max-width:640px;width:100%;}
+.letter-badge{font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:6px 14px;border-radius:100px;}
+.letter-paper{
+  position:relative;width:min(92vw,560px);max-height:min(64vh,64dvh,520px);overflow-y:auto;
+  background:linear-gradient(165deg,#f6ecd6,#efe2c4);
+  border-radius:6px 14px 10px 16px/10px 16px 6px 14px;
+  box-shadow:0 30px 70px -25px #000, 0 0 0 1px #d8c8a0 inset;
+  padding:30px 32px;transform:translateY(26px) rotate(-1.2deg) scale(.96);opacity:0;
+  transition:transform .6s cubic-bezier(.2,.9,.25,1.05), opacity .5s ease;
+}
+.letter-paper.appear{transform:translateY(0) rotate(-.6deg) scale(1);opacity:1;}
+.letter-text{
+  font-family:var(--ff-hand);color:#2c2113;font-size:clamp(1.15rem,2.6vw,1.5rem);
+  line-height:1.55;text-align:left;margin:0;
+}
+.letter-text .lw{opacity:.1;filter:blur(1.5px);transition:opacity .5s ease, filter .5s ease, color .5s ease;}
+.letter-text .lw.written{opacity:1;filter:blur(0);color:#241a0d;}
+.letter-signoff{font-family:var(--ff-hand);font-size:1.1rem;color:var(--gold);}
+
+@media(max-width:480px){
+  .video-gate h1{font-size:1.4rem;}
+  .phone-shell{border-radius:20px;}
+  .voice-msg{max-width:92%;padding:10px 12px;}
+  .game-board{height:min(52vh,52dvh,380px);}
+  .node-target{width:96px;height:68px;font-size:.74rem;padding:6px;}
+  .node-core{width:78px;height:78px;font-size:.85rem;}
+  #lockSvg{width:88px;height:88px;}
+  .lock-wrap h2{font-size:1.1rem;}
+  .bug{width:44px;height:44px;font-size:1.55rem;}
+  .skip-intro{top:12px;right:12px;font-size:.66rem;padding:6px 12px;}
+  .tt-caption{max-width:58%;font-size:.76rem;bottom:88px;}
+  .tt-icon{font-size:1.3rem;}
+  .tt-side-icons{bottom:108px;gap:14px;}
+  .lock-time{font-size:2rem;}
+  .wa-notif{padding:10px 12px;}
+  .token-coin{font-size:2.2rem;}
+  .token-row{gap:10px;margin-top:20px;}
+  .letter-paper{padding:22px 20px;max-height:min(58vh,58dvh,460px);}
+  .letter-text{font-size:1.08rem;}
+  .letter-signoff{font-size:1rem;}
+}
+@media(max-height:640px){
+  .phone-shell{height:min(88vh,88dvh,640px);}
+  .game-board{height:min(46vh,46dvh,340px);}
+}
+
+/* En dispositivos móviles reales: sin marco de celular, todo a pantalla completa.
+   El "mockup" de teléfono (marco + notch) solo se ve en pantallas grandes (PC). */
+@media(max-width:700px){
+  #introVideo{
+    position:fixed; inset:0; z-index:2;
+    width:100vw; max-width:100vw;
+    height:100vh; height:100dvh; max-height:100vh; max-height:100dvh;
+    border-radius:0; border:none; box-shadow:none; object-fit:cover;
+  }
+  .phone-shell{
+    position:fixed; inset:0; z-index:2;
+    width:100vw; max-width:100vw;
+    height:100vh; height:100dvh; max-height:100vh; max-height:100dvh;
+    border-radius:0; border:none; box-shadow:none;
+  }
+  .phone-notch{ display:none; }
+}
+
+/* =========================================================
    NAV + LOGIN
    ========================================================= */
 .site-nav{
@@ -428,10 +663,109 @@ footer p{max-width:640px;margin:6px auto;}
 </head>
 <body>
 
+<!-- ============ INTRO INTERACTIVA ============ -->
+<div class="intro-overlay closed" id="introOverlay">
+  <button class="skip-intro" id="skipIntro">Saltar intro →</button>
+  <div class="intro-progress" id="introProgress"></div>
+
+  <!-- PASO 1: VIDEO PRINCIPAL -->
+  <div class="intro-step active" id="stepVideo">
+    <div class="video-gate" id="videoGate">
+      <div class="gate-badge">🔊 Activa el sonido para la mejor experiencia</div>
+      <h1 style="font-size:clamp(1.5rem,3.4vw,2.2rem);">Toca para comenzar tu <span class="grad-text">ruta</span></h1>
+      <p class="micro" style="max-width:38ch;">Verás un video corto, luego un feed estilo TikTok y un chat de WhatsApp para conocer nuestra comunidad.</p>
+      <button class="btn btn-primary" id="startBtn" disabled>Cargando...
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <video id="introVideo" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow">
+      <source type="video/mp4">
+    </video>
+  </div>
+
+  <!-- PASO 2: EMBUDO TIKTOK: 2 clips cortos con scroll + video completo -->
+  <div class="intro-step" id="stepTiktok">
+    <div class="video-gate" id="tiktokGate">
+      <div class="gate-badge">📱 Sigue la ruta</div>
+      <h1 style="font-size:clamp(1.4rem,3.2vw,2rem);">Toca para ver el siguiente clip</h1>
+      <button class="btn btn-primary" id="tiktokStartBtn">Continuar
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="phone-shell tiktok-shell" id="tiktokShell" style="display:none;">
+      <div class="phone-notch"></div>
+      <div class="tt-stage" id="ttStage">
+        <div class="tt-video-wrap tt-active" data-i="0">
+          <video id="ttVideo0" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
+        </div>
+        <div class="tt-video-wrap" data-i="1">
+          <video id="ttVideo1" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
+        </div>
+        <div class="tt-video-wrap" data-i="2">
+          <video id="ttVideo2" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
+        </div>
+        <div class="tt-caption">@proyectum.ia · Así fue el antes y después 🚀</div>
+        <div class="tt-side-icons">
+          <button class="tt-icon tt-like" id="ttLikeBtn" aria-label="Me gusta">❤️<span id="ttLikeCount">12.8K</span></button>
+          <div class="tt-icon">💬<span>892</span></div>
+          <div class="tt-icon">↗️<span>Compartir</span></div>
+        </div>
+        <div class="tt-comment-box">
+          <input type="text" placeholder="Agrega un comentario..." id="ttCommentInput">
+          <button id="ttCommentBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 3: NOTIFICACIÓN DE WHATSAPP -> ABRE EL GRUPO -->
+  <div class="intro-step" id="stepChat">
+    <div class="phone-shell" id="chatPhoneShell">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="lock-layer" id="lockLayer">
+          <div class="lock-time">9:41</div>
+          <div class="lock-date">Hoy</div>
+          <div class="wa-notif" id="waNotif">
+            <div class="wa-notif-icon">💬</div>
+            <div class="wa-notif-text">
+              <div class="wa-notif-title">WhatsApp · ahora</div>
+              <div class="wa-notif-body"><strong>PROYECTUM IA TEAM</strong><br>Andrés: ¡Bienvenido al equipo! 🚀</div>
+            </div>
+          </div>
+        </div>
+        <div class="wa-app" id="waApp">
+          <div class="wa-header">
+            <div class="wa-avatar">👥</div>
+            <div>
+              <div class="wa-name">PROYECTUM IA TEAM</div>
+              <div class="wa-status">259 activos en el grupo</div>
+            </div>
+          </div>
+          <div class="wa-body" id="waBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO FINAL: BIENVENIDA -->
+  <div class="intro-step" id="stepWelcome">
+    <div class="tokens-wrap" id="welcomeWrap">
+      <div class="welcome-mark" id="welcomeMark">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#03181c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4L19 7"/></svg>
+      </div>
+      <div class="eyebrow" style="margin-top:22px;">Ya eres parte de la comunidad</div>
+      <h2 style="font-size:clamp(1.5rem,3.4vw,2.2rem);margin-top:10px;">¡Bienvenida a <span class="grad-text">Proyectum IA</span>!</h2>
+      <p class="micro" style="margin-top:14px;max-width:40ch;">Sigue explorando para conocer el programa, los módulos y cómo activar tu acceso.</p>
+    </div>
+  </div>
+
+</div>
+
 <div class="xp-rail"><div class="xp-fill" id="xpFill"></div></div>
 
 <!-- ============ NAV ============ -->
-<nav class="site-nav visible" id="siteNav">
+<nav class="site-nav" id="siteNav">
   <div class="wrap">
     <a href="/" class="nav-brand"><span class="dot"></span> PROYECTUM <span class="grad-text">IA</span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">
@@ -475,7 +809,7 @@ footer p{max-width:640px;margin:6px auto;}
 </div>
 
 <!-- ============ HOTBAR MÓVIL (navegación inferior tipo app) ============ -->
-<nav class="mobile-hotbar visible" id="mobileHotbar">
+<nav class="mobile-hotbar" id="mobileHotbar">
   <div class="hotbar-row">
     <a href="/plataforma" class="hotbar-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
@@ -568,6 +902,57 @@ footer p{max-width:640px;margin:6px auto;}
         </div>
       </div>
 
+      <div class="admin-section">
+        <h4>Video principal del embudo</h4>
+        <div class="admin-field">
+          <label>URL actual (Supabase o externa)</label>
+          <input type="url" id="adminVideoMainUrl" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoMainFile" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Video TikTok 1</h4>
+        <div class="admin-field">
+          <input type="url" id="adminVideoTk1Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoTk1File" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Video TikTok 2</h4>
+        <div class="admin-field">
+          <input type="url" id="adminVideoTk2Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoTk2File" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Video TikTok 3</h4>
+        <div class="admin-field">
+          <input type="url" id="adminVideoTk3Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminVideoTk3File" accept="video/*">
+        </div>
+      </div>
+
+      <div class="admin-section">
+        <h4>Audio del chat</h4>
+        <div class="admin-field">
+          <input type="url" id="adminAudio1Url" placeholder="https://...">
+        </div>
+        <div class="admin-file-row">
+          <input type="file" id="adminAudio1File" accept="audio/*">
+        </div>
+      </div>
+
       <div class="admin-actions">
         <button class="admin-reset" id="adminReset" type="button">Restaurar original</button>
         <button class="admin-save" id="adminSave" type="button">Guardar cambios</button>
@@ -608,8 +993,8 @@ footer p{max-width:640px;margin:6px auto;}
       <p>Proyectum IA reúne formación, herramientas y una secuencia de acción para que conviertas la inteligencia artificial en habilidades aplicables a un negocio digital.</p>
 
       <div class="ml-actions">
-        <a class="ml-btn buy-link" href="https://pay.hotmart.com/O106580846O" target="_blank" rel="noopener">Conocer el acceso ↗</a>
-        <a class="ml-link" href="#ml-programa">Explorar el programa ↓</a>
+        <button type="button" class="ml-btn ml-btn-experience" id="startExperienceBtn">▶ Iniciar experiencia</button>
+        <a class="ml-link" href="https://pay.hotmart.com/O106580846O" target="_blank" rel="noopener" class="buy-link">Conocer el acceso ↗</a>
       </div>
 
       <div class="ml-meta">
@@ -618,6 +1003,11 @@ footer p{max-width:640px;margin:6px auto;}
         <span>✦ PDFs + ejercicios</span>
       </div>
     </div>
+
+    <button type="button" class="ml-scroll-cue" id="heroScrollCue" aria-label="Seguir conociendo la plataforma">
+      <span>Sigue conociendo la plataforma</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
   </div>
 
   <section class="ml-section" id="ml-modelo">
@@ -822,6 +1212,759 @@ const io = new IntersectionObserver((entries)=>{
 revealTargets.forEach(el=>io.observe(el));
 </script>
 
+<!-- ============ MOTOR DE MEDIOS: evita reproducciones simultáneas ============ -->
+<script>
+window.mediaEngine = (function(){
+  const registered = new Set();
+  function allMedia(){
+    return Array.prototype.slice.call(document.querySelectorAll('audio, video'))
+      .concat(Array.from(registered));
+  }
+  function register(el){
+    if(el) registered.add(el);
+  }
+  function stopAllExcept(exceptEl){
+    allMedia().forEach(function(m){
+      if(m !== exceptEl && !m.paused){
+        try{ m.pause(); }catch(e){}
+      }
+    });
+  }
+  function play(el, opts){
+    if(!el) return Promise.resolve();
+    stopAllExcept(el);
+    const p = el.play();
+    return (p && typeof p.then === 'function') ? p.catch(function(){}) : Promise.resolve();
+  }
+  const visibilityObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(!entry.isIntersecting && !entry.target.paused){
+        try{ entry.target.pause(); }catch(e){}
+      }
+    });
+  }, { threshold: 0.05 });
+
+  function observe(el){
+    if(el) visibilityObserver.observe(el);
+  }
+  function observeAllVideos(root){
+    (root || document).querySelectorAll('video').forEach(observe);
+  }
+
+  return { stopAllExcept: stopAllExcept, play: play, observe: observe, observeAllVideos: observeAllVideos, register: register };
+})();
+</script>
+
+<!-- ============ LÓGICA DE LA INTRO INTERACTIVA (bajo demanda) ============ -->
+<script>
+(function(){
+  const overlay = document.getElementById('introOverlay');
+  const siteNav = document.getElementById('siteNav');
+  const mobileHotbar = document.getElementById('mobileHotbar');
+  const heroSection = document.querySelector('.ml-hero');
+  const startExperienceBtn = document.getElementById('startExperienceBtn');
+  const heroScrollCue = document.getElementById('heroScrollCue');
+
+  window.mediaEngine.observeAllVideos(overlay);
+
+  const STEP_ORDER = ['video','tiktok','chat','welcome'];
+  const steps = {
+    video: document.getElementById('stepVideo'),
+    tiktok: document.getElementById('stepTiktok'),
+    chat: document.getElementById('stepChat'),
+    welcome: document.getElementById('stepWelcome')
+  };
+  const introProgress = document.getElementById('introProgress');
+  introProgress.innerHTML = STEP_ORDER.map(function(){ return '<span class="dot"></span>'; }).join('');
+  const progressDots = Array.prototype.slice.call(introProgress.children);
+  function goTo(name){
+    Object.values(steps).forEach(s=>s.classList.remove('active'));
+    steps[name].classList.add('active');
+    const idx = STEP_ORDER.indexOf(name);
+    progressDots.forEach(function(d, i){
+      d.classList.toggle('active', i === idx);
+      d.classList.toggle('done', i < idx);
+    });
+    window.mediaEngine.stopAllExcept(null);
+  }
+
+  // Revela nav + hotbar la primera vez que la persona sale del hero (scroll natural
+  // o toque en la flecha), sin necesidad de completar la experiencia.
+  function revealChrome(){
+    if(siteNav) siteNav.classList.add('visible');
+    if(mobileHotbar) mobileHotbar.classList.add('visible');
+  }
+  if(heroSection && 'IntersectionObserver' in window){
+    const heroObserver = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(!entry.isIntersecting) revealChrome();
+      });
+    }, { threshold: 0.15 });
+    heroObserver.observe(heroSection);
+  }
+  if(heroScrollCue){
+    heroScrollCue.addEventListener('click', function(){
+      revealChrome();
+      const target = document.getElementById('ml-modelo');
+      if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+    });
+  }
+
+  function openOverlay(){
+    overlay.classList.remove('closed');
+    document.body.style.overflow = 'hidden';
+    goTo('video');
+  }
+
+  function closeOverlay(){
+    overlay.classList.add('closed');
+    document.body.style.overflow = '';
+    window.mediaEngine.stopAllExcept(null);
+    clearBugs();
+    clearGroupTimers();
+    revealChrome();
+  }
+
+  const skipIntroBtn = document.getElementById('skipIntro');
+  if (skipIntroBtn){
+    skipIntroBtn.addEventListener('click', closeOverlay);
+  }
+
+  /* ---- Sonidos generados con Web Audio API (sin archivos externos) ---- */
+  let audioCtx;
+  function ctx(){
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state === 'suspended'){ audioCtx.resume().catch(function(){}); }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, type, gain){
+    type = type || 'sine'; gain = gain==null ? .18 : gain;
+    const c = ctx();
+    const osc = c.createOscillator();
+    const g = c.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    osc.connect(g); g.connect(c.destination);
+    const t0 = c.currentTime + start;
+    g.gain.setValueAtTime(gain, t0);
+    g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+    osc.start(t0); osc.stop(t0 + dur + .02);
+  }
+  function playDing(){ tone(880,0,.12,'sine',.15); tone(1320,.08,.15,'sine',.12); }
+  function playLevelUp(){ [523,659,784,1046].forEach((f,i)=>tone(f,i*.09,.16,'triangle',.16)); }
+  function playPop(){ tone(700,0,.05,'square',.14); tone(300,.03,.08,'square',.1); }
+
+  function safePlay(video, onFail, attempt){
+    if(!video) return;
+    attempt = attempt || 0;
+    const MAX_ATTEMPTS = 5;
+    let settled = false;
+    function tryPlay(){
+      const p = window.mediaEngine.play(video);
+      if(p && typeof p.then === 'function'){
+        p.then(function(){
+          if(!video.paused) settled = true;
+          if(!settled && attempt < MAX_ATTEMPTS){
+            if(video.readyState >= 2){
+              setTimeout(function(){ safePlay(video, onFail, attempt+1); }, 250 + attempt*150);
+            } else {
+              const retry = function(){
+                video.removeEventListener('canplay', retry);
+                video.removeEventListener('loadeddata', retry);
+                safePlay(video, onFail, attempt+1);
+              };
+              video.addEventListener('canplay', retry, { once:true });
+              video.addEventListener('loadeddata', retry, { once:true });
+              setTimeout(retry, 2500);
+            }
+          } else if(!settled && attempt >= MAX_ATTEMPTS){
+            if(onFail) onFail();
+          }
+        });
+      }
+    }
+    tryPlay();
+
+    if(!video.dataset.autoResumeBound){
+      video.dataset.autoResumeBound = '1';
+      video.addEventListener('pause', function(){
+        if(video.dataset.introFinished === '1') return;
+        if(video.ended || video.seeking) return;
+        if(!overlay.contains(video) || overlay.classList.contains('closed')) return;
+        setTimeout(function(){
+          if(video.paused && !video.ended && video.dataset.introFinished !== '1'){
+            window.mediaEngine.play(video);
+          }
+        }, 400);
+      });
+    }
+  }
+
+  function mediaUrl(key, fallback){
+    return (window.PROYECTUM_MEDIA && window.PROYECTUM_MEDIA[key]) || fallback;
+  }
+
+  /* ---- Paso 1: video principal ---- */
+  const startBtn = document.getElementById('startBtn');
+  const videoGate = document.getElementById('videoGate');
+  const introVideo = document.getElementById('introVideo');
+  let videoAdvanced = false;
+  function advanceFromVideo(){
+    if(videoAdvanced) return;
+    videoAdvanced = true;
+    introVideo.dataset.introFinished = '1';
+    introVideo.pause();
+    goTo('tiktok');
+  }
+
+  function enableStartButton(){
+    if(startBtn.dataset.enabled === '1') return;
+    startBtn.dataset.enabled = '1';
+    startBtn.disabled = false;
+    startBtn.innerHTML = 'Reproducir <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  }
+  if(window.PROYECTUM_MEDIA_READY){
+    enableStartButton();
+  } else {
+    document.addEventListener('proyectumMediaReady', enableStartButton);
+    setTimeout(enableStartButton, 10000);
+  }
+
+  /* ---- Paso: notificación de WhatsApp cae desde arriba y abre el grupo ---- */
+  const chatPhoneShell = document.getElementById('chatPhoneShell');
+  const lockLayer = document.getElementById('lockLayer');
+  const waNotif = document.getElementById('waNotif');
+  const waApp = document.getElementById('waApp');
+
+  function runNotificationSequence(){
+    goTo('chat');
+    requestAnimationFrame(function(){
+      setTimeout(function(){ chatPhoneShell.classList.add('risen'); }, 40);
+    });
+    setTimeout(function(){
+      waNotif.classList.add('show');
+      playDing();
+    }, 900);
+    setTimeout(function(){
+      waNotif.classList.add('tapped');
+    }, 2600);
+    setTimeout(function(){
+      lockLayer.classList.add('hide');
+      waApp.classList.add('show');
+      startChat();
+    }, 2950);
+  }
+  function unlockVideoForMobile(video){
+    if(!video) return;
+    const wasMuted = video.muted;
+    video.muted = true;
+    const p = video.play();
+    if(p && typeof p.then === 'function'){
+      p.then(function(){
+        video.pause();
+        video.currentTime = 0;
+        video.muted = wasMuted;
+      }).catch(function(){
+        video.muted = wasMuted;
+      });
+    } else {
+      video.pause();
+      video.muted = wasMuted;
+    }
+  }
+
+  function unlockAudioForMobile(audio){
+    if(!audio) return;
+    const p = audio.play();
+    if(p && typeof p.then === 'function'){
+      p.then(function(){
+        audio.pause();
+        audio.currentTime = 0;
+      }).catch(function(){});
+    } else {
+      try{ audio.pause(); }catch(e){}
+    }
+  }
+
+  function showTtUnmuteHint(video){
+    const stage = document.getElementById('ttStage');
+    if(!stage || stage.querySelector('.tt-unmute')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tt-unmute';
+    btn.textContent = '🔇 Toca para activar el sonido';
+    btn.addEventListener('click', function(){
+      video.muted = false;
+      window.mediaEngine.play(video);
+      btn.remove();
+    });
+    stage.appendChild(btn);
+  }
+
+  function safePlayWithMutedFallback(video, onHardFail){
+    safePlay(video, function(){
+      if(!video.muted){
+        video.muted = true;
+        video.currentTime = 0;
+        safePlay(video, onHardFail);
+        showTtUnmuteHint(video);
+      } else if(onHardFail){
+        onHardFail();
+      }
+    });
+  }
+
+  startExperienceBtn.addEventListener('click', function(){
+    ctx();
+    openOverlay();
+    startBtn.click();
+  });
+
+  startBtn.addEventListener('click', function(){
+    ctx();
+
+    const videoMainUrl = mediaUrl('videoMain', '');
+    if(videoMainUrl){
+      introVideo.querySelector('source').src = videoMainUrl;
+      introVideo.dataset.realSrcAssigned = '1';
+      introVideo.load();
+    }
+    VOICE_AUDIOS[1].src = mediaUrl('audio1', VOICE_AUDIOS[1].src);
+    voiceAudios[1].src = VOICE_AUDIOS[1].src;
+
+    voiceAudios.forEach(unlockAudioForMobile);
+    videoGate.style.display = 'none';
+    if(videoMainUrl){
+      introVideo.style.display = 'block';
+      safePlayWithMutedFallback(introVideo, advanceFromVideo);
+      setTimeout(function(){ if(introVideo.readyState === 0) advanceFromVideo(); }, 8000);
+    } else {
+      advanceFromVideo();
+    }
+  });
+  introVideo.addEventListener('ended', advanceFromVideo);
+  introVideo.addEventListener('error', function(){
+    if(introVideo.dataset.realSrcAssigned === '1'){
+      advanceFromVideo();
+    }
+  });
+
+  /* ---- Paso: audios estilo WhatsApp (audios reales) ---- */
+  const waBody = document.getElementById('waBody');
+
+  const VOICE_AUDIOS = [
+    { src: 'https://res.cloudinary.com/vlhv2gge/video/upload/v1785198831/Audio_1_sg7jm2.mp3',
+      groupMessages: [
+        { t: 1800, name: 'Andrés',  text: '¡Hoy llegué a 50 clientes más!' },
+        { t: 3600, name: 'Sofía',   text: 'Tenemos que usar más nuestra IA, está súper' },
+        { t: 5600, name: 'Daniel',  text: '¡Gracias por todo el apoyo equipo!' },
+        { t: 7600, name: 'Esteban', text: 'Le acabo de comprar un carro a mi mamá' }
+      ] },
+    { src: 'https://res.cloudinary.com/vlhv2gge/video/upload/v1785198832/Audio_2_cr28eq.mp3',
+      groupMessages: [
+        { t: 1600, name: 'Santiago', text: 'Bienvenidos a los nuevos, por favor presten atención' },
+        { t: 3800, name: 'Sara',     text: '¡A darla toda! Confío en ti' },
+        { t: 6000, name: 'Rubén',    text: 'Estamos para crecer entre todos' }
+      ] }
+  ];
+  const voiceAudios = VOICE_AUDIOS.map(function(v){
+    const a = new Audio(v.src);
+    a.preload = 'auto';
+    window.mediaEngine.register(a);
+    return a;
+  });
+
+  function formatTime(sec){
+    if(!isFinite(sec) || sec <= 0) return '0:00';
+    const m = Math.floor(sec/60), s = Math.floor(sec%60);
+    return m + ':' + (s<10?'0':'') + s;
+  }
+  function buildWave(){
+    let html = '';
+    for(let i=0;i<22;i++){ html += '<i style="height:' + (8+Math.random()*16) + 'px"></i>'; }
+    return html;
+  }
+
+  const SENDER_COLORS = ['#22FDF9','#ffc94a','#7ee787','#ff8a65','#c792ea','#4fc3f7'];
+  const senderColorMap = {};
+  let senderColorIdx = 0;
+  function colorForSender(name){
+    if(!senderColorMap[name]) senderColorMap[name] = SENDER_COLORS[senderColorIdx++ % SENDER_COLORS.length];
+    return senderColorMap[name];
+  }
+  const groupMsgTimers = [];
+  function clearGroupTimers(){
+    groupMsgTimers.forEach(function(id){ clearTimeout(id); });
+    groupMsgTimers.length = 0;
+  }
+  function addGroupMessage(name, text){
+    const el = document.createElement('div');
+    el.className = 'wa-msg-text';
+    const sender = document.createElement('div');
+    sender.className = 'wa-msg-sender';
+    sender.style.color = colorForSender(name);
+    sender.textContent = name;
+    const p = document.createElement('p');
+    p.textContent = text;
+    el.appendChild(sender);
+    el.appendChild(p);
+    waBody.appendChild(el);
+    waBody.scrollTop = waBody.scrollHeight;
+  }
+
+  function startChat(){
+    let i = 1;
+
+    function next(){
+      if(i >= VOICE_AUDIOS.length){
+        setTimeout(finishExperience, 900);
+        return;
+      }
+      const typing = document.createElement('div');
+      typing.className = 'wa-typing';
+      typing.innerHTML = '<span></span><span></span><span></span>';
+      waBody.appendChild(typing);
+      waBody.scrollTop = waBody.scrollHeight;
+
+      setTimeout(function(){
+        typing.remove();
+        const audio = voiceAudios[i];
+        const cfg = VOICE_AUDIOS[i];
+
+        const msg = document.createElement('div');
+        msg.className = 'voice-msg';
+        msg.innerHTML = '<button class="voice-play" aria-label="Reproducir">▶</button><div class="voice-wave">' + buildWave() + '</div><span class="voice-time">0:00</span>';
+        waBody.appendChild(msg);
+        waBody.scrollTop = waBody.scrollHeight;
+        playDing();
+
+        const playBtn = msg.querySelector('.voice-play');
+        const timeEl = msg.querySelector('.voice-time');
+
+        audio.addEventListener('loadedmetadata', function(){
+          timeEl.textContent = formatTime(audio.duration);
+        }, { once:true });
+
+        let advanced = false;
+        function finishAndAdvance(){
+          if(advanced) return;
+          advanced = true;
+          msg.classList.remove('playing');
+          i++;
+          setTimeout(next, 700);
+        }
+
+        function startPlayback(){
+          msg.classList.add('playing');
+          window.mediaEngine.play(audio).then(function(){
+            if(audio.paused) finishAndAdvance();
+          });
+          (cfg.groupMessages || []).forEach(function(gm){
+            groupMsgTimers.push(setTimeout(function(){ addGroupMessage(gm.name, gm.text); }, gm.t));
+          });
+        }
+
+        audio.addEventListener('timeupdate', function(){
+          const remaining = audio.duration - audio.currentTime;
+          if(isFinite(remaining)) timeEl.textContent = formatTime(remaining);
+        });
+        audio.addEventListener('ended', finishAndAdvance);
+        audio.addEventListener('error', finishAndAdvance);
+        audio.addEventListener('pause', function(){
+          if(advanced || audio.ended) return;
+          if(!steps.chat.classList.contains('active')) return;
+          setTimeout(function(){
+            if(audio.paused && !audio.ended && !advanced && steps.chat.classList.contains('active')){
+              window.mediaEngine.play(audio);
+            }
+          }, 400);
+        });
+
+        playBtn.addEventListener('click', function(){
+          if(audio.paused){
+            window.mediaEngine.play(audio);
+            msg.classList.add('playing');
+          } else {
+            audio.pause();
+            msg.classList.remove('playing');
+          }
+        });
+
+        setTimeout(startPlayback, 500);
+        setTimeout(function(){ if(!advanced && audio.error) finishAndAdvance(); }, 15000);
+      }, 1300);
+    }
+
+    const typing0 = document.createElement('div');
+    typing0.className = 'wa-typing';
+    typing0.innerHTML = '<span></span><span></span><span></span>';
+    waBody.appendChild(typing0);
+    waBody.scrollTop = waBody.scrollHeight;
+    setTimeout(function(){
+      typing0.remove();
+      showBizChoice(next);
+    }, 1300);
+  }
+
+  const BIZ_VIDEOS = {
+    MarcaPersonal: [
+      'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600936/WhatsApp_Video_2026-07-29_at_10.12.22_AM_qk3axw.mp4',
+      'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600936/hf_20260801_021414_e7abded8-ed84-4d94-a5a6-4fb918efdac6_swg5wy.mp4'
+    ],
+    NegocioDigital: [
+      'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600937/hf_20260801_031224_5ef37f33-33c7-4c25-a2a1-cd6debec8b38_qujlvf.mp4'
+    ],
+    NegocioTradicional: [
+      'https://res.cloudinary.com/vlhv2gge/video/upload/v1785600936/hf_20260801_025545_36bb0557-1754-49fb-8bf6-f20175d6928e_jyfvrx.mp4'
+    ],
+    InfoProductos: [
+      'https://res.cloudinary.com/vlhv2gge/video/upload/v1785602771/hf_20260801_163527_426a13dd-67ef-4c44-87e1-7030502e1c7e_fohapn.mp4'
+    ],
+    Empleado: [
+      'https://res.cloudinary.com/vlhv2gge/video/upload/v1785602771/hf_20260801_163527_426a13dd-67ef-4c44-87e1-7030502e1c7e_fohapn.mp4'
+    ]
+  };
+  function appendBotVideoMessage(url){
+    const wrap = document.createElement('div');
+    wrap.className = 'wa-video-msg';
+    wrap.innerHTML =
+      '<div class="wa-msg-sender" style="color:var(--gold)">PROYECTUM IA TEAM</div>' +
+      '<video muted loop playsinline webkit-playsinline="true" controls preload="auto" src="' + url + '"></video>';
+    waBody.appendChild(wrap);
+    waBody.scrollTop = waBody.scrollHeight;
+    const v = wrap.querySelector('video');
+    window.mediaEngine.observe(v);
+    window.mediaEngine.play(v);
+  }
+  function sendBizVideos(key){
+    const urls = BIZ_VIDEOS[key] || [];
+    urls.forEach(function(url, idx){
+      groupMsgTimers.push(setTimeout(function(){
+        appendBotVideoMessage(url);
+        playDing();
+      }, idx * 850));
+    });
+  }
+
+  function showBizChoice(onDone){
+    const card = document.createElement('div');
+    card.className = 'wa-msg-text biz-card';
+    card.innerHTML =
+      '<div class="wa-msg-sender" style="color:var(--gold)">PROYECTUM IA TEAM</div>' +
+      '<p class="biz-question">Antes de seguir... ¿cuál te representa mejor? 👇</p>' +
+      '<div class="biz-options">' +
+        '<button type="button" data-v="MarcaPersonal">✅ Marca personal</button>' +
+        '<button type="button" data-v="NegocioDigital">✅ Negocio digital</button>' +
+        '<button type="button" data-v="NegocioTradicional">⭕ Negocio tradicional</button>' +
+        '<button type="button" data-v="InfoProductos">⭕ Info productos</button>' +
+        '<button type="button" data-v="Empleado">⭕ Empleado</button>' +
+      '</div>';
+    waBody.appendChild(card);
+    waBody.scrollTop = waBody.scrollHeight;
+    playDing();
+
+    const optionsWrap = card.querySelector('.biz-options');
+    Array.prototype.forEach.call(optionsWrap.querySelectorAll('button'), function(btn){
+      btn.addEventListener('click', function(){
+        const key = btn.dataset.v;
+        const label = btn.textContent;
+        optionsWrap.remove();
+        const chosen = document.createElement('p');
+        chosen.className = 'biz-chosen';
+        chosen.textContent = '✅ Elegiste: ' + label;
+        card.appendChild(chosen);
+        waBody.scrollTop = waBody.scrollHeight;
+        playLevelUp();
+        setTimeout(function(){
+          sendBizVideos(key);
+          onDone();
+        }, 900);
+      }, { once: true });
+    });
+  }
+
+  /* ---- Paso final: bienvenida y cierre del embudo ---- */
+  function finishExperience(){
+    clearGroupTimers();
+    chatPhoneShell.classList.remove('risen');
+    setTimeout(function(){
+      goTo('welcome');
+      playLevelUp();
+      const mark = document.getElementById('welcomeMark');
+      if(mark){
+        mark.classList.remove('pop');
+        void mark.offsetWidth;
+        mark.classList.add('pop');
+      }
+      setTimeout(function(){
+        closeOverlay();
+        const target = document.getElementById('ml-modelo');
+        if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+      }, 2200);
+    }, 680);
+  }
+
+  const tiktokShell = document.getElementById('tiktokShell');
+  const tiktokGate = document.getElementById('tiktokGate');
+  const tiktokStartBtn = document.getElementById('tiktokStartBtn');
+  const ttVideos = [
+    document.getElementById('ttVideo0'),
+    document.getElementById('ttVideo1'),
+    document.getElementById('ttVideo2')
+  ];
+  const ttWraps = Array.prototype.slice.call(document.querySelectorAll('.tt-video-wrap'));
+  const ttLikeBtn = document.getElementById('ttLikeBtn');
+  const ttLikeCount = document.getElementById('ttLikeCount');
+  const ttCommentBtn = document.getElementById('ttCommentBtn');
+  const ttCommentInput = document.getElementById('ttCommentInput');
+  let ttLiked = false;
+  const ttBaseLikes = 12800;
+
+  function formatLikes(n){ return (n/1000).toFixed(1).replace('.0','') + 'K'; }
+  ttLikeCount.textContent = formatLikes(ttBaseLikes);
+
+  ttLikeBtn.addEventListener('click', function(){
+    ttLiked = !ttLiked;
+    ttLikeBtn.classList.toggle('liked', ttLiked);
+    ttLikeCount.textContent = formatLikes(ttBaseLikes + (ttLiked ? 1 : 0));
+    playPop();
+    if(ttLiked){
+      const b = ttLikeBtn.getBoundingClientRect();
+      spawnParticles(b.left+b.width/2, b.top+b.height/2);
+    }
+  });
+  ttCommentBtn.addEventListener('click', function(){
+    if(!ttCommentInput.value.trim()) return;
+    playDing();
+    ttCommentInput.value = '';
+    ttCommentInput.placeholder = '¡Comentario enviado!';
+    setTimeout(function(){ ttCommentInput.placeholder = 'Agrega un comentario...'; }, 1600);
+  });
+
+  function ttGoTo(idx){
+    ttWraps.forEach(function(w){
+      const wi = Number(w.dataset.i);
+      w.classList.remove('tt-active','tt-leaving');
+      if(wi === idx) w.classList.add('tt-active');
+      else if(wi < idx) w.classList.add('tt-leaving');
+    });
+  }
+
+  function startTiktokSequence(){
+    const tk1 = mediaUrl('videoTiktok1', '');
+    const tk2 = mediaUrl('videoTiktok2', '');
+    const tk3 = mediaUrl('videoTiktok3', '');
+    if(tk1 && ttVideos[0].src !== tk1) ttVideos[0].src = tk1;
+    if(tk2 && ttVideos[1].src !== tk2) ttVideos[1].src = tk2;
+    if(tk3 && ttVideos[2].src !== tk3){ ttVideos[2].src = tk3; ttVideos[2].dataset.realSrcAssigned = '1'; }
+
+    if(!ttVideos[0].src){
+      advanceFromTiktok();
+      return;
+    }
+    ttGoTo(0);
+    ttVideos[0].currentTime = 0;
+    ttVideos[0].muted = true;
+    safePlay(ttVideos[0]);
+    setTimeout(function(){
+      ttVideos[0].dataset.introFinished = '1';
+      ttVideos[0].pause();
+      ttGoTo(1);
+      ttVideos[1].currentTime = 0;
+      ttVideos[1].muted = true;
+      safePlay(ttVideos[1]);
+      setTimeout(function(){
+        ttVideos[1].dataset.introFinished = '1';
+        ttVideos[1].pause();
+        ttGoTo(2);
+        ttVideos[2].muted = false;
+        ttVideos[2].currentTime = 0;
+        safePlay(ttVideos[2], function(){
+          ttVideos[2].muted = true;
+          safePlay(ttVideos[2]);
+          showTtUnmuteHint(ttVideos[2]);
+        });
+      }, 1000);
+    }, 500);
+  }
+  function advanceFromTiktok(){
+    ttVideos[2].dataset.introFinished = '1';
+    ttVideos[2].pause();
+    runNotificationSequence();
+  }
+  ttVideos.forEach(function(v, idx){
+    v.addEventListener('error', function(){
+      console.error('[Proyectum IA] Error al cargar el video TikTok ' + (idx+1) + ':', v.currentSrc || v.src, v.error);
+    });
+  });
+  introVideo.addEventListener('error', function(){
+    console.error('[Proyectum IA] Error al cargar el video principal:', introVideo.currentSrc, introVideo.error);
+  });
+
+  ttVideos[2].addEventListener('ended', advanceFromTiktok);
+  ttVideos[2].addEventListener('error', function(){
+    if(ttVideos[2].dataset.realSrcAssigned === '1'){
+      advanceFromTiktok();
+    }
+  });
+
+  function runTiktokRise(){
+    tiktokShell.style.display = 'block';
+    requestAnimationFrame(function(){
+      setTimeout(function(){ tiktokShell.classList.add('risen'); }, 40);
+    });
+    startTiktokSequence();
+  }
+  tiktokStartBtn.addEventListener('click', function(){
+    ctx();
+    tiktokGate.style.display = 'none';
+    ['ttVideo0','ttVideo1','ttVideo2'].forEach(function(id){
+      unlockVideoForMobile(document.getElementById(id));
+    });
+    runTiktokRise();
+  });
+
+  const bugLayer = document.getElementById('bugLayer');
+  function clearBugs(){ /* minijuego de bichos retirado; se deja vacío por compatibilidad */ }
+
+  function spawnParticles(x,y){
+    for(let i=0;i<18;i++){
+      const p = document.createElement('span');
+      p.className = 'particle';
+      const angle = Math.random()*Math.PI*2, dist = 60+Math.random()*90;
+      p.style.left = x+'px'; p.style.top = y+'px';
+      p.style.setProperty('--dx', Math.cos(angle)*dist+'px');
+      p.style.setProperty('--dy', Math.sin(angle)*dist+'px');
+      p.style.background = i%2 ? '#22FDF9' : '#ffc94a';
+      document.body.appendChild(p);
+      setTimeout(function(){ p.remove(); }, 900);
+    }
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState !== 'visible') return;
+    if(overlay.classList.contains('closed')) return;
+
+    if(steps.video.classList.contains('active') && introVideo.dataset.introFinished !== '1' && introVideo.paused && !introVideo.ended){
+      window.mediaEngine.play(introVideo);
+    }
+    if(steps.tiktok.classList.contains('active')){
+      ttVideos.forEach(function(v){
+        if(v.dataset.introFinished !== '1' && v.paused && !v.ended){
+          window.mediaEngine.play(v);
+        }
+      });
+    }
+    if(steps.chat.classList.contains('active')){
+      voiceAudios.forEach(function(a){
+        if(a.paused && a.currentTime > 0 && !a.ended){
+          window.mediaEngine.play(a);
+        }
+      });
+    }
+  });
+})();
+</script>
+
 <!-- ============ NAV + LOGIN (independiente de la intro) ============ -->
 <script>
 (function(){
@@ -872,9 +2015,6 @@ revealTargets.forEach(el=>io.observe(el));
     loginOverlay.classList.add('open');
   });
 
-  // "Plataforma" y "Comunidad" son solo para quien ya inició sesión: si alguien
-  // sin sesión toca esos enlaces (en el menú de arriba o en la hotbar móvil),
-  // en vez de navegar se le abre directamente el formulario de inicio de sesión.
   const PROTECTED_PATHS = ['/plataforma', '/publicaciones'];
   async function hasActiveSession(){
     if(!window.sb) return false;
@@ -902,8 +2042,6 @@ revealTargets.forEach(el=>io.observe(el));
   }
   bindProtectedLinks();
 
-  // Pinta en gris los enlaces protegidos (Plataforma / Comunidad) mientras no
-  // haya sesión activa, tanto en el menú de escritorio como en la hotbar móvil.
   async function refreshProtectedLinkStyles(){
     const isAuthed = await hasActiveSession();
     document.querySelectorAll('a').forEach(function(a){
@@ -951,7 +2089,6 @@ revealTargets.forEach(el=>io.observe(el));
     }
   });
 
-  // Resalta el ítem activo del hotbar según la ruta actual
   document.querySelectorAll('.hotbar-item:not(.buy)').forEach(function(a){
     if(a.getAttribute('href') === window.location.pathname){
       a.classList.add('active');
@@ -968,7 +2105,12 @@ revealTargets.forEach(el=>io.observe(el));
   const DEFAULTS = {
     heroImg: document.getElementById('heroImg') ? document.getElementById('heroImg').getAttribute('src') : '',
     authorImg: document.getElementById('authorImg') ? document.getElementById('authorImg').getAttribute('src') : '',
-    buyLink: "https://pay.hotmart.com/O106580846O"
+    buyLink: "https://pay.hotmart.com/O106580846O",
+    videoMain: "",
+    videoTiktok1: "",
+    videoTiktok2: "",
+    videoTiktok3: "",
+    audio1: "https://res.cloudinary.com/vlhv2gge/video/upload/v1785198832/Audio_2_cr28eq.mp3"
   };
   const CACHE_KEY = 'proyectumia_admin_settings_cache';
 
@@ -994,7 +2136,12 @@ revealTargets.forEach(el=>io.observe(el));
       return {
         heroImg: data.hero_img || DEFAULTS.heroImg,
         authorImg: data.author_img || DEFAULTS.authorImg,
-        buyLink: data.buy_link || DEFAULTS.buyLink
+        buyLink: data.buy_link || DEFAULTS.buyLink,
+        videoMain: data.video_main || DEFAULTS.videoMain,
+        videoTiktok1: data.video_tiktok_1 || DEFAULTS.videoTiktok1,
+        videoTiktok2: data.video_tiktok_2 || DEFAULTS.videoTiktok2,
+        videoTiktok3: data.video_tiktok_3 || DEFAULTS.videoTiktok3,
+        audio1: data.audio_1 || DEFAULTS.audio1
       };
     }catch(e){ return null; }
   }
@@ -1020,6 +2167,11 @@ revealTargets.forEach(el=>io.observe(el));
         hero_img: settings.heroImg,
         author_img: settings.authorImg,
         buy_link: settings.buyLink,
+        video_main: settings.videoMain,
+        video_tiktok_1: settings.videoTiktok1,
+        video_tiktok_2: settings.videoTiktok2,
+        video_tiktok_3: settings.videoTiktok3,
+        audio_1: settings.audio1,
         updated_at: new Date().toISOString()
       })
       .eq('id', 1);
@@ -1038,21 +2190,29 @@ revealTargets.forEach(el=>io.observe(el));
       const loginBuyLink = document.getElementById('loginBuyLink');
       if(loginBuyLink) loginBuyLink.setAttribute('href', settings.buyLink);
     }
+    window.PROYECTUM_MEDIA = {
+      videoMain: settings.videoMain,
+      videoTiktok1: settings.videoTiktok1,
+      videoTiktok2: settings.videoTiktok2,
+      videoTiktok3: settings.videoTiktok3,
+      audio1: settings.audio1
+    };
     window.PROYECTUM_BUY_LINK = settings.buyLink;
     cacheSettings(settings);
   }
 
   let current = loadCachedSettings();
-  applySettings(current); // aplica la caché de inmediato, sin parpadeo
+  applySettings(current);
 
   fetchSettingsFromSupabase().then(function(remote){
     if(remote){
       current = remote;
       applySettings(current);
     }
+    window.PROYECTUM_MEDIA_READY = true;
+    document.dispatchEvent(new Event('proyectumMediaReady'));
   });
 
-  // ---- UI del panel ----
   const adminFab = document.getElementById('adminFab');
   const adminOverlay = document.getElementById('adminOverlay');
   const closeAdmin = document.getElementById('closeAdmin');
@@ -1074,6 +2234,12 @@ revealTargets.forEach(el=>io.observe(el));
   const adminReset = document.getElementById('adminReset');
   const adminStatus = document.getElementById('adminStatus');
 
+  const adminVideoMainUrl = document.getElementById('adminVideoMainUrl');
+  const adminVideoTk1Url = document.getElementById('adminVideoTk1Url');
+  const adminVideoTk2Url = document.getElementById('adminVideoTk2Url');
+  const adminVideoTk3Url = document.getElementById('adminVideoTk3Url');
+  const adminAudio1Url = document.getElementById('adminAudio1Url');
+
   function showLoginView(message){
     adminLoginView.style.display = 'block';
     adminEditView.style.display = 'none';
@@ -1092,6 +2258,11 @@ revealTargets.forEach(el=>io.observe(el));
     adminBuyLink.value = settings.buyLink || '';
     adminHeroPreview.src = settings.heroImg || '';
     adminAuthorPreview.src = settings.authorImg || '';
+    adminVideoMainUrl.value = settings.videoMain || '';
+    adminVideoTk1Url.value = settings.videoTiktok1 || '';
+    adminVideoTk2Url.value = settings.videoTiktok2 || '';
+    adminVideoTk3Url.value = settings.videoTiktok3 || '';
+    adminAudio1Url.value = settings.audio1 || '';
   }
 
   async function checkAdminSession(){
@@ -1171,6 +2342,47 @@ revealTargets.forEach(el=>io.observe(el));
     });
   });
 
+  async function uploadMediaFile(file, targetInput, statusLabel){
+    if(!window.sb) return;
+    const isAdmin = await checkAdminSession();
+    if(!isAdmin){
+      adminStatus.textContent = 'Debes iniciar sesión como admin para subir archivos.';
+      return;
+    }
+    adminStatus.textContent = 'Subiendo ' + statusLabel + '...';
+    const ext = (file.name.split('.').pop() || 'bin').toLowerCase();
+    const path = statusLabel.replace(/\s+/g,'-').toLowerCase() + '-' + Date.now() + '.' + ext;
+
+    const { error: uploadError } = await window.sb.storage
+      .from('site-media')
+      .upload(path, file, { cacheControl: '3600', upsert: false });
+
+    if(uploadError){
+      adminStatus.textContent = '❌ Error al subir ' + statusLabel + ': ' + uploadError.message;
+      return;
+    }
+
+    const { data: publicData } = window.sb.storage.from('site-media').getPublicUrl(path);
+    targetInput.value = publicData.publicUrl;
+    adminStatus.textContent = '✅ ' + statusLabel + ' subido. Pulsa "Guardar cambios" para publicarlo.';
+  }
+
+  document.getElementById('adminVideoMainFile').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoMainUrl, 'video principal');
+  });
+  document.getElementById('adminVideoTk1File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoTk1Url, 'video tiktok 1');
+  });
+  document.getElementById('adminVideoTk2File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoTk2Url, 'video tiktok 2');
+  });
+  document.getElementById('adminVideoTk3File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminVideoTk3Url, 'video tiktok 3');
+  });
+  document.getElementById('adminAudio1File').addEventListener('change', function(){
+    const f = this.files[0]; if(f) uploadMediaFile(f, adminAudio1Url, 'audio del chat');
+  });
+
   adminSave.addEventListener('click', async function(){
     const isAdmin = await checkAdminSession();
     if(!isAdmin){
@@ -1181,7 +2393,12 @@ revealTargets.forEach(el=>io.observe(el));
     current = {
       heroImg: adminHeroUrl.value.trim() || DEFAULTS.heroImg,
       authorImg: adminAuthorUrl.value.trim() || DEFAULTS.authorImg,
-      buyLink: adminBuyLink.value.trim() || DEFAULTS.buyLink
+      buyLink: adminBuyLink.value.trim() || DEFAULTS.buyLink,
+      videoMain: adminVideoMainUrl.value.trim() || DEFAULTS.videoMain,
+      videoTiktok1: adminVideoTk1Url.value.trim() || DEFAULTS.videoTiktok1,
+      videoTiktok2: adminVideoTk2Url.value.trim() || DEFAULTS.videoTiktok2,
+      videoTiktok3: adminVideoTk3Url.value.trim() || DEFAULTS.videoTiktok3,
+      audio1: adminAudio1Url.value.trim() || DEFAULTS.audio1
     };
     const { error } = await saveSettingsToSupabase(current);
     if(error){
