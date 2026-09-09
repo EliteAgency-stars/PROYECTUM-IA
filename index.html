@@ -11,17 +11,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // Cliente único de Supabase, compartido por TODO el sitio (login del nav y panel admin).
-  // Se crea aquí, justo después de cargar la librería y antes que cualquier otro script,
-  // guardando la instancia como "window.sb" (nunca como "supabase": ese nombre ya lo usa
-  // la propia librería como variable global y redeclararlo rompía toda la página).
   window.SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
   window.SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
   window.ADMIN_EMAIL = "contact@proyectumia.com";
-  // CORRECCIÓN #1: bandera global de "configuración lista". Antes, si el visitante
-  // tocaba "Reproducir" antes de que Supabase respondiera con las URLs de los
-  // videos, el embudo saltaba directo de TikTok a WhatsApp porque los <video>
-  // se quedaban sin "src" asignado. Este flag se pone en true SOLO cuando ya
-  // sabemos con certeza (éxito o fallo) qué URLs usar.
   window.PROYECTUM_MEDIA_READY = false;
   try{
     window.sb = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
@@ -57,38 +49,36 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
   background:linear-gradient(90deg,var(--primary),#8ffcf9 60%,var(--gold));
   -webkit-background-clip:text;background-clip:text;color:transparent;
 }
-.xp-rail{
-  position:fixed;top:0;left:0;width:100%;height:4px;background:var(--bg-alt);z-index:999;
-}
-.xp-fill{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,var(--secondary),var(--primary),var(--gold));
-  box-shadow:0 0 12px var(--primary);
-  transition:width .12s linear;
-}
-.hero{
-  position:relative; padding:96px 0 80px;
+:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
+
+/* =========================================================
+   HERO INDEPENDIENTE: siempre visible, con su propio CTA para
+   abrir el embudo interactivo y una flecha para bajar directo
+   al contenido de la plataforma sin ver el embudo.
+   ========================================================= */
+.exp-hero{
+  position:relative; padding:120px 0 70px; text-align:center;
   background:
     radial-gradient(60% 50% at 82% 8%, #0a3a44 0%, transparent 70%),
     radial-gradient(45% 40% at 10% 90%, #052a33 0%, transparent 70%),
     var(--bg);
-  border-bottom:1px solid var(--line); overflow:hidden;
+  border-bottom:1px solid var(--line);
+  min-height:100vh; min-height:100dvh;
+  display:flex; align-items:center; justify-content:center; flex-direction:column;
 }
-.hero .wrap{display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;}
-.hero-badge{
-  display:inline-flex;align-items:center;gap:8px;
+.exp-hero .wrap{display:flex;flex-direction:column;align-items:center;}
+.exp-hero .gate-badge{
   font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);
-  border:1px solid #4a3d1f;background:#1a160a;padding:6px 12px;border-radius:100px;
-  margin-bottom:22px;
+  border:1px solid #4a3d1f;background:#1a160a;padding:6px 14px;border-radius:100px;margin-bottom:22px;
 }
-.hero h1{font-size:clamp(2rem,4.4vw,3.6rem);line-height:1.1;color:var(--text);}
-.hero p.lead{margin-top:20px;color:var(--text-dim);font-size:1.08rem;max-width:46ch;}
-.cta-row{display:flex;gap:16px;align-items:center;margin-top:34px;flex-wrap:wrap;}
+.exp-hero h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1.1;color:var(--text);max-width:16ch;}
+.exp-hero p.lead{margin-top:20px;color:var(--text-dim);font-size:1.08rem;max-width:46ch;}
+.exp-actions{display:flex;flex-direction:column;align-items:center;gap:26px;margin-top:38px;}
 .btn{
   font-family:var(--ff-display);font-weight:600;font-size:1rem;
   border:none;cursor:pointer;text-decoration:none;
   display:inline-flex;align-items:center;gap:10px;
-  padding:16px 28px;border-radius:12px;
+  padding:17px 32px;border-radius:12px;
   transition:transform .18s ease, box-shadow .18s ease;
 }
 .btn-primary{
@@ -99,146 +89,30 @@ h1,h2,h3{font-family:var(--ff-display);margin:0;letter-spacing:-.01em;}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 0 1px var(--primary), 0 14px 34px -8px var(--primary);}
 .btn-primary svg{transition:transform .18s ease;}
 .btn-primary:hover svg{transform:translateX(3px);}
-.btn-primary:disabled{opacity:.55;cursor:progress;transform:none !important;box-shadow:0 0 0 1px #0e565766, 0 8px 30px -8px var(--primary) !important;}
+.btn-primary:disabled{opacity:.55;cursor:progress;transform:none !important;}
 .micro{font-family:var(--ff-mono);font-size:.75rem;color:var(--text-dim);}
-.hero-art{position:relative;}
-.hero-art .frame{
-  position:relative;border-radius:22px;overflow:hidden;
-  border:1px solid var(--line);
-  box-shadow:0 30px 70px -30px #000, 0 0 60px -20px var(--primary-dim);
+.scroll-cue{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:transparent;border:none;color:var(--text-dim);cursor:pointer;
+  font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.05em;
 }
-.hero-art img{width:100%;}
-.hero-art .glow-ring{
-  position:absolute;inset:-40px;border-radius:50%;
-  background:conic-gradient(from 0deg,var(--primary),transparent 30%,var(--gold),transparent 70%,var(--primary));
-  filter:blur(50px);opacity:.35;z-index:-1;
-  animation:spin 14s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg);}}
+.scroll-cue:hover{color:var(--primary);}
+.scroll-cue svg{animation:bounceDown 1.8s ease-in-out infinite;}
+@keyframes bounceDown{0%,100%{transform:translateY(0);}50%{transform:translateY(8px);}}
+
 section{padding:88px 0;}
 .section-head{text-align:center;max-width:640px;margin:0 auto 54px;}
 .section-head h2{font-size:clamp(1.6rem,3vw,2.3rem);margin-top:14px;}
 .section-head p{color:var(--text-dim);margin-top:14px;}
-.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
-.stat-card{
-  background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-  padding:30px 24px;text-align:center;
-  opacity:0;transform:translateY(24px);transition:opacity .6s ease, transform .6s ease;
-}
-.stat-card.in-view{opacity:1;transform:translateY(0);}
-.stat-card svg{width:34px;height:34px;color:var(--primary);margin-bottom:16px;}
-.stat-card h3{font-family:var(--ff-display);font-size:1.05rem;color:var(--text);}
-.stat-card p{color:var(--text-dim);font-size:.92rem;margin-top:8px;}
-.path-section{background:var(--bg-alt);border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:56px 0;}
-.level-grid{
-  position:relative;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:16px;
-}
-.level-grid::before{
-  content:"";position:absolute;top:24px;left:6%;right:6%;height:2px;z-index:0;
-  background:linear-gradient(90deg,#035266,#22FDF9,#ffc94a);opacity:.55;
-}
-.level-item{
-  position:relative;z-index:1;
-  background:var(--panel);border:1px solid var(--line);border-radius:14px;
-  padding:16px 16px 18px;
-  opacity:0;transform:translateY(16px);
-  transition:opacity .5s ease, transform .5s ease;
-}
-.level-item.in-view{opacity:1;transform:translateY(0);}
-.level-num{
-  width:34px;height:34px;border-radius:10px;background:var(--bg-alt);
-  border:2px solid var(--line);display:flex;align-items:center;justify-content:center;
-  font-family:var(--ff-mono);font-weight:600;font-size:.78rem;color:var(--text-dim);
-  margin-bottom:10px;transition:all .4s ease;
-}
-.level-item.in-view .level-num{border-color:var(--primary);color:var(--bg);background:linear-gradient(140deg,var(--primary),var(--gold));box-shadow:0 0 16px -3px var(--primary);}
-.level-tag{font-family:var(--ff-mono);font-size:.66rem;color:var(--gold);letter-spacing:.08em;}
-.level-item h3{font-size:.92rem;margin-top:5px;color:var(--text);line-height:1.3;}
-.level-item p{color:var(--text-dim);font-size:.8rem;margin-top:7px;line-height:1.4;}
-@media(max-width:900px){
-  .level-grid{grid-template-columns:repeat(2,1fr);}
-  .level-grid::before{display:none;}
-}
-@media(max-width:480px){
-  .level-grid{grid-template-columns:1fr;gap:10px;}
-  .level-item{padding:14px 16px;display:grid;grid-template-columns:34px 1fr;gap:0 12px;align-items:start;}
-  .level-num{margin-bottom:0;grid-row:1 / 3;}
-  .level-tag{grid-column:2;}
-  .level-item h3{grid-column:2;margin-top:2px;font-size:.88rem;}
-  .level-item p{grid-column:2;margin-top:4px;font-size:.78rem;}
-}
-.badge-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;}
-.badge{
-  perspective:1000px;height:168px;
-  opacity:0;transform:scale(.92);transition:opacity .5s ease, transform .5s ease;
-}
-.badge.in-view{opacity:1;transform:scale(1);}
-.badge-inner{
-  position:relative;width:100%;height:100%;transition:transform .55s cubic-bezier(.2,.8,.2,1);
-  transform-style:preserve-3d;
-}
-.badge:hover .badge-inner, .badge:focus-within .badge-inner{transform:rotateY(180deg);}
-.badge-face{
-  position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;
-  border:1px solid var(--line);
-}
-.badge-face.front{background:var(--panel);}
-.badge-face.front svg{width:30px;height:30px;color:var(--gold);margin-bottom:12px;}
-.badge-face.front span{font-family:var(--ff-display);font-size:.92rem;color:var(--text);}
-.badge-face.back{
-  background:linear-gradient(150deg,var(--secondary),#03222b);
-  transform:rotateY(180deg);color:var(--text);font-size:.82rem;
-}
-@media(max-width:900px){.badge-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:480px){.badge-grid{grid-template-columns:1fr;}.badge{height:140px;}}
-.author-section .wrap{
-  display:flex;gap:36px;align-items:center;background:var(--panel);
-  border:1px solid var(--line);border-radius:24px;padding:40px;
-}
-.author-img{width:120px;height:120px;border-radius:50%;overflow:hidden;flex:none;border:2px solid var(--primary);}
-.author-img img{width:100%;height:100%;object-fit:cover;}
-.author-section h3{font-size:1.15rem;color:var(--text);}
-.author-section p{color:var(--text-dim);margin-top:8px;font-size:.95rem;}
-@media(max-width:640px){.author-section .wrap{flex-direction:column;text-align:center;padding:28px 22px;}}
-.final{
-  background:radial-gradient(60% 80% at 50% 0%, #0a3a44 0%, var(--bg) 70%);
-  border-top:1px solid var(--line);text-align:center;
-}
-.final .level-final{
-  display:inline-flex;align-items:center;gap:10px;font-family:var(--ff-mono);
-  color:var(--gold);font-size:.78rem;border:1px solid #4a3d1f;background:#1a160a;
-  padding:6px 14px;border-radius:100px;margin-bottom:22px;
-}
-.final h2{font-size:clamp(1.6rem,3.6vw,2.6rem);max-width:20ch;margin:0 auto;}
-.final p{color:var(--text-dim);margin-top:18px;max-width:50ch;margin-left:auto;margin-right:auto;}
-.final .btn-primary{margin-top:32px;font-size:1.1rem;padding:19px 36px;}
-footer{padding:36px 0;text-align:center;color:var(--text-dim);font-size:.78rem;border-top:1px solid var(--line);}
-footer p{max-width:640px;margin:6px auto;}
-@media(max-width:900px){
-  .hero .wrap{grid-template-columns:1fr;}
-  .hero-art{order:-1;}
-  .stat-grid{grid-template-columns:1fr;}
-}
-@media(max-width:600px){
-  section{padding:56px 0;}
-  .wrap{padding:0 18px;}
-  .hero{padding:64px 0 52px;}
-  .cta-row{flex-direction:column;align-items:stretch;}
-  .cta-row .btn{justify-content:center;width:100%;}
-  .cta-row .micro{text-align:center;}
-  .section-head{margin-bottom:36px;}
-  .author-img{width:96px;height:96px;}
-}
-@media (prefers-reduced-motion: reduce){
+
+@media(prefers-reduced-motion: reduce){
   *{animation:none !important;transition:none !important;}
-  .stat-card,.level-item,.badge{opacity:1 !important;transform:none !important;}
 }
-:focus-visible{outline:2px solid var(--gold);outline-offset:3px;}
 
 /* =========================================================
-   INTRO INTERACTIVA: video -> audios WhatsApp -> minijuego -> candado
+   EMBUDO INTERACTIVO (independiente de la página normal)
+   video -> tiktok -> whatsapp -> bienvenida
+   Solo se abre al tocar "Iniciar experiencia" en el hero.
    ========================================================= */
 .intro-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:block;overflow:hidden;}
 .intro-overlay.closed{display:none;}
@@ -251,12 +125,9 @@ footer p{max-width:640px;margin:6px auto;}
 .intro-progress .dot.done{background:var(--gold);}
 .intro-progress .dot.active{background:var(--primary);transform:scale(1.5);}
 
-/* paso 1: video */
 .video-gate{display:flex;flex-direction:column;align-items:center;gap:18px;max-width:520px;}
-.gate-badge{font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:6px 14px;border-radius:100px;}
 #introVideo{display:none;max-width:min(92vw,720px);max-height:min(78vh,78dvh);border-radius:18px;border:1px solid var(--line);box-shadow:0 30px 70px -30px #000;width:100%;}
 
-/* paso: el teléfono "sale", recibe la notificación y abre WhatsApp */
 .phone-shell{
   width:min(92vw,420px);height:min(82vh,82dvh,720px);
   background:#050d12;border:1px solid var(--line);border-radius:28px;overflow:hidden;
@@ -328,26 +199,6 @@ footer p{max-width:640px;margin:6px auto;}
 .wa-video-msg{align-self:flex-start;max-width:78%;background:var(--panel);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:9px;opacity:0;transform:translateY(10px);animation:msgIn .4s ease forwards;}
 .wa-video-msg video{width:100%;max-width:230px;border-radius:10px;display:block;background:#000;}
 
-/* bichos de envidia (minijuego dentro del audio 1) */
-.bug-layer{position:fixed;inset:0;z-index:60;pointer-events:none;}
-.bug-counter{position:fixed;top:18px;left:18px;z-index:61;font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160aee;padding:7px 14px;border-radius:100px;opacity:0;transform:translateY(-10px);transition:opacity .3s,transform .3s;}
-.bug-counter.show{opacity:1;transform:translateY(0);}
-.bug{
-  position:absolute;width:52px;height:52px;display:flex;align-items:center;justify-content:center;
-  font-size:1.9rem;cursor:pointer;pointer-events:auto;user-select:none;touch-action:manipulation;
-  filter:drop-shadow(0 4px 10px rgba(0,0,0,.55));
-  animation:bugFloat 2.6s ease-in-out infinite;
-  transition:transform .15s ease;
-}
-.bug:active{transform:scale(.9);}
-@keyframes bugFloat{
-  0%,100%{transform:translate(0,0) rotate(-6deg);}
-  50%{transform:translate(var(--fx,12px),var(--fy,-14px)) rotate(6deg);}
-}
-.bug.squish{animation:bugSquish .35s ease forwards !important;pointer-events:none;}
-@keyframes bugSquish{to{transform:scale(0) rotate(50deg);opacity:0;}}
-
-/* paso "tiktok": scroll de videos cortos + like + comentarios */
 .phone-shell.tiktok-shell{background:#000;}
 .tt-stage{position:relative;width:100%;height:100%;overflow:hidden;background:#000;}
 .tt-video-wrap{position:absolute;inset:0;transform:translateY(100%);transition:transform .5s cubic-bezier(.32,.9,.28,1);}
@@ -365,91 +216,26 @@ footer p{max-width:640px;margin:6px auto;}
 .tt-comment-box button{background:var(--primary);border:none;border-radius:100px;padding:8px 14px;font-family:var(--ff-display);font-weight:600;font-size:.72rem;color:#03181c;cursor:pointer;flex:none;}
 .tt-unmute{position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:6;background:#000000cc;border:1px solid #ffffff40;color:#fff;font-family:var(--ff-mono);font-size:.72rem;padding:8px 14px;border-radius:100px;cursor:pointer;}
 
-/* paso: recompensa de tokens */
-.tokens-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:480px;}
-.token-row{display:flex;gap:16px;margin-top:28px;}
-.token-coin{font-size:2.8rem;display:inline-block;opacity:0;transform:translateY(-50px) rotate(-25deg);animation:coinDrop .65s cubic-bezier(.34,1.6,.4,1) forwards;filter:drop-shadow(0 8px 14px rgba(0,0,0,.4));}
-.token-coin:nth-child(1){animation-delay:.15s;}
-.token-coin:nth-child(2){animation-delay:.38s;}
-.token-coin:nth-child(3){animation-delay:.6s;}
-@keyframes coinDrop{to{opacity:1;transform:translateY(0) rotate(0);}}
+/* paso final: bienvenida (reemplaza tokens + minijuego + candado) */
+.welcome-wrap{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:480px;}
+.welcome-check{font-size:3.4rem;margin-bottom:10px;}
+.welcome-wrap h2{font-size:clamp(1.6rem,3.4vw,2.3rem);}
+.welcome-wrap p{color:var(--text-dim);margin-top:14px;max-width:40ch;}
 
-/* paso 3: minijuego */
-#stepGame .game-head{max-width:560px;margin-bottom:24px;}
-.token-bar{font-family:var(--ff-mono);font-size:.78rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:7px 16px;border-radius:100px;margin-top:16px;display:inline-flex;align-items:center;gap:6px;transition:transform .2s ease;}
-.token-bar.spend{animation:tokenSpend .35s ease;}
-@keyframes tokenSpend{0%{transform:scale(1);}40%{transform:scale(1.15);}100%{transform:scale(1);}}
-.game-board{position:relative;width:min(92vw,560px);height:min(58vh,58dvh,440px);}
-.node{position:absolute;transform:translate(-50%,-50%);border-radius:16px;border:2px solid var(--line);background:var(--panel);color:var(--text);font-family:var(--ff-display);font-weight:600;font-size:.85rem;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;cursor:pointer;user-select:none;touch-action:none;transition:border-color .3s,box-shadow .3s,background .3s;z-index:2;line-height:1.2;}
-.node-core{width:96px;height:96px;left:50%;top:50%;border-radius:50%;background:linear-gradient(140deg,var(--primary),var(--gold));color:#03181c;font-size:1rem;cursor:grab;box-shadow:0 0 30px -6px var(--primary);}
-.node-target{width:120px;height:80px;}
-.node-target.connected{border-color:var(--primary);box-shadow:0 0 20px -4px var(--primary);background:#0a2933;}
-#gameLines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;}
-#gameLines line{stroke:var(--line);stroke-width:3;}
-#gameLines line.done{stroke:url(#introTrackGrad);}
-.levelup-toast{position:fixed;top:12%;left:50%;transform:translate(-50%,-20px);background:linear-gradient(140deg,var(--primary),var(--gold));color:#03181c;font-family:var(--ff-display);font-weight:700;padding:12px 26px;border-radius:100px;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;z-index:70;white-space:nowrap;max-width:88vw;text-align:center;}
-.levelup-toast.show{opacity:1;transform:translate(-50%,0);}
-
-/* paso 4: candado */
-.lock-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;}
-#lockSvg{width:110px;height:110px;color:var(--gold);}
-#lockSvg.shake{animation:shakeLock .5s ease;}
-@keyframes shakeLock{0%,100%{transform:translateX(0);}20%{transform:translateX(-8px) rotate(-4deg);}40%{transform:translateX(8px) rotate(4deg);}60%{transform:translateX(-6px) rotate(-3deg);}80%{transform:translateX(6px) rotate(3deg);}}
-#lockSvg.broken{animation:lockBreak .6s ease forwards;}
-@keyframes lockBreak{to{opacity:0;transform:scale(1.7) rotate(18deg);filter:blur(3px);}}
-.lock-wrap h2{font-size:1.3rem;}
 .particle{position:fixed;width:8px;height:8px;border-radius:2px;z-index:9999;pointer-events:none;animation:particleFly .8s ease-out forwards;}
 @keyframes particleFly{to{transform:translate(var(--dx),var(--dy)) rotate(720deg);opacity:0;}}
 
-/* paso: carta manuscrita de Santiago (audio final) */
-.letter-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;max-width:640px;width:100%;}
-.letter-badge{font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);border:1px solid #4a3d1f;background:#1a160a;padding:6px 14px;border-radius:100px;}
-.letter-paper{
-  position:relative;width:min(92vw,560px);max-height:min(64vh,64dvh,520px);overflow-y:auto;
-  background:linear-gradient(165deg,#f6ecd6,#efe2c4);
-  border-radius:6px 14px 10px 16px/10px 16px 6px 14px;
-  box-shadow:0 30px 70px -25px #000, 0 0 0 1px #d8c8a0 inset;
-  padding:30px 32px;transform:translateY(26px) rotate(-1.2deg) scale(.96);opacity:0;
-  transition:transform .6s cubic-bezier(.2,.9,.25,1.05), opacity .5s ease;
-}
-.letter-paper.appear{transform:translateY(0) rotate(-.6deg) scale(1);opacity:1;}
-.letter-text{
-  font-family:var(--ff-hand);color:#2c2113;font-size:clamp(1.15rem,2.6vw,1.5rem);
-  line-height:1.55;text-align:left;margin:0;
-}
-.letter-text .lw{opacity:.1;filter:blur(1.5px);transition:opacity .5s ease, filter .5s ease, color .5s ease;}
-.letter-text .lw.written{opacity:1;filter:blur(0);color:#241a0d;}
-.letter-signoff{font-family:var(--ff-hand);font-size:1.1rem;color:var(--gold);}
-
 @media(max-width:480px){
-  .video-gate h1{font-size:1.4rem;}
   .phone-shell{border-radius:20px;}
   .voice-msg{max-width:92%;padding:10px 12px;}
-  .game-board{height:min(52vh,52dvh,380px);}
-  .node-target{width:96px;height:68px;font-size:.74rem;padding:6px;}
-  .node-core{width:78px;height:78px;font-size:.85rem;}
-  #lockSvg{width:88px;height:88px;}
-  .lock-wrap h2{font-size:1.1rem;}
-  .bug{width:44px;height:44px;font-size:1.55rem;}
   .skip-intro{top:12px;right:12px;font-size:.66rem;padding:6px 12px;}
   .tt-caption{max-width:58%;font-size:.76rem;bottom:88px;}
   .tt-icon{font-size:1.3rem;}
   .tt-side-icons{bottom:108px;gap:14px;}
   .lock-time{font-size:2rem;}
   .wa-notif{padding:10px 12px;}
-  .token-coin{font-size:2.2rem;}
-  .token-row{gap:10px;margin-top:20px;}
-  .letter-paper{padding:22px 20px;max-height:min(58vh,58dvh,460px);}
-  .letter-text{font-size:1.08rem;}
-  .letter-signoff{font-size:1rem;}
-}
-@media(max-height:640px){
-  .phone-shell{height:min(88vh,88dvh,640px);}
-  .game-board{height:min(46vh,46dvh,340px);}
 }
 
-/* En dispositivos móviles reales: sin marco de celular, todo a pantalla completa.
-   El "mockup" de teléfono (marco + notch) solo se ve en pantallas grandes (PC). */
 @media(max-width:700px){
   #introVideo{
     position:fixed; inset:0; z-index:2;
@@ -474,9 +260,7 @@ footer p{max-width:640px;margin:6px auto;}
   display:flex;align-items:center;justify-content:space-between;gap:20px;
   padding:14px 24px;background:#04141ae6;backdrop-filter:blur(10px);
   border-bottom:1px solid var(--line);
-  transform:translateY(-100%);transition:transform .35s ease;
 }
-.site-nav.visible{transform:translateY(0);}
 @media(max-width:820px){
   .site-nav{ display:none !important; }
 }
@@ -541,7 +325,8 @@ footer p{max-width:640px;margin:6px auto;}
 .login-error{margin-top:10px;font-family:var(--ff-mono);font-size:.72rem;color:#ff8a80;text-align:center;min-height:1em;}
 
 /* =========================================================
-   HOTBAR MÓVIL (bottom tab bar tipo app)
+   HOTBAR MÓVIL (bottom tab bar tipo app) — visible siempre, ya
+   no depende de haber visto el embudo.
    ========================================================= */
 .mobile-hotbar{
   display:none;
@@ -549,9 +334,7 @@ footer p{max-width:640px;margin:6px auto;}
   background:#04141af0;backdrop-filter:blur(14px);
   border-top:1px solid var(--line);
   padding:6px 4px calc(6px + env(safe-area-inset-bottom));
-  transform:translateY(100%);transition:transform .35s ease;
 }
-.mobile-hotbar.visible{transform:translateY(0);}
 .hotbar-row{display:flex;align-items:stretch;justify-content:space-between;max-width:560px;margin:0 auto;}
 .hotbar-item{
   flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
@@ -574,7 +357,6 @@ footer p{max-width:640px;margin:6px auto;}
   body{padding-bottom:64px;}
 }
 
-/* Enlaces "sin acceso": se muestran en gris mientras no haya sesión iniciada */
 .nav-links a.auth-locked,
 .hotbar-item.auth-locked{
   color:#5a6b6e !important;
@@ -651,121 +433,32 @@ footer p{max-width:640px;margin:6px auto;}
 }
 .admin-reset:hover{color:var(--text);border-color:var(--text-dim);}
 .admin-status{margin-top:12px;font-family:var(--ff-mono);font-size:.72rem;color:var(--gold);text-align:center;min-height:1em;}
-
-/* =========================================================
-   LOGIN DEL PANEL DE ADMINISTRADOR (Supabase Auth)
-   ========================================================= */
 .admin-login-box{display:flex;flex-direction:column;gap:14px;}
 .admin-login-box .admin-field{margin-bottom:0;}
 .admin-login-error{font-family:var(--ff-mono);font-size:.72rem;color:#ff8a80;min-height:1em;}
-</style>
 
+/* =========================================================
+   LANDING (contenido normal de la plataforma)
+   ========================================================= */
+.manus-landing{position:relative;background:#050908;color:#fff;overflow:hidden;border-top:1px solid rgba(255,255,255,.08);font-family:'Inter',sans-serif;}
+.manus-landing *{box-sizing:border-box}.manus-landing .wrap{max-width:1360px;margin:auto;padding-left:24px;padding-right:24px}.ml-glow{position:absolute;width:420px;height:420px;border-radius:50%;filter:blur(110px);opacity:.11;pointer-events:none}.ml-glow-1{background:#00d8be;right:-160px;top:520px}.ml-glow-2{background:#00d8be;left:-220px;top:1600px}
+.ml-section{position:relative;padding:110px 0;border-bottom:1px solid rgba(255,255,255,.08)}.ml-alt{background:#07110f}.ml-two-col{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}.ml-label{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;color:#00d8be;text-transform:uppercase;margin-bottom:18px}.ml-section h2{font-size:clamp(2.2rem,4.4vw,4rem);line-height:1;letter-spacing:-.055em;margin:0 0 24px}.ml-section p{color:rgba(255,255,255,.62);line-height:1.8}.ml-system-card{border:1px solid rgba(255,255,255,.12);background:#09100f;border-radius:20px;overflow:hidden}.ml-system-image{aspect-ratio:16/10;overflow:hidden}.ml-system-image img{width:100%;height:100%;object-fit:cover}.ml-system-caption{padding:22px}.ml-system-caption small{display:block;font-family:'IBM Plex Mono',monospace;font-size:.64rem;color:#00d8be;letter-spacing:.1em;margin-bottom:8px}.ml-system-caption strong{font-size:1.1rem}.ml-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.ml-steps>div{border:1px solid rgba(255,255,255,.1);padding:16px;border-radius:14px}.ml-steps b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.65rem}.ml-steps strong{display:block;margin-top:8px}.ml-steps p{font-size:.75rem;margin:7px 0 0;color:rgba(255,255,255,.45);line-height:1.5}
+.ml-section-head{display:flex;justify-content:space-between;gap:60px;align-items:end;margin-bottom:55px}.ml-section-head>div{max-width:720px}.ml-section-head>p{max-width:420px;margin:0}.ml-modules{border-top:1px solid rgba(255,255,255,.12)}.ml-modules>div{display:grid;grid-template-columns:90px 1fr;gap:25px;padding:25px 0;border-bottom:1px solid rgba(255,255,255,.1);align-items:start}.ml-modules>div>b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.78rem;padding-top:4px}.ml-modules article h3{font-size:1.2rem;margin:0 0 6px;letter-spacing:-.02em}.ml-modules article p{margin:0;color:rgba(255,255,255,.48);font-size:.84rem;line-height:1.6}
+.ml-skill-image{position:relative;border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden}.ml-skill-image img{width:100%;aspect-ratio:4/3;object-fit:cover}.ml-image-tag{position:absolute;left:18px;bottom:18px;background:rgba(5,9,8,.85);backdrop-filter:blur(10px);padding:12px 15px;border:1px solid rgba(0,216,190,.25);border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:.64rem;color:#00d8be}.ml-image-tag strong{font-family:'Inter',sans-serif;font-size:.9rem;color:#fff}.ml-capabilities{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}.ml-capabilities>div{border-top:1px solid rgba(255,255,255,.1);padding-top:15px}.ml-capabilities i{font-style:normal;color:#00d8be}.ml-capabilities h3{display:inline;margin-left:8px;font-size:.95rem}.ml-capabilities p{font-size:.78rem;margin:6px 0 0}
+.ml-bonus{background:radial-gradient(60% 80% at 80% 30%,rgba(0,216,190,.08),transparent 65%)}.ml-bonus-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ml-bonus-grid>div{display:flex;gap:14px;align-items:center;border:1px solid rgba(255,255,255,.1);padding:17px;border-radius:13px}.ml-bonus-grid b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.65rem}.ml-bonus-grid span{font-size:.83rem;color:rgba(255,255,255,.78)}
+.ml-offer{background:#07110f}.ml-offer-grid{display:grid;grid-template-columns:1fr 430px;gap:90px;align-items:center}.ml-payment{margin-top:25px;color:#00d8be;font-family:'IBM Plex Mono',monospace;font-size:.72rem}.ml-price-card{background:#0a1512;border:1px solid rgba(0,216,190,.3);border-radius:22px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.ml-price-top{display:flex;justify-content:space-between;gap:15px;align-items:start;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:20px}.ml-price-top small{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.6rem;letter-spacing:.1em}.ml-price-top h3{font-size:1.35rem;margin-top:5px}.ml-price-top em{font-style:normal;font-size:.65rem;color:rgba(255,255,255,.4)}.ml-price{display:flex;align-items:start;margin:22px 0}.ml-price small{font-family:'IBM Plex Mono',monospace;margin-top:18px;color:rgba(255,255,255,.5)}.ml-price strong{font-size:6rem;line-height:.8;letter-spacing:-.08em}.ml-price-card>p{font-size:.78rem;color:rgba(255,255,255,.5);line-height:1.6}.ml-price-card ul{list-style:none;padding:0;margin:22px 0;display:grid;gap:9px}.ml-price-card li{font-size:.78rem;color:rgba(255,255,255,.72)}.ml-btn-wide{width:100%;margin-top:6px}.ml-note{text-align:center!important;font-family:'IBM Plex Mono',monospace;font-size:.62rem!important;margin-top:15px}.ml-disclaimer{max-width:850px;margin:45px auto 0;text-align:center;color:rgba(255,255,255,.35)!important;font-size:.68rem!important;line-height:1.7!important}
+.ml-faq{border-top:1px solid rgba(255,255,255,.12)}.ml-faq details{border-bottom:1px solid rgba(255,255,255,.1);padding:20px 0}.ml-faq summary{cursor:pointer;font-weight:700;font-size:.9rem;list-style:none}.ml-faq summary::-webkit-details-marker{display:none}.ml-faq summary:after{content:'+';float:right;color:#00d8be;font-size:1.2rem}.ml-faq details[open] summary:after{content:'−'}.ml-faq details p{font-size:.8rem;margin:12px 25px 0 0;color:rgba(255,255,255,.5)}
+.ml-final{position:relative;padding:130px 0;text-align:center;background:radial-gradient(60% 100% at 50% 0%,rgba(0,216,190,.13),transparent 65%);overflow:hidden}.ml-final-mark{font-size:2rem;color:#00d8be;margin-bottom:20px}.ml-final h2{font-size:clamp(2.8rem,6vw,5.5rem);line-height:.95;letter-spacing:-.07em;margin-bottom:25px}.ml-final p{max-width:520px;margin:0 auto 30px;color:rgba(255,255,255,.55)}
+.ml-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#00d8be;color:#03100e;padding:16px 24px;border-radius:12px;font-weight:800;letter-spacing:-.02em;transition:transform .2s,box-shadow .2s}.ml-btn:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,216,190,.22)}
+@media(max-width:850px){.ml-two-col,.ml-offer-grid{grid-template-columns:1fr;gap:45px}.ml-section-head{display:block}.ml-section-head>p{margin-top:20px}.ml-offer-grid{gap:40px}}
+@media(max-width:600px){.ml-section{padding:60px 0}.ml-section h2{font-size:2.5rem}.ml-modules>div{grid-template-columns:50px 1fr;gap:10px;padding:21px 0}.ml-modules article h3{font-size:1.05rem}.ml-modules article p{font-size:.76rem}.ml-bonus-grid,.ml-capabilities{grid-template-columns:1fr}.ml-price-card{padding:25px 20px}.ml-price strong{font-size:5rem}.ml-price-card ul{grid-template-columns:1fr}.ml-final{padding:85px 0}.ml-final h2{font-size:3rem}}
+footer{padding:36px 0;text-align:center;color:var(--text-dim);font-size:.78rem;border-top:1px solid var(--line);}
+footer p{max-width:640px;margin:6px auto;}
+</style>
 </head>
 <body>
-
-<!-- ============ INTRO INTERACTIVA ============ -->
-<div class="intro-overlay closed" id="introOverlay">
-  <button class="skip-intro" id="skipIntro">Saltar intro →</button>
-  <div class="intro-progress" id="introProgress"></div>
-
-  <!-- PASO 1: VIDEO PRINCIPAL -->
-  <div class="intro-step active" id="stepVideo">
-    <div class="video-gate" id="videoGate">
-      <div class="gate-badge">🔊 Activa el sonido para la mejor experiencia</div>
-      <h1 style="font-size:clamp(1.5rem,3.4vw,2.2rem);">Toca para comenzar tu <span class="grad-text">ruta</span></h1>
-      <p class="micro" style="max-width:38ch;">Verás un video corto, luego un feed estilo TikTok y un chat de WhatsApp para conocer nuestra comunidad.</p>
-      <button class="btn btn-primary" id="startBtn" disabled>Cargando...
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
-    </div>
-    <video id="introVideo" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow">
-      <source type="video/mp4">
-    </video>
-  </div>
-
-  <!-- PASO 2: EMBUDO TIKTOK: 2 clips cortos con scroll + video completo -->
-  <div class="intro-step" id="stepTiktok">
-    <div class="video-gate" id="tiktokGate">
-      <div class="gate-badge">📱 Sigue la ruta</div>
-      <h1 style="font-size:clamp(1.4rem,3.2vw,2rem);">Toca para ver el siguiente clip</h1>
-      <button class="btn btn-primary" id="tiktokStartBtn">Continuar
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      </button>
-    </div>
-    <div class="phone-shell tiktok-shell" id="tiktokShell" style="display:none;">
-      <div class="phone-notch"></div>
-      <div class="tt-stage" id="ttStage">
-        <div class="tt-video-wrap tt-active" data-i="0">
-          <video id="ttVideo0" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
-        </div>
-        <div class="tt-video-wrap" data-i="1">
-          <video id="ttVideo1" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
-        </div>
-        <div class="tt-video-wrap" data-i="2">
-          <video id="ttVideo2" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
-        </div>
-        <div class="tt-caption">@proyectum.ia · Así fue el antes y después 🚀</div>
-        <div class="tt-side-icons">
-          <button class="tt-icon tt-like" id="ttLikeBtn" aria-label="Me gusta">❤️<span id="ttLikeCount">12.8K</span></button>
-          <div class="tt-icon">💬<span>892</span></div>
-          <div class="tt-icon">↗️<span>Compartir</span></div>
-        </div>
-        <div class="tt-comment-box">
-          <input type="text" placeholder="Agrega un comentario..." id="ttCommentInput">
-          <button id="ttCommentBtn">Enviar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PASO 3: NOTIFICACIÓN DE WHATSAPP -> ABRE EL GRUPO -->
-  <div class="intro-step" id="stepChat">
-    <div class="phone-shell" id="chatPhoneShell">
-      <div class="phone-notch"></div>
-      <div class="phone-screen">
-        <div class="lock-layer" id="lockLayer">
-          <div class="lock-time">9:41</div>
-          <div class="lock-date">Hoy</div>
-          <div class="wa-notif" id="waNotif">
-            <div class="wa-notif-icon">💬</div>
-            <div class="wa-notif-text">
-              <div class="wa-notif-title">WhatsApp · ahora</div>
-              <div class="wa-notif-body"><strong>PROYECTUM IA TEAM</strong><br>Andrés: ¡Bienvenido al equipo! 🚀</div>
-            </div>
-          </div>
-        </div>
-        <div class="wa-app" id="waApp">
-          <div class="wa-header">
-            <div class="wa-avatar">👥</div>
-            <div>
-              <div class="wa-name">PROYECTUM IA TEAM</div>
-              <div class="wa-status">259 activos en el grupo</div>
-            </div>
-          </div>
-          <div class="wa-body" id="waBody"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- PASO FINAL: BIENVENIDA -->
-  <div class="intro-step" id="stepWelcome">
-    <div class="tokens-wrap" id="welcomeWrap">
-      <div class="welcome-mark" id="welcomeMark">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#03181c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l4 4L19 7"/></svg>
-      </div>
-      <div class="eyebrow" style="margin-top:22px;">Ya eres parte de la comunidad</div>
-      <h2 style="font-size:clamp(1.5rem,3.4vw,2.2rem);margin-top:10px;">¡Bienvenida a <span class="grad-text">Proyectum IA</span>!</h2>
-      <p class="micro" style="margin-top:14px;max-width:40ch;">Sigue explorando para conocer el programa, los módulos y cómo activar tu acceso.</p>
-    </div>
-  </div>
-
-</div>
-
-<div class="xp-rail"><div class="xp-fill" id="xpFill"></div></div>
-
-<!-- ============ NAV ============ -->
-<nav class="site-nav" id="siteNav">
+<!-- ============ NAV (siempre visible) ============ -->
+<nav class="site-nav visible" id="siteNav">
   <div class="wrap">
     <a href="/" class="nav-brand"><span class="dot"></span> PROYECTUM <span class="grad-text">IA</span></a>
     <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">
@@ -808,8 +501,8 @@ footer p{max-width:640px;margin:6px auto;}
   </div>
 </div>
 
-<!-- ============ HOTBAR MÓVIL (navegación inferior tipo app) ============ -->
-<nav class="mobile-hotbar" id="mobileHotbar">
+<!-- ============ HOTBAR MÓVIL (siempre visible) ============ -->
+<nav class="mobile-hotbar visible" id="mobileHotbar">
   <div class="hotbar-row">
     <a href="/plataforma" class="hotbar-item">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
@@ -836,7 +529,7 @@ footer p{max-width:640px;margin:6px auto;}
   </div>
 </nav>
 
-<!-- ============ ACCESO ADMIN (editar imágenes y links de compra) ============ -->
+<!-- ============ ACCESO ADMIN ============ -->
 <button class="admin-fab" id="adminFab" aria-label="Panel de administrador" title="Panel de administrador">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
 </button>
@@ -844,8 +537,6 @@ footer p{max-width:640px;margin:6px auto;}
 <div class="admin-overlay" id="adminOverlay">
   <div class="admin-box">
     <button class="close-btn" id="closeAdmin">✕</button>
-
-    <!-- Vista de LOGIN del panel admin (Supabase Auth) -->
     <div id="adminLoginView">
       <p class="eyebrow">Solo administrador</p>
       <h2>Inicia sesión para editar</h2>
@@ -864,7 +555,6 @@ footer p{max-width:640px;margin:6px auto;}
       </div>
     </div>
 
-    <!-- Vista de EDICIÓN (solo visible tras iniciar sesión como admin) -->
     <div id="adminEditView" style="display:none;">
       <p class="eyebrow">Solo administrador</p>
       <h2>Editar imágenes y enlaces</h2>
@@ -960,55 +650,125 @@ footer p{max-width:640px;margin:6px auto;}
       <p class="admin-status" id="adminStatus"></p>
       <p class="admin-status" style="color:var(--text-dim);"><a href="#" id="adminLogoutLink" style="color:var(--text-dim);text-decoration:underline;">Cerrar sesión de administrador</a></p>
     </div>
-
   </div>
 </div>
 
-<main>
-<style>
-/* =========================================================
-   LANDING FINAL MANUS — reemplaza el CTA final sin tocar el embudo
-   ========================================================= */
-.manus-landing{position:relative;background:#050908;color:#fff;overflow:hidden;border-top:1px solid rgba(255,255,255,.08);font-family:'Inter',sans-serif;}
-.manus-landing *{box-sizing:border-box}.manus-landing .wrap{max-width:1360px;margin:auto;padding-left:24px;padding-right:24px}.ml-glow{position:absolute;width:420px;height:420px;border-radius:50%;filter:blur(110px);opacity:.11;pointer-events:none}.ml-glow-1{background:#00d8be;right:-160px;top:520px}.ml-glow-2{background:#00d8be;left:-220px;top:1600px}
-.ml-hero{position:relative;min-height:760px;display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,.1);overflow:hidden}.ml-hero-bg{position:absolute;inset:0;background:radial-gradient(60% 80% at 80% 30%,rgba(0,216,190,.14),transparent 65%),radial-gradient(50% 70% at 15% 80%,rgba(0,216,190,.07),transparent 70%)}.ml-hero-content{position:relative;z-index:2;padding-top:90px;padding-bottom:90px}.ml-kicker{display:inline-flex;padding:9px 13px;border:1px solid rgba(0,216,190,.35);background:rgba(0,216,190,.08);border-radius:999px;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.08em;color:#00d8be;text-transform:uppercase}.ml-hero h1{font-size:clamp(3rem,7vw,6.4rem);line-height:.93;letter-spacing:-.075em;max-width:850px;margin:28px 0 24px}.ml-hero h1 span,.ml-section h2 span,.ml-final h2 span{color:#00d8be}.ml-hero p{max-width:650px;color:rgba(255,255,255,.67);font-size:1.08rem;line-height:1.8}.ml-actions{display:flex;gap:20px;align-items:center;flex-wrap:wrap;margin-top:34px}.ml-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;background:#00d8be;color:#03100e;padding:16px 24px;border-radius:12px;font-weight:800;letter-spacing:-.02em;transition:transform .2s,box-shadow .2s}.ml-btn:hover{transform:translateY(-2px);box-shadow:0 12px 35px rgba(0,216,190,.22)}.ml-link{color:rgba(255,255,255,.6);text-decoration:none;border-bottom:1px solid rgba(255,255,255,.2);padding-bottom:3px}.ml-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:48px;color:rgba(255,255,255,.45);font-family:'IBM Plex Mono',monospace;font-size:.72rem}
-.ml-section{position:relative;padding:110px 0;border-bottom:1px solid rgba(255,255,255,.08)}.ml-alt{background:#07110f}.ml-two-col{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center}.ml-label{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;color:#00d8be;text-transform:uppercase;margin-bottom:18px}.ml-section h2{font-size:clamp(2.2rem,4.4vw,4rem);line-height:1;letter-spacing:-.055em;margin:0 0 24px}.ml-section p{color:rgba(255,255,255,.62);line-height:1.8}.ml-system-card{border:1px solid rgba(255,255,255,.12);background:#09100f;border-radius:20px;overflow:hidden}.ml-system-image{aspect-ratio:16/10;overflow:hidden}.ml-system-image img{width:100%;height:100%;object-fit:cover}.ml-system-caption{padding:22px}.ml-system-caption small{display:block;font-family:'IBM Plex Mono',monospace;font-size:.64rem;color:#00d8be;letter-spacing:.1em;margin-bottom:8px}.ml-system-caption strong{font-size:1.1rem}.ml-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.ml-steps>div{border:1px solid rgba(255,255,255,.1);padding:16px;border-radius:14px}.ml-steps b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.65rem}.ml-steps strong{display:block;margin-top:8px}.ml-steps p{font-size:.75rem;margin:7px 0 0;color:rgba(255,255,255,.45);line-height:1.5}
-.ml-section-head{display:flex;justify-content:space-between;gap:60px;align-items:end;margin-bottom:55px}.ml-section-head>div{max-width:720px}.ml-section-head>p{max-width:420px;margin:0}.ml-modules{border-top:1px solid rgba(255,255,255,.12)}.ml-modules>div{display:grid;grid-template-columns:90px 1fr;gap:25px;padding:25px 0;border-bottom:1px solid rgba(255,255,255,.1);align-items:start}.ml-modules>div>b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.78rem;padding-top:4px}.ml-modules article h3{font-size:1.2rem;margin:0 0 6px;letter-spacing:-.02em}.ml-modules article p{margin:0;color:rgba(255,255,255,.48);font-size:.84rem;line-height:1.6}
-.ml-skill-image{position:relative;border:1px solid rgba(255,255,255,.1);border-radius:20px;overflow:hidden}.ml-skill-image img{width:100%;aspect-ratio:4/3;object-fit:cover}.ml-image-tag{position:absolute;left:18px;bottom:18px;background:rgba(5,9,8,.85);backdrop-filter:blur(10px);padding:12px 15px;border:1px solid rgba(0,216,190,.25);border-radius:12px;font-family:'IBM Plex Mono',monospace;font-size:.64rem;color:#00d8be}.ml-image-tag strong{font-family:'Inter',sans-serif;font-size:.9rem;color:#fff}.ml-capabilities{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}.ml-capabilities>div{border-top:1px solid rgba(255,255,255,.1);padding-top:15px}.ml-capabilities i{font-style:normal;color:#00d8be}.ml-capabilities h3{display:inline;margin-left:8px;font-size:.95rem}.ml-capabilities p{font-size:.78rem;margin:6px 0 0}
-.ml-bonus{background:radial-gradient(60% 80% at 80% 30%,rgba(0,216,190,.08),transparent 65%)}.ml-bonus-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.ml-bonus-grid>div{display:flex;gap:14px;align-items:center;border:1px solid rgba(255,255,255,.1);padding:17px;border-radius:13px}.ml-bonus-grid b{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.65rem}.ml-bonus-grid span{font-size:.83rem;color:rgba(255,255,255,.78)}
-.ml-offer{background:#07110f}.ml-offer-grid{display:grid;grid-template-columns:1fr 430px;gap:90px;align-items:center}.ml-payment{margin-top:25px;color:#00d8be;font-family:'IBM Plex Mono',monospace;font-size:.72rem}.ml-price-card{background:#0a1512;border:1px solid rgba(0,216,190,.3);border-radius:22px;padding:32px;box-shadow:0 30px 80px rgba(0,0,0,.25)}.ml-price-top{display:flex;justify-content:space-between;gap:15px;align-items:start;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:20px}.ml-price-top small{font-family:'IBM Plex Mono',monospace;color:#00d8be;font-size:.6rem;letter-spacing:.1em}.ml-price-top h3{font-size:1.35rem;margin-top:5px}.ml-price-top em{font-style:normal;font-size:.65rem;color:rgba(255,255,255,.4)}.ml-price{display:flex;align-items:start;margin:22px 0}.ml-price small{font-family:'IBM Plex Mono',monospace;margin-top:18px;color:rgba(255,255,255,.5)}.ml-price strong{font-size:6rem;line-height:.8;letter-spacing:-.08em}.ml-price-card>p{font-size:.78rem;color:rgba(255,255,255,.5);line-height:1.6}.ml-price-card ul{list-style:none;padding:0;margin:22px 0;display:grid;gap:9px}.ml-price-card li{font-size:.78rem;color:rgba(255,255,255,.72)}.ml-btn-wide{width:100%;margin-top:6px}.ml-note{text-align:center!important;font-family:'IBM Plex Mono',monospace;font-size:.62rem!important;margin-top:15px}.ml-disclaimer{max-width:850px;margin:45px auto 0;text-align:center;color:rgba(255,255,255,.35)!important;font-size:.68rem!important;line-height:1.7!important}
-.ml-faq{border-top:1px solid rgba(255,255,255,.12)}.ml-faq details{border-bottom:1px solid rgba(255,255,255,.1);padding:20px 0}.ml-faq summary{cursor:pointer;font-weight:700;font-size:.9rem;list-style:none}.ml-faq summary::-webkit-details-marker{display:none}.ml-faq summary:after{content:'+';float:right;color:#00d8be;font-size:1.2rem}.ml-faq details[open] summary:after{content:'−'}.ml-faq details p{font-size:.8rem;margin:12px 25px 0 0;color:rgba(255,255,255,.5)}
-.ml-final{position:relative;padding:130px 0;text-align:center;background:radial-gradient(60% 100% at 50% 0%,rgba(0,216,190,.13),transparent 65%);overflow:hidden}.ml-final-mark{font-size:2rem;color:#00d8be;margin-bottom:20px}.ml-final h2{font-size:clamp(2.8rem,6vw,5.5rem);line-height:.95;letter-spacing:-.07em;margin-bottom:25px}.ml-final p{max-width:520px;margin:0 auto 30px;color:rgba(255,255,255,.55)}@media(max-width:850px){.ml-two-col,.ml-offer-grid{grid-template-columns:1fr;gap:45px}.ml-section-head{display:block}.ml-section-head>p{margin-top:20px}.ml-offer-grid{gap:40px}}@media(max-width:600px){.ml-hero{min-height:680px}.ml-hero-content{padding-top:80px;padding-bottom:70px}.ml-hero h1{font-size:3.1rem}.ml-hero p{font-size:.94rem}.ml-actions{flex-direction:column;align-items:stretch}.ml-actions .ml-btn,.ml-actions .ml-link{text-align:center;width:100%}.ml-meta{gap:12px;flex-direction:column}.ml-section{padding:60px 0}.ml-section h2{font-size:2.5rem}.ml-modules>div{grid-template-columns:50px 1fr;gap:10px;padding:21px 0}.ml-modules article h3{font-size:1.05rem}.ml-modules article p{font-size:.76rem}.ml-bonus-grid,.ml-capabilities{grid-template-columns:1fr}.ml-price-card{padding:25px 20px}.ml-price strong{font-size:5rem}.ml-price-card ul{grid-template-columns:1fr}.ml-final{padding:85px 0}.ml-final h2{font-size:3rem}}
-</style>
+<!-- ============ HERO INDEPENDIENTE ============ -->
+<section class="exp-hero" id="expHero">
+  <div class="wrap">
+    <div class="gate-badge">✦ Formación práctica en IA</div>
+    <h1>Sube de nivel tu negocio con <span class="grad-text">Inteligencia Artificial</span></h1>
+    <p class="lead">Mira cómo funciona Proyectum IA en una experiencia interactiva de 2 minutos, o baja directo a conocer la plataforma.</p>
+    <div class="exp-actions">
+      <button class="btn btn-primary" id="startExperienceBtn">Iniciar experiencia
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+      <button class="scroll-cue" id="scrollCueBtn">
+        Conoce nuestra plataforma
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v16M5 13l7 7 7-7"/></svg>
+      </button>
+    </div>
+  </div>
+</section>
 
+<!-- ============ EMBUDO INTERACTIVO (oculto hasta hacer click en "Iniciar experiencia") ============ -->
+<div class="intro-overlay closed" id="introOverlay">
+  <button class="skip-intro" id="skipIntro">Cerrar ✕</button>
+  <div class="intro-progress" id="introProgress"></div>
+
+  <!-- PASO 1: VIDEO PRINCIPAL -->
+  <div class="intro-step active" id="stepVideo">
+    <div class="video-gate" id="videoGate">
+      <div class="gate-badge">🔊 Activa el sonido para la mejor experiencia</div>
+      <h1 style="font-size:clamp(1.5rem,3.4vw,2.2rem);">Cargando tu experiencia...</h1>
+      <p class="micro" style="max-width:38ch;">Verás un video corto, luego un feed estilo TikTok y un chat de WhatsApp con nuestro equipo.</p>
+    </div>
+    <video id="introVideo" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow">
+      <source type="video/mp4">
+    </video>
+  </div>
+
+  <!-- PASO 2: EMBUDO TIKTOK -->
+  <div class="intro-step" id="stepTiktok">
+    <div class="video-gate" id="tiktokGate">
+      <div class="gate-badge">📱 Sigue la ruta</div>
+      <h1 style="font-size:clamp(1.4rem,3.2vw,2rem);">Toca para ver el siguiente clip</h1>
+      <button class="btn btn-primary" id="tiktokStartBtn">Continuar
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="phone-shell tiktok-shell" id="tiktokShell" style="display:none;">
+      <div class="phone-notch"></div>
+      <div class="tt-stage" id="ttStage">
+        <div class="tt-video-wrap tt-active" data-i="0">
+          <video id="ttVideo0" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
+        </div>
+        <div class="tt-video-wrap" data-i="1">
+          <video id="ttVideo1" muted playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
+        </div>
+        <div class="tt-video-wrap" data-i="2">
+          <video id="ttVideo2" playsinline webkit-playsinline="true" preload="auto" x-webkit-airplay="allow"></video>
+        </div>
+        <div class="tt-caption">@proyectum.ia · Así fue el antes y después 🚀</div>
+        <div class="tt-side-icons">
+          <button class="tt-icon tt-like" id="ttLikeBtn" aria-label="Me gusta">❤️<span id="ttLikeCount">12.8K</span></button>
+          <div class="tt-icon">💬<span>892</span></div>
+          <div class="tt-icon">↗️<span>Compartir</span></div>
+        </div>
+        <div class="tt-comment-box">
+          <input type="text" placeholder="Agrega un comentario..." id="ttCommentInput">
+          <button id="ttCommentBtn">Enviar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 3: WHATSAPP -->
+  <div class="intro-step" id="stepChat">
+    <div class="phone-shell" id="chatPhoneShell">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="lock-layer" id="lockLayer">
+          <div class="lock-time">9:41</div>
+          <div class="lock-date">Hoy</div>
+          <div class="wa-notif" id="waNotif">
+            <div class="wa-notif-icon">💬</div>
+            <div class="wa-notif-text">
+              <div class="wa-notif-title">WhatsApp · ahora</div>
+              <div class="wa-notif-body"><strong>PROYECTUM IA TEAM</strong><br>Andrés: ¡Bienvenido al equipo! 🚀</div>
+            </div>
+          </div>
+        </div>
+        <div class="wa-app" id="waApp">
+          <div class="wa-header">
+            <div class="wa-avatar">👥</div>
+            <div>
+              <div class="wa-name">PROYECTUM IA TEAM</div>
+              <div class="wa-status">259 activos en el grupo</div>
+            </div>
+          </div>
+          <div class="wa-body" id="waBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PASO 4: BIENVENIDA (cierra el embudo automáticamente) -->
+  <div class="intro-step" id="stepWelcome">
+    <div class="welcome-wrap">
+      <div class="welcome-check">✅</div>
+      <div class="eyebrow">Listo</div>
+      <h2>¡Bienvenido a Proyectum IA!</h2>
+      <p>Ya conoces cómo trabajamos. Ahora explora la plataforma completa, el programa y tu acceso.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONTENIDO DE LA PLATAFORMA (siempre visible/scrolleable) ============ -->
+<main>
 <section class="manus-landing" id="manusLanding">
   <div class="ml-glow ml-glow-1"></div>
   <div class="ml-glow ml-glow-2"></div>
-
-  <div class="ml-hero">
-    <div class="ml-hero-bg"></div>
-    <div class="ml-hero-content wrap">
-      <div class="ml-kicker">✦ Formación práctica en IA</div>
-      <h1>Aprende la IA.<br><span>Activa tu ruta</span><br>digital.</h1>
-      <p>Proyectum IA reúne formación, herramientas y una secuencia de acción para que conviertas la inteligencia artificial en habilidades aplicables a un negocio digital.</p>
-
-      <div class="ml-actions">
-        <button type="button" class="ml-btn ml-btn-experience" id="startExperienceBtn">▶ Iniciar experiencia</button>
-        <a class="ml-link" href="https://pay.hotmart.com/O106580846O" target="_blank" rel="noopener" class="buy-link">Conocer el acceso ↗</a>
-      </div>
-
-      <div class="ml-meta">
-        <span>◷ 12–15 horas estimadas</span>
-        <span>▣ 51 lecciones en video</span>
-        <span>✦ PDFs + ejercicios</span>
-      </div>
-    </div>
-
-    <button type="button" class="ml-scroll-cue" id="heroScrollCue" aria-label="Seguir conociendo la plataforma">
-      <span>Sigue conociendo la plataforma</span>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-    </button>
-  </div>
 
   <section class="ml-section" id="ml-modelo">
     <div class="wrap ml-two-col">
@@ -1191,27 +951,6 @@ footer p{max-width:640px;margin:6px auto;}
   </div>
 </footer>
 
-<script>
-// Barra de progreso XP según scroll
-const xpFill = document.getElementById('xpFill');
-function updateXp(){
-  const h = document.documentElement;
-  const scrolled = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
-  xpFill.style.width = scrolled + '%';
-}
-document.addEventListener('scroll', updateXp);
-updateXp();
-
-// Reveal on scroll
-const revealTargets = document.querySelectorAll('.stat-card, .level-item, .badge');
-const io = new IntersectionObserver((entries)=>{
-  entries.forEach(e=>{
-    if(e.isIntersecting){ e.target.classList.add('in-view'); }
-  });
-}, {threshold:.3});
-revealTargets.forEach(el=>io.observe(el));
-</script>
-
 <!-- ============ MOTOR DE MEDIOS: evita reproducciones simultáneas ============ -->
 <script>
 window.mediaEngine = (function(){
@@ -1255,15 +994,16 @@ window.mediaEngine = (function(){
 })();
 </script>
 
-<!-- ============ LÓGICA DE LA INTRO INTERACTIVA (bajo demanda) ============ -->
+<!-- ============ LÓGICA DEL EMBUDO INDEPENDIENTE ============
+     El embudo (video -> tiktok -> whatsapp -> bienvenida) ahora vive
+     completamente aparte de la página normal. Nunca se abre solo: solo
+     arranca cuando la persona toca "Iniciar experiencia" en el hero.
+     Al terminar, se cierra solo y la persona queda viendo la página
+     normal (que siempre estuvo ahí, scrolleable, con nav y hotbar). -->
 <script>
 (function(){
   const overlay = document.getElementById('introOverlay');
-  const siteNav = document.getElementById('siteNav');
-  const mobileHotbar = document.getElementById('mobileHotbar');
-  const heroSection = document.querySelector('.ml-hero');
-  const startExperienceBtn = document.getElementById('startExperienceBtn');
-  const heroScrollCue = document.getElementById('heroScrollCue');
+  const expHero = document.getElementById('expHero');
 
   window.mediaEngine.observeAllVideos(overlay);
 
@@ -1288,49 +1028,22 @@ window.mediaEngine = (function(){
     window.mediaEngine.stopAllExcept(null);
   }
 
-  // Revela nav + hotbar la primera vez que la persona sale del hero (scroll natural
-  // o toque en la flecha), sin necesidad de completar la experiencia.
-  function revealChrome(){
-    if(siteNav) siteNav.classList.add('visible');
-    if(mobileHotbar) mobileHotbar.classList.add('visible');
-  }
-  if(heroSection && 'IntersectionObserver' in window){
-    const heroObserver = new IntersectionObserver(function(entries){
-      entries.forEach(function(entry){
-        if(!entry.isIntersecting) revealChrome();
-      });
-    }, { threshold: 0.15 });
-    heroObserver.observe(heroSection);
-  }
-  if(heroScrollCue){
-    heroScrollCue.addEventListener('click', function(){
-      revealChrome();
-      const target = document.getElementById('ml-modelo');
-      if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
-    });
-  }
-
   function openOverlay(){
     overlay.classList.remove('closed');
     document.body.style.overflow = 'hidden';
-    goTo('video');
   }
-
   function closeOverlay(){
     overlay.classList.add('closed');
     document.body.style.overflow = '';
     window.mediaEngine.stopAllExcept(null);
-    clearBugs();
     clearGroupTimers();
-    revealChrome();
+    // Al cerrar, deja a la persona justo donde arranca el contenido de la plataforma.
+    const target = document.getElementById('ml-modelo');
+    if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
   }
+  document.getElementById('skipIntro').addEventListener('click', closeOverlay);
 
-  const skipIntroBtn = document.getElementById('skipIntro');
-  if (skipIntroBtn){
-    skipIntroBtn.addEventListener('click', closeOverlay);
-  }
-
-  /* ---- Sonidos generados con Web Audio API (sin archivos externos) ---- */
+  /* ---- Sonidos generados con Web Audio API ---- */
   let audioCtx;
   function ctx(){
     if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
@@ -1404,7 +1117,6 @@ window.mediaEngine = (function(){
   }
 
   /* ---- Paso 1: video principal ---- */
-  const startBtn = document.getElementById('startBtn');
   const videoGate = document.getElementById('videoGate');
   const introVideo = document.getElementById('introVideo');
   let videoAdvanced = false;
@@ -1416,20 +1128,68 @@ window.mediaEngine = (function(){
     goTo('tiktok');
   }
 
-  function enableStartButton(){
-    if(startBtn.dataset.enabled === '1') return;
-    startBtn.dataset.enabled = '1';
-    startBtn.disabled = false;
-    startBtn.innerHTML = 'Reproducir <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-  }
-  if(window.PROYECTUM_MEDIA_READY){
-    enableStartButton();
-  } else {
-    document.addEventListener('proyectumMediaReady', enableStartButton);
-    setTimeout(enableStartButton, 10000);
+  function safePlayWithMutedFallback(video, onHardFail){
+    safePlay(video, function(){
+      if(!video.muted){
+        video.muted = true;
+        video.currentTime = 0;
+        safePlay(video, onHardFail);
+        showTtUnmuteHint(video);
+      } else if(onHardFail){
+        onHardFail();
+      }
+    });
   }
 
-  /* ---- Paso: notificación de WhatsApp cae desde arriba y abre el grupo ---- */
+  /* Botón único: "Iniciar experiencia" en el hero. Este toque es el ÚNICO
+     gesto necesario para arrancar todo el embudo (video, tiktok y whatsapp). */
+  function beginFunnel(){
+    ctx();
+    openOverlay();
+    goTo('video');
+
+    const videoMainUrl = mediaUrl('videoMain', '');
+    if(videoMainUrl){
+      introVideo.querySelector('source').src = videoMainUrl;
+      introVideo.dataset.realSrcAssigned = '1';
+      introVideo.load();
+    }
+    VOICE_AUDIOS[1].src = mediaUrl('audio1', VOICE_AUDIOS[1].src);
+    voiceAudios[1].src = VOICE_AUDIOS[1].src;
+    voiceAudios.forEach(unlockAudioForMobile);
+
+    ['ttVideo0','ttVideo1','ttVideo2'].forEach(function(id){
+      unlockVideoForMobile(document.getElementById(id));
+    });
+
+    if(videoMainUrl){
+      videoGate.style.display = 'flex';
+      videoGate.querySelector('h1').textContent = 'Reproduciendo...';
+      safePlayWithMutedFallback(introVideo, advanceFromVideo);
+      setTimeout(function(){ if(introVideo.readyState >= 1) videoGate.style.display = 'none'; introVideo.style.display = 'block'; }, 250);
+      setTimeout(function(){ if(introVideo.readyState === 0) advanceFromVideo(); }, 8000);
+    } else {
+      advanceFromVideo();
+    }
+  }
+  document.getElementById('startExperienceBtn').addEventListener('click', beginFunnel);
+  document.getElementById('scrollCueBtn').addEventListener('click', function(){
+    const target = document.getElementById('ml-modelo');
+    if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+
+  introVideo.addEventListener('ended', advanceFromVideo);
+  introVideo.addEventListener('error', function(){
+    if(introVideo.dataset.realSrcAssigned === '1'){
+      advanceFromVideo();
+    }
+  });
+  introVideo.addEventListener('playing', function(){
+    videoGate.style.display = 'none';
+    introVideo.style.display = 'block';
+  });
+
+  /* ---- WhatsApp: notificación cae y abre el grupo ---- */
   const chatPhoneShell = document.getElementById('chatPhoneShell');
   const lockLayer = document.getElementById('lockLayer');
   const waNotif = document.getElementById('waNotif');
@@ -1453,6 +1213,7 @@ window.mediaEngine = (function(){
       startChat();
     }, 2950);
   }
+
   function unlockVideoForMobile(video){
     if(!video) return;
     const wasMuted = video.muted;
@@ -1485,70 +1246,6 @@ window.mediaEngine = (function(){
     }
   }
 
-  function showTtUnmuteHint(video){
-    const stage = document.getElementById('ttStage');
-    if(!stage || stage.querySelector('.tt-unmute')) return;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'tt-unmute';
-    btn.textContent = '🔇 Toca para activar el sonido';
-    btn.addEventListener('click', function(){
-      video.muted = false;
-      window.mediaEngine.play(video);
-      btn.remove();
-    });
-    stage.appendChild(btn);
-  }
-
-  function safePlayWithMutedFallback(video, onHardFail){
-    safePlay(video, function(){
-      if(!video.muted){
-        video.muted = true;
-        video.currentTime = 0;
-        safePlay(video, onHardFail);
-        showTtUnmuteHint(video);
-      } else if(onHardFail){
-        onHardFail();
-      }
-    });
-  }
-
-  startExperienceBtn.addEventListener('click', function(){
-    ctx();
-    openOverlay();
-    startBtn.click();
-  });
-
-  startBtn.addEventListener('click', function(){
-    ctx();
-
-    const videoMainUrl = mediaUrl('videoMain', '');
-    if(videoMainUrl){
-      introVideo.querySelector('source').src = videoMainUrl;
-      introVideo.dataset.realSrcAssigned = '1';
-      introVideo.load();
-    }
-    VOICE_AUDIOS[1].src = mediaUrl('audio1', VOICE_AUDIOS[1].src);
-    voiceAudios[1].src = VOICE_AUDIOS[1].src;
-
-    voiceAudios.forEach(unlockAudioForMobile);
-    videoGate.style.display = 'none';
-    if(videoMainUrl){
-      introVideo.style.display = 'block';
-      safePlayWithMutedFallback(introVideo, advanceFromVideo);
-      setTimeout(function(){ if(introVideo.readyState === 0) advanceFromVideo(); }, 8000);
-    } else {
-      advanceFromVideo();
-    }
-  });
-  introVideo.addEventListener('ended', advanceFromVideo);
-  introVideo.addEventListener('error', function(){
-    if(introVideo.dataset.realSrcAssigned === '1'){
-      advanceFromVideo();
-    }
-  });
-
-  /* ---- Paso: audios estilo WhatsApp (audios reales) ---- */
   const waBody = document.getElementById('waBody');
 
   const VOICE_AUDIOS = [
@@ -1616,7 +1313,7 @@ window.mediaEngine = (function(){
 
     function next(){
       if(i >= VOICE_AUDIOS.length){
-        setTimeout(finishExperience, 900);
+        setTimeout(finishFunnel, 900);
         return;
       }
       const typing = document.createElement('div');
@@ -1782,27 +1479,18 @@ window.mediaEngine = (function(){
     });
   }
 
-  /* ---- Paso final: bienvenida y cierre del embudo ---- */
-  function finishExperience(){
+  /* ---- Paso final: bienvenida y cierre automático del embudo ---- */
+  function finishFunnel(){
     clearGroupTimers();
     chatPhoneShell.classList.remove('risen');
     setTimeout(function(){
       goTo('welcome');
       playLevelUp();
-      const mark = document.getElementById('welcomeMark');
-      if(mark){
-        mark.classList.remove('pop');
-        void mark.offsetWidth;
-        mark.classList.add('pop');
-      }
-      setTimeout(function(){
-        closeOverlay();
-        const target = document.getElementById('ml-modelo');
-        if(target) target.scrollIntoView({ behavior:'smooth', block:'start' });
-      }, 2200);
+      setTimeout(closeOverlay, 2600);
     }, 680);
   }
 
+  /* ---- Paso TikTok ---- */
   const tiktokShell = document.getElementById('tiktokShell');
   const tiktokGate = document.getElementById('tiktokGate');
   const tiktokStartBtn = document.getElementById('tiktokStartBtn');
@@ -1827,10 +1515,6 @@ window.mediaEngine = (function(){
     ttLikeBtn.classList.toggle('liked', ttLiked);
     ttLikeCount.textContent = formatLikes(ttBaseLikes + (ttLiked ? 1 : 0));
     playPop();
-    if(ttLiked){
-      const b = ttLikeBtn.getBoundingClientRect();
-      spawnParticles(b.left+b.width/2, b.top+b.height/2);
-    }
   });
   ttCommentBtn.addEventListener('click', function(){
     if(!ttCommentInput.value.trim()) return;
@@ -1839,6 +1523,21 @@ window.mediaEngine = (function(){
     ttCommentInput.placeholder = '¡Comentario enviado!';
     setTimeout(function(){ ttCommentInput.placeholder = 'Agrega un comentario...'; }, 1600);
   });
+
+  function showTtUnmuteHint(video){
+    const stage = document.getElementById('ttStage');
+    if(!stage || stage.querySelector('.tt-unmute')) return;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'tt-unmute';
+    btn.textContent = '🔇 Toca para activar el sonido';
+    btn.addEventListener('click', function(){
+      video.muted = false;
+      window.mediaEngine.play(video);
+      btn.remove();
+    });
+    stage.appendChild(btn);
+  }
 
   function ttGoTo(idx){
     ttWraps.forEach(function(w){
@@ -1917,29 +1616,10 @@ window.mediaEngine = (function(){
   tiktokStartBtn.addEventListener('click', function(){
     ctx();
     tiktokGate.style.display = 'none';
-    ['ttVideo0','ttVideo1','ttVideo2'].forEach(function(id){
-      unlockVideoForMobile(document.getElementById(id));
-    });
     runTiktokRise();
   });
 
-  const bugLayer = document.getElementById('bugLayer');
-  function clearBugs(){ /* minijuego de bichos retirado; se deja vacío por compatibilidad */ }
-
-  function spawnParticles(x,y){
-    for(let i=0;i<18;i++){
-      const p = document.createElement('span');
-      p.className = 'particle';
-      const angle = Math.random()*Math.PI*2, dist = 60+Math.random()*90;
-      p.style.left = x+'px'; p.style.top = y+'px';
-      p.style.setProperty('--dx', Math.cos(angle)*dist+'px');
-      p.style.setProperty('--dy', Math.sin(angle)*dist+'px');
-      p.style.background = i%2 ? '#22FDF9' : '#ffc94a';
-      document.body.appendChild(p);
-      setTimeout(function(){ p.remove(); }, 900);
-    }
-  }
-
+  /* ---- Reanudar reproducción al volver de segundo plano ---- */
   document.addEventListener('visibilitychange', function(){
     if(document.visibilityState !== 'visible') return;
     if(overlay.classList.contains('closed')) return;
@@ -1965,7 +1645,7 @@ window.mediaEngine = (function(){
 })();
 </script>
 
-<!-- ============ NAV + LOGIN (independiente de la intro) ============ -->
+<!-- ============ NAV + LOGIN ============ -->
 <script>
 (function(){
   const HOTMART_URL = "https://pay.hotmart.com/O106580846O";
@@ -2097,7 +1777,7 @@ window.mediaEngine = (function(){
 })();
 </script>
 
-<!-- ============ PANEL DE ADMINISTRADOR (protegido con Supabase Auth) ============ -->
+<!-- ============ PANEL DE ADMINISTRADOR ============ -->
 <script>
 (function(){
   const ADMIN_EMAIL = window.ADMIN_EMAIL;
@@ -2421,6 +2101,5 @@ window.mediaEngine = (function(){
   });
 })();
 </script>
-
 </body>
 </html>
