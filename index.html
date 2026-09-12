@@ -10,7 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // Cliente único de Supabase, compartido por TODO el sitio (login del nav y panel admin).
   window.SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
   window.SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
   window.ADMIN_EMAIL = "contact@proyectumia.com";
@@ -21,6 +20,29 @@
     console.error("[Proyectum IA] No se pudo inicializar Supabase:", err);
     window.sb = null;
   }
+
+  // Autologin: si el correo de bienvenida trae ?autologin=1&email=..&pw=..,
+  // iniciamos sesión solos y mandamos a la persona directo a la plataforma.
+  (function(){
+    if(!window.sb) return;
+    var params = new URLSearchParams(window.location.search);
+    if(params.get("autologin") !== "1") return;
+    var email = params.get("email");
+    var pw = params.get("pw");
+    if(!email || !pw) return;
+
+    // Limpiamos la URL de inmediato para que la contraseña no quede
+    // visible ni en el historial del navegador.
+    window.history.replaceState({}, document.title, "/");
+
+    window.sb.auth.signInWithPassword({ email: email, password: pw }).then(function(res){
+      if(res.error){
+        console.error("[Proyectum IA] Autologin falló:", res.error.message);
+        return; // se queda en la landing normal, puede iniciar sesión manualmente
+      }
+      window.location.replace("/plataforma");
+    });
+  })();
 </script>
 <style>
 :root{
