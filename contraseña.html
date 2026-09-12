@@ -3,294 +3,281 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Recuperar acceso — Proyectum IA</title>
+<title>Recuperar contraseña — ProyectumIA</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg: #0b1020;
-    --bg-soft: #10162b;
-    --card: #131a33;
-    --line: #232c4c;
-    --text: #e9ecf7;
-    --text-dim: #9aa3c4;
-    --accent: #5b7cff;
-    --accent-2: #7f5bff;
-    --ok: #3ddc97;
-    --err: #ff6b6b;
-    --radius: 14px;
+    --bg: #0A1F1C;
+    --surface: #0F2823;
+    --surface-2: #133029;
+    --line: #1E4038;
+    --turquoise: #4DECD8;
+    --turquoise-dim: #2E8F82;
+    --mint: #8FE3D3;
+    --text: #F2FBF9;
+    --text-muted: #7FA39B;
+    --error: #FF7A6B;
   }
+
   *{ box-sizing: border-box; }
-  html,body{ height:100%; }
-  body{
+
+  html,body{
     margin:0;
-    background:
-      radial-gradient(1100px 600px at 15% -10%, rgba(91,124,255,0.16), transparent 60%),
-      radial-gradient(900px 500px at 100% 10%, rgba(127,91,255,0.14), transparent 55%),
-      var(--bg);
+    padding:0;
+    background: var(--bg);
     color: var(--text);
     font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  body{
     display:flex;
     align-items:center;
     justify-content:center;
-    padding: 32px 20px;
+    padding: 24px;
+    background-image:
+      radial-gradient(circle at 15% 10%, rgba(77,236,216,0.07), transparent 40%),
+      radial-gradient(circle at 85% 90%, rgba(77,236,216,0.05), transparent 45%);
   }
-  .wrap{ width:100%; max-width: 440px; }
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom: 28px;
-    justify-content:center;
-  }
-  .brand .mark{
-    width:30px; height:30px; border-radius:9px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    flex-shrink:0;
-  }
-  .brand span{
-    font-family:'Sora', sans-serif;
-    font-weight:600;
-    font-size: 17px;
-    letter-spacing: -0.01em;
-  }
+
   .card{
-    background: var(--card);
+    width:100%;
+    max-width: 420px;
+    background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 34px 30px;
-    box-shadow: 0 20px 60px -20px rgba(0,0,0,0.55);
+    border-radius: 20px;
+    padding: 40px 32px;
   }
+
+  .mark{
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--turquoise);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:'Montserrat', sans-serif;
+    font-weight:800;
+    color: var(--turquoise);
+    font-size: 18px;
+    margin-bottom: 28px;
+  }
+
   h1{
-    font-family:'Sora', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    line-height:1.3;
-    margin: 0 0 8px;
-    letter-spacing: -0.01em;
+    font-family:'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 24px;
+    line-height: 1.3;
+    margin: 0 0 8px 0;
+    color: var(--text);
   }
-  p.sub{
-    color: var(--text-dim);
-    font-size: 14.5px;
-    line-height:1.5;
-    margin: 0 0 26px;
+
+  p.subtitle{
+    margin: 0 0 28px 0;
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.6;
   }
+
   .steps{
     display:flex;
     gap:6px;
-    margin-bottom: 26px;
+    margin-bottom: 28px;
   }
-  .steps .dot{
+  .steps span{
     flex:1;
     height:3px;
-    border-radius:3px;
+    border-radius: 2px;
     background: var(--line);
     transition: background .3s ease;
   }
-  .steps .dot.active{ background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
-  .steps .dot.done{ background: var(--accent); opacity:.55; }
+  .steps span.active{ background: var(--turquoise); }
 
   label{
     display:block;
     font-size: 13px;
-    color: var(--text-dim);
-    margin-bottom: 7px;
-    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
   }
+
   input{
     width:100%;
-    background: var(--bg-soft);
+    background: var(--surface-2);
     border: 1px solid var(--line);
-    color: var(--text);
-    padding: 13px 14px;
     border-radius: 10px;
+    padding: 13px 14px;
+    color: var(--text);
+    font-family:'Inter', sans-serif;
     font-size: 15px;
-    font-family: 'Inter', sans-serif;
+    margin-bottom: 18px;
     outline: none;
     transition: border-color .2s ease;
   }
-  input:focus{ border-color: var(--accent); }
-  input::placeholder{ color: #5c6489; }
+  input::placeholder{ color: #4E6D66; }
+  input:focus{ border-color: var(--turquoise); }
+  input:focus-visible{ outline: 2px solid var(--turquoise); outline-offset: 2px; }
 
-  .field{ margin-bottom: 18px; }
-
-  .code-input{
-    letter-spacing: 6px;
+  input.code-input{
+    letter-spacing: 10px;
+    font-size: 22px;
     text-align:center;
-    font-size: 20px;
-    font-weight:600;
+    font-family:'Montserrat', sans-serif;
+    font-weight: 700;
   }
 
-  button.primary{
+  button{
     width:100%;
-    padding: 13px 16px;
+    background: var(--turquoise);
+    color: #06201B;
+    border: none;
     border-radius: 10px;
-    border:none;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color:#fff;
-    font-family:'Sora', sans-serif;
-    font-weight:600;
-    font-size: 15px;
-    cursor:pointer;
-    margin-top: 6px;
-    transition: filter .15s ease, transform .15s ease;
-  }
-  button.primary:hover{ filter: brightness(1.08); }
-  button.primary:active{ transform: scale(0.99); }
-  button.primary:disabled{ opacity:.55; cursor:not-allowed; }
-
-  .link-btn{
-    background:none;
-    border:none;
-    color: var(--accent);
-    font-size: 13.5px;
-    cursor:pointer;
-    padding: 0;
-    margin-top: 16px;
-    display:block;
-    text-align:center;
-    width:100%;
+    padding: 14px;
     font-family:'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    cursor: pointer;
+    transition: background .2s ease, transform .1s ease;
   }
-  .link-btn:hover{ text-decoration: underline; }
+  button:hover{ background: var(--mint); }
+  button:active{ transform: scale(0.99); }
+  button:disabled{
+    background: var(--turquoise-dim);
+    cursor: default;
+  }
+  button:focus-visible{ outline: 2px solid var(--turquoise); outline-offset: 3px; }
 
-  .msg{
-    font-size: 13.5px;
-    padding: 11px 13px;
-    border-radius: 9px;
+  .link-row{
+    text-align:center;
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .link-row a{
+    color: var(--turquoise);
+    text-decoration: none;
+    cursor:pointer;
+  }
+  .link-row a:hover{ text-decoration: underline; }
+
+  .message{
+    font-size: 13px;
+    padding: 12px 14px;
+    border-radius: 10px;
     margin-bottom: 18px;
     display:none;
-    line-height:1.4;
+    line-height: 1.5;
   }
-  .msg.show{ display:block; }
-  .msg.err{ background: rgba(255,107,107,0.1); color: var(--err); border: 1px solid rgba(255,107,107,0.25); }
-  .msg.ok{ background: rgba(61,220,151,0.1); color: var(--ok); border: 1px solid rgba(61,220,151,0.25); }
-
-  .step{ display:none; }
-  .step.active{ display:block; }
+  .message.error{
+    display:block;
+    background: rgba(255,122,107,0.1);
+    border: 1px solid rgba(255,122,107,0.3);
+    color: var(--error);
+  }
+  .message.success{
+    display:block;
+    background: rgba(77,236,216,0.08);
+    border: 1px solid rgba(77,236,216,0.25);
+    color: var(--mint);
+  }
 
   .hint{
-    font-size: 12.5px;
-    color: var(--text-dim);
-    margin-top: 10px;
-    text-align:center;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: -10px 0 18px 0;
   }
 
-  .success-icon{
-    width:52px; height:52px;
-    border-radius:50%;
-    background: rgba(61,220,151,0.12);
-    border: 1px solid rgba(61,220,151,0.3);
-    display:flex; align-items:center; justify-content:center;
-    margin: 0 auto 18px;
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+
+  @media (prefers-reduced-motion: reduce){
+    .steps span, input, button{ transition: none; }
   }
-  .success-icon svg{ width:24px; height:24px; }
 </style>
 </head>
 <body>
 
-<div class="wrap">
-  <div class="brand">
-    <div class="mark"></div>
-    <span>Proyectum IA</span>
+<div class="card">
+  <div class="mark">P</div>
+
+  <div class="steps">
+    <span class="active" data-step="1"></span>
+    <span data-step="2"></span>
+    <span data-step="3"></span>
   </div>
 
-  <div class="card">
+  <div id="msg" class="message"></div>
 
-    <div class="steps">
-      <div class="dot active" data-step="1"></div>
-      <div class="dot" data-step="2"></div>
-      <div class="dot" data-step="3"></div>
-    </div>
-
-    <div id="msg" class="msg"></div>
-
-    <!-- PASO 1: correo -->
-    <div class="step active" data-step="1">
-      <h1>Recupera tu acceso</h1>
-      <p class="sub">Escribe el correo con el que compraste tu curso. Te enviaremos un código de verificación.</p>
-      <div class="field">
-        <label for="email">Correo electrónico</label>
-        <input id="email" type="email" placeholder="tucorreo@ejemplo.com" autocomplete="email">
-      </div>
-      <button class="primary" id="btn-send-code">Enviar código</button>
-    </div>
-
-    <!-- PASO 2: código -->
-    <div class="step" data-step="2">
-      <h1>Revisa tu correo</h1>
-      <p class="sub">Te enviamos un código de 6 dígitos a <strong id="email-display"></strong>. Ingrésalo para continuar.</p>
-      <div class="field">
-        <label for="code">Código de verificación</label>
-        <input id="code" class="code-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000">
-      </div>
-      <button class="primary" id="btn-verify-code">Verificar código</button>
-      <button class="link-btn" id="btn-resend">¿No te llegó? Reenviar código</button>
-    </div>
-
-    <!-- PASO 3: nueva contraseña -->
-    <div class="step" data-step="3">
-      <h1>Crea tu nueva contraseña</h1>
-      <p class="sub">Elige una contraseña segura para tu cuenta.</p>
-      <div class="field">
-        <label for="new-password">Nueva contraseña</label>
-        <input id="new-password" type="password" placeholder="Mínimo 8 caracteres" autocomplete="new-password">
-      </div>
-      <div class="field">
-        <label for="confirm-password">Confirmar contraseña</label>
-        <input id="confirm-password" type="password" placeholder="Repite tu contraseña" autocomplete="new-password">
-      </div>
-      <button class="primary" id="btn-reset-password">Guardar nueva contraseña</button>
-    </div>
-
-    <!-- PASO 4: éxito -->
-    <div class="step" data-step="4">
-      <div class="success-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#3ddc97" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-      </div>
-      <h1 style="text-align:center;">Contraseña actualizada</h1>
-      <p class="sub" style="text-align:center;">Ya puedes iniciar sesión en Proyectum IA con tu nueva contraseña.</p>
-      <button class="primary" id="btn-go-login">Ir a iniciar sesión</button>
-    </div>
-
+  <!-- PASO 1: correo -->
+  <div class="screen active" id="screen-1">
+    <h1>Recupera tu acceso</h1>
+    <p class="subtitle">Escribe el correo con el que compraste tu curso y te enviamos un código.</p>
+    <form id="form-correo">
+      <label for="correo">Correo electrónico</label>
+      <input type="email" id="correo" placeholder="tucorreo@ejemplo.com" required autocomplete="email">
+      <button type="submit" id="btn-correo">Enviar código</button>
+    </form>
+    <div class="link-row"><a href="#" id="link-volver-login">Volver a iniciar sesión</a></div>
   </div>
 
-  <p class="hint">¿Problemas para recuperar tu acceso? Escríbenos a soporte@proyectumia.com</p>
+  <!-- PASO 2: código -->
+  <div class="screen" id="screen-2">
+    <h1>Revisa tu correo</h1>
+    <p class="subtitle" id="subtitle-codigo">Te enviamos un código de 6 dígitos. Escríbelo aquí abajo.</p>
+    <form id="form-codigo">
+      <label for="codigo">Código de verificación</label>
+      <input type="text" id="codigo" class="code-input" maxlength="6" inputmode="numeric" pattern="[0-9]*" placeholder="000000" required>
+      <button type="submit" id="btn-codigo">Verificar código</button>
+    </form>
+    <div class="link-row"><a href="#" id="link-reenviar">Reenviar código</a></div>
+  </div>
+
+  <!-- PASO 3: nueva contraseña -->
+  <div class="screen" id="screen-3">
+    <h1>Crea tu nueva contraseña</h1>
+    <p class="subtitle">Elige una contraseña segura. La usarás la próxima vez que inicies sesión.</p>
+    <form id="form-password">
+      <label for="password1">Nueva contraseña</label>
+      <input type="password" id="password1" placeholder="Mínimo 8 caracteres" minlength="8" required autocomplete="new-password">
+      <label for="password2">Confirma tu contraseña</label>
+      <input type="password" id="password2" placeholder="Repite la contraseña" minlength="8" required autocomplete="new-password">
+      <button type="submit" id="btn-password">Guardar nueva contraseña</button>
+    </form>
+  </div>
+
+  <!-- PASO 4: éxito -->
+  <div class="screen" id="screen-4">
+    <h1>Tu contraseña quedó lista</h1>
+    <p class="subtitle">Ya puedes volver e iniciar sesión con tu nueva contraseña.</p>
+    <button type="button" id="btn-a-login">Ir a iniciar sesión</button>
+  </div>
 </div>
 
 <script>
   const WEBHOOK_URL = "https://n8n.santiagoorj.beer/webhook/Passwordrecover-proyectum";
-  const LOGIN_URL = "index.html"; // ajusta al login real de Proyectum IA
+  const LOGIN_URL = "index.html"; // cámbialo por la URL real de tu login
 
-  let state = { email: "", code: "" };
+  let state = { correo: "", codigo: "" };
 
   const msgBox = document.getElementById('msg');
-  function showMsg(text, type){
+  function showMessage(text, type){
     msgBox.textContent = text;
-    msgBox.className = 'msg show ' + type;
+    msgBox.className = 'message ' + type;
   }
-  function clearMsg(){
-    msgBox.className = 'msg';
-  }
-
-  function goToStep(n){
-    document.querySelectorAll('.step').forEach(el => {
-      el.classList.toggle('active', el.dataset.step === String(n));
-    });
-    document.querySelectorAll('.dot').forEach(dot => {
-      const s = Number(dot.dataset.step);
-      dot.classList.toggle('active', s === n);
-      dot.classList.toggle('done', s < n);
-    });
-    clearMsg();
+  function clearMessage(){
+    msgBox.className = 'message';
+    msgBox.textContent = '';
   }
 
-  function setLoading(btn, loading, textDefault){
-    btn.disabled = loading;
-    btn.textContent = loading ? 'Procesando...' : textDefault;
+  function goToScreen(n){
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + n).classList.add('active');
+    document.querySelectorAll('.steps span').forEach(s => {
+      s.classList.toggle('active', Number(s.dataset.step) <= n);
+    });
+    clearMessage();
   }
 
   async function callWebhook(payload){
@@ -299,100 +286,121 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    let data = {};
-    try { data = await res.json(); } catch(e) {}
-    if (!res.ok || data.success === false) {
-      throw new Error(data.message || 'Ocurrió un error. Intenta de nuevo.');
+    if(!res.ok){
+      throw new Error('network');
     }
-    return data;
+    return res.json();
   }
 
-  // Paso 1 -> enviar código
-  document.getElementById('btn-send-code').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-send-code');
-    const email = document.getElementById('email').value.trim().toLowerCase();
-    if (!email || !email.includes('@')) {
-      showMsg('Escribe un correo válido.', 'err');
-      return;
-    }
-    setLoading(btn, true, 'Enviar código');
-    try {
-      await callWebhook({ action: 'send_code', email });
-      state.email = email;
-      document.getElementById('email-display').textContent = email;
-      goToStep(2);
-    } catch (e) {
-      showMsg(e.message, 'err');
+  function setLoading(btn, loadingText){
+    btn.dataset.originalText = btn.textContent;
+    btn.textContent = loadingText;
+    btn.disabled = true;
+  }
+  function clearLoading(btn){
+    btn.textContent = btn.dataset.originalText;
+    btn.disabled = false;
+  }
+
+  // Paso 1: enviar correo
+  document.getElementById('form-correo').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearMessage();
+    const correo = document.getElementById('correo').value.trim();
+    const btn = document.getElementById('btn-correo');
+    setLoading(btn, 'Enviando...');
+    try{
+      const data = await callWebhook({ action: 'solicitar_codigo', correo });
+      if(data.success){
+        state.correo = correo;
+        document.getElementById('subtitle-codigo').textContent =
+          'Te enviamos un código de 6 dígitos a ' + correo + '.';
+        goToScreen(2);
+      } else {
+        showMessage(data.message || 'No pudimos enviar el código.', 'error');
+      }
+    } catch(err){
+      showMessage('Hubo un problema de conexión. Intenta de nuevo.', 'error');
     } finally {
-      setLoading(btn, false, 'Enviar código');
+      clearLoading(btn);
+    }
+  });
+
+  // Paso 2: verificar código
+  document.getElementById('form-codigo').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearMessage();
+    const codigo = document.getElementById('codigo').value.trim();
+    const btn = document.getElementById('btn-codigo');
+    setLoading(btn, 'Verificando...');
+    try{
+      const data = await callWebhook({ action: 'verificar_codigo', correo: state.correo, codigo });
+      if(data.success){
+        state.codigo = codigo;
+        goToScreen(3);
+      } else {
+        showMessage(data.message || 'Código inválido o expirado.', 'error');
+      }
+    } catch(err){
+      showMessage('Hubo un problema de conexión. Intenta de nuevo.', 'error');
+    } finally {
+      clearLoading(btn);
     }
   });
 
   // Reenviar código
-  document.getElementById('btn-resend').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-resend');
-    btn.disabled = true;
-    try {
-      await callWebhook({ action: 'send_code', email: state.email });
-      showMsg('Te enviamos un nuevo código.', 'ok');
-    } catch (e) {
-      showMsg(e.message, 'err');
-    } finally {
-      btn.disabled = false;
+  document.getElementById('link-reenviar').addEventListener('click', async (e) => {
+    e.preventDefault();
+    clearMessage();
+    try{
+      const data = await callWebhook({ action: 'solicitar_codigo', correo: state.correo });
+      showMessage(data.success ? 'Te reenviamos el código.' : (data.message || 'No pudimos reenviarlo.'),
+                  data.success ? 'success' : 'error');
+    } catch(err){
+      showMessage('Hubo un problema de conexión.', 'error');
     }
   });
 
-  // Paso 2 -> verificar código
-  document.getElementById('btn-verify-code').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-verify-code');
-    const code = document.getElementById('code').value.trim();
-    if (!/^\d{6}$/.test(code)) {
-      showMsg('El código debe tener 6 dígitos.', 'err');
+  // Paso 3: nueva contraseña
+  document.getElementById('form-password').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearMessage();
+    const p1 = document.getElementById('password1').value;
+    const p2 = document.getElementById('password2').value;
+    if(p1 !== p2){
+      showMessage('Las contraseñas no coinciden.', 'error');
       return;
     }
-    setLoading(btn, true, 'Verificar código');
-    try {
-      await callWebhook({ action: 'verify_code', email: state.email, code });
-      state.code = code;
-      goToStep(3);
-    } catch (e) {
-      showMsg(e.message, 'err');
-    } finally {
-      setLoading(btn, false, 'Verificar código');
-    }
-  });
-
-  // Paso 3 -> nueva contraseña
-  document.getElementById('btn-reset-password').addEventListener('click', async () => {
-    const btn = document.getElementById('btn-reset-password');
-    const pass = document.getElementById('new-password').value;
-    const confirm = document.getElementById('confirm-password').value;
-
-    if (pass.length < 8) {
-      showMsg('La contraseña debe tener al menos 8 caracteres.', 'err');
+    if(p1.length < 8){
+      showMessage('Usa al menos 8 caracteres.', 'error');
       return;
     }
-    if (pass !== confirm) {
-      showMsg('Las contraseñas no coinciden.', 'err');
-      return;
-    }
-    setLoading(btn, true, 'Guardar nueva contraseña');
-    try {
-      await callWebhook({
-        action: 'reset_password',
-        email: state.email,
-        code: state.code,
-        new_password: pass
+    const btn = document.getElementById('btn-password');
+    setLoading(btn, 'Guardando...');
+    try{
+      const data = await callWebhook({
+        action: 'actualizar_password',
+        correo: state.correo,
+        codigo: state.codigo,
+        nueva_password: p1
       });
-      goToStep(4);
-    } catch (e) {
-      showMsg(e.message, 'err');
+      if(data.success){
+        goToScreen(4);
+      } else {
+        showMessage(data.message || 'No pudimos actualizar tu contraseña.', 'error');
+      }
+    } catch(err){
+      showMessage('Hubo un problema de conexión. Intenta de nuevo.', 'error');
     } finally {
-      setLoading(btn, false, 'Guardar nueva contraseña');
+      clearLoading(btn);
     }
   });
 
-  document.getElementById('btn-go-login').addEventListener('click', () => {
+  document.getElementById('link-volver-login').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.href = LOGIN_URL;
+  });
+  document.getElementById('btn-a-login').addEventListener('click', () => {
     window.location.href = LOGIN_URL;
   });
 </script>
