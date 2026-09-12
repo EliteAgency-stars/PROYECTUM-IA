@@ -371,19 +371,41 @@ h3.block-title{font-family:var(--ff-mono);font-size:.72rem;letter-spacing:.06em;
   </div>
 </nav>
 
+<!-- ============ LOGIN (idéntico en flujo al de index.html) ============ -->
 <div class="overlay" id="loginOverlay">
   <div class="modal">
     <button class="close-btn" data-close="loginOverlay">✕</button>
-    <div class="eyebrow">Acceso a la plataforma</div>
-    <h2 id="authTitle">Iniciar sesión</h2>
-    <p class="sub" id="authSub">Entra con tu correo y contraseña.</p>
-    <div class="field"><label>Correo</label><input type="email" id="authEmail" placeholder="tucorreo@ejemplo.com"></div>
-    <div class="field"><label>Contraseña</label><input type="password" id="authPass" placeholder="••••••••"></div>
-    <div class="form-actions">
-      <button class="pill-btn" id="toggleAuthMode">Crear cuenta</button>
-      <button class="pill-btn primary" id="authSubmit">Entrar</button>
+
+    <!-- Vista: login -->
+    <div id="loginView">
+      <div class="eyebrow">Acceso a la plataforma</div>
+      <h2>Entra a tu cuenta</h2>
+      <p class="sub">Inicia sesión con tu correo y contraseña.</p>
+      <div class="field"><label for="authEmail">Correo</label><input type="email" id="authEmail" placeholder="tucorreo@ejemplo.com" autocomplete="username"></div>
+      <div class="field"><label for="authPass">Contraseña</label><input type="password" id="authPass" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="msg" id="authMsg"></div>
+      <div class="form-actions">
+        <button class="pill-btn" id="goToForgotBtn">¿Olvidaste tu contraseña?</button>
+        <button class="pill-btn primary" id="authSubmit">Entrar</button>
+      </div>
+      <p class="hint" style="text-align:center;margin-top:14px;line-height:1.6;">
+        📩 Revisa tu correo electrónico: ahí te enviamos el usuario y la contraseña para entrar a tu plataforma.<br><br>
+        ¿Aún no tienes acceso? <a href="#" id="loginBuyLink" style="color:var(--primary);">Consigue tu cupo aquí</a>.
+      </p>
     </div>
-    <div class="msg" id="authMsg"></div>
+
+    <!-- Vista: olvidé mi contraseña -->
+    <div id="forgotView" style="display:none;">
+      <div class="eyebrow">Recuperar acceso</div>
+      <h2>Restablece tu contraseña</h2>
+      <p class="sub">Escribe el correo con el que te registraste. Te enviaremos un enlace para crear una nueva contraseña.</p>
+      <div class="field"><label for="forgotEmail">Correo</label><input type="email" id="forgotEmail" placeholder="tucorreo@ejemplo.com" autocomplete="username"></div>
+      <div class="msg" id="forgotMsg"></div>
+      <div class="form-actions">
+        <button class="pill-btn" id="backToLoginBtn">Volver a iniciar sesión</button>
+        <button class="pill-btn primary" id="forgotSubmitBtn">Enviar enlace de recuperación</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -506,12 +528,12 @@ const VIDEO_BUCKET = window.VIDEO_BUCKET;
 const COVER_BUCKET = window.COVER_BUCKET;
 const RESOURCES_BUCKET = window.RESOURCES_BUCKET;
 const PURCHASE_URL = window.PURCHASE_URL;
+const REQUEST_RESET_URL = window.SUPABASE_URL + "/functions/v1/request-password-reset";
 
 let currentUser = null;
 let isAdmin = false;
 let platformSections = [];
 let modules = [];
-let authMode = "login";
 let activeModuleId = null;
 let editingSectionId = null;
 let editingModuleId = null;
@@ -594,19 +616,32 @@ function renderHeader(){
     $("logoutBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); });
   } else {
     wrap.innerHTML = `<button class="pill-btn" id="loginBtn">Iniciar sesión</button>`;
-    $("loginBtn").addEventListener("click", ()=> openModal("loginOverlay"));
+    $("loginBtn").addEventListener("click", openLoginModal);
   }
 }
-$("loginBtn")?.addEventListener("click", ()=> openModal("loginOverlay"));
+$("loginBtn")?.addEventListener("click", openLoginModal);
 
-$("toggleAuthMode").addEventListener("click", ()=>{
-  authMode = authMode === "login" ? "signup" : "login";
-  $("authTitle").textContent = authMode === "login" ? "Iniciar sesión" : "Crear cuenta";
-  $("authSub").textContent = authMode === "login" ? "Entra con tu correo y contraseña." : "Regístrate para comentar y ver los módulos.";
-  $("authSubmit").textContent = authMode === "login" ? "Entrar" : "Registrarme";
-  $("toggleAuthMode").textContent = authMode === "login" ? "Crear cuenta" : "Ya tengo cuenta";
+/* ---------- Login / recuperar contraseña (igual que index.html) ---------- */
+$("loginBuyLink").href = PURCHASE_URL;
+$("loginBuyLink").target = "_blank";
+$("loginBuyLink").rel = "noopener";
+
+function showLoginView(){
+  $("loginView").style.display = "block";
+  $("forgotView").style.display = "none";
   $("authMsg").className = "msg"; $("authMsg").textContent = "";
-});
+}
+function showForgotView(){
+  $("loginView").style.display = "none";
+  $("forgotView").style.display = "block";
+  $("forgotMsg").className = "msg"; $("forgotMsg").textContent = "";
+}
+function openLoginModal(){
+  showLoginView();
+  openModal("loginOverlay");
+}
+$("goToForgotBtn").addEventListener("click", showForgotView);
+$("backToLoginBtn").addEventListener("click", showLoginView);
 
 $("authSubmit").addEventListener("click", async ()=>{
   const email = $("authEmail").value.trim();
@@ -614,19 +649,39 @@ $("authSubmit").addEventListener("click", async ()=>{
   const msgEl = $("authMsg");
   msgEl.className = "msg"; msgEl.textContent = "";
   if(!email || !password){ msgEl.className = "msg error"; msgEl.textContent = "Completa correo y contraseña."; return; }
+  if(!sb){ msgEl.className = "msg error"; msgEl.textContent = "No se pudo conectar con el servidor."; return; }
   $("authSubmit").disabled = true;
-  try{
-    if(authMode === "login"){
-      const { error } = await sb.auth.signInWithPassword({ email, password });
-      if(error) throw error;
-      closeModal("loginOverlay");
-    } else {
-      const { error } = await sb.auth.signUp({ email, password });
-      if(error) throw error;
-      msgEl.className = "msg ok"; msgEl.textContent = "Cuenta creada. Revisa tu correo si se requiere confirmación, o inicia sesión.";
-    }
-  }catch(err){ msgEl.className = "msg error"; msgEl.textContent = err.message || "Algo salió mal."; }
+  const { error } = await sb.auth.signInWithPassword({ email, password });
   $("authSubmit").disabled = false;
+  if(error){
+    msgEl.className = "msg error";
+    msgEl.textContent = "Correo o contraseña incorrectos. Revisa el correo que te enviamos con tus datos de acceso.";
+    return;
+  }
+  closeModal("loginOverlay");
+});
+
+$("forgotSubmitBtn").addEventListener("click", async ()=>{
+  const email = $("forgotEmail").value.trim();
+  const msgEl = $("forgotMsg");
+  msgEl.className = "msg"; msgEl.textContent = "";
+  if(!email){ msgEl.className = "msg error"; msgEl.textContent = "Escribe tu correo."; return; }
+  $("forgotSubmitBtn").disabled = true;
+  try{
+    const res = await fetch(REQUEST_RESET_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+    const data = await res.json();
+    msgEl.className = "msg ok";
+    msgEl.textContent = data.message || "Si el correo está registrado, te llegará un enlace para restablecer tu contraseña.";
+    $("forgotEmail").value = "";
+  }catch(err){
+    msgEl.className = "msg error";
+    msgEl.textContent = "No pudimos procesar la solicitud. Intenta de nuevo en unos minutos.";
+  }
+  $("forgotSubmitBtn").disabled = false;
 });
 
 async function loadPlatform(){
@@ -694,7 +749,7 @@ function renderContent(filter=""){
   wrap.querySelectorAll("[data-module-id]").forEach(card=>{
     card.addEventListener("click", ()=>{
       if(!currentUser){
-        window.location.href = PURCHASE_URL;
+        openLoginModal();
         return;
       }
       openModuleDetail(card.dataset.moduleId);
@@ -916,7 +971,7 @@ $("saveModuleBtn").addEventListener("click", async ()=>{
 
 async function openModuleDetail(id){
   if(!currentUser){
-    window.location.href = PURCHASE_URL;
+    openLoginModal();
     return;
   }
   const mod = modules.find(m => m.id === id);
