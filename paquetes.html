@@ -242,6 +242,8 @@ body.admin-mode .panel-solicitudes{display:block;}
 .compra-field label{display:block;font-family:var(--ff-mono);font-size:.66rem;color:var(--text-dim);margin-bottom:6px;}
 .compra-field input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-size:.86rem;}
 .compra-field input:focus{outline:none;border-color:var(--primary);}
+.compra-field input[readonly]{color:var(--text-dim);}
+.compra-field.oculto-campo{display:none;}
 .compra-submit{width:100%;margin-top:18px;font-family:var(--ff-display);font-weight:600;background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;border:none;padding:13px;border-radius:10px;cursor:pointer;}
 .compra-estado{font-size:.76rem;margin-top:10px;min-height:14px;text-align:center;}
 .compra-estado.ok{color:var(--primary);}
@@ -373,7 +375,7 @@ body.admin-mode .panel-solicitudes{display:block;}
         <label>Nombre de quien hizo el pago</label>
         <input type="text" id="compraNombre" required>
       </div>
-      <div class="compra-field">
+      <div class="compra-field" id="compraCorreoField">
         <label>Tu correo (aquí te llega la confirmación)</label>
         <input type="email" id="compraCorreo" required>
       </div>
@@ -660,6 +662,19 @@ function abrirCompra(id, titulo, url){
   document.getElementById('compraEstado').textContent = '';
   document.getElementById('compraEstado').className = 'compra-estado';
   compraForm.reset();
+
+  const campoCorreo = document.getElementById('compraCorreo');
+  const contenedorCorreo = document.getElementById('compraCorreoField');
+  if(currentSession){
+    campoCorreo.value = currentSession.user.email;
+    campoCorreo.required = false;
+    contenedorCorreo.classList.add('oculto-campo');
+  } else {
+    campoCorreo.value = '';
+    campoCorreo.required = true;
+    contenedorCorreo.classList.remove('oculto-campo');
+  }
+
   compraModal.classList.add('open');
 }
 document.getElementById('closeCompraModal').addEventListener('click', () => compraModal.classList.remove('open'));
