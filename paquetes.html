@@ -61,35 +61,53 @@ body.admin-mode .admin-toolbar{display:flex;}
 }
 .add-package-btn:hover{background:var(--primary-dim);}
 
-/* Grid de paquetes */
-.pkg-grid{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:26px;
+/* Lista de paquetes (horizontal) */
+.pkg-list{
+  display:flex;flex-direction:column;gap:22px;
   padding:34px 0 90px;
 }
 .pkg-card{
   position:relative;border-radius:var(--radius);overflow:hidden;background:var(--panel);
-  border:1px solid var(--line);display:flex;flex-direction:column;
+  border:1px solid var(--line);display:flex;flex-direction:row;
   transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
 }
-.pkg-card:hover{transform:translateY(-5px);border-color:var(--primary);box-shadow:0 22px 50px -20px #000, 0 0 0 1px var(--primary-dim);}
-.pkg-media{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,var(--secondary),var(--bg-alt));overflow:hidden;}
+.pkg-card:hover{transform:translateY(-3px);border-color:var(--primary);box-shadow:0 22px 50px -20px #000, 0 0 0 1px var(--primary-dim);}
+
+.pkg-media{
+  position:relative;flex:0 0 300px;min-height:100%;
+  background:linear-gradient(135deg,var(--secondary),var(--bg-alt));overflow:hidden;
+}
 .pkg-media img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease;}
 .pkg-card:hover .pkg-media img{transform:scale(1.06);}
 .pkg-media .no-img{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:var(--text-dim);}
 .pkg-media .no-img svg{width:32px;height:32px;}
-.pkg-media::after{
-  content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 55%,#04141af2 100%);pointer-events:none;
+
+.pkg-body{padding:26px 28px;display:flex;flex-direction:column;flex:1;min-width:0;}
+.pkg-body h3{font-size:1.25rem;}
+.pkg-body p{color:var(--text-dim);font-size:.92rem;margin-top:10px;flex:1;white-space:pre-wrap;}
+
+.pkg-footer{
+  margin-top:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;
 }
-.pkg-body{padding:24px 24px 26px;display:flex;flex-direction:column;flex:1;}
-.pkg-body h3{font-size:1.2rem;}
-.pkg-body p{color:var(--text-dim);font-size:.9rem;margin-top:10px;flex:1;white-space:pre-wrap;}
+.pkg-price{font-family:var(--ff-display);font-size:1.4rem;font-weight:700;color:var(--gold);}
+.pkg-price .price-tag{display:block;font-family:var(--ff-mono);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text-dim);font-weight:400;margin-bottom:2px;}
 .pkg-cta{
-  margin-top:20px;font-family:var(--ff-display);font-weight:600;font-size:.88rem;
+  font-family:var(--ff-display);font-weight:600;font-size:.88rem;
   background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;border:none;cursor:pointer;
-  padding:12px 20px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
-  transition:transform .15s ease;
+  padding:13px 22px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .15s ease;white-space:nowrap;
 }
 .pkg-cta:hover{transform:translateY(-1px);}
+
+/* Burbuja de clientes satisfechos */
+.pkg-badge{
+  position:absolute;top:14px;left:14px;z-index:3;
+  display:flex;align-items:center;gap:6px;
+  background:#04141ae6;backdrop-filter:blur(6px);border:1px solid var(--primary-dim);
+  color:var(--primary);font-family:var(--ff-mono);font-size:.66rem;letter-spacing:.02em;
+  padding:6px 11px;border-radius:100px;
+}
+.pkg-badge b{color:var(--text);font-family:var(--ff-body);font-weight:700;}
 
 /* Controles admin sobre la tarjeta */
 .pkg-admin-actions{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:6px;}
@@ -102,8 +120,14 @@ body.admin-mode .admin-toolbar{display:flex;}
 .pkg-admin-actions .del-btn:hover{color:#ff8a8a;border-color:#ff8a8a;}
 .pkg-admin-actions svg{width:15px;height:15px;}
 
-.empty-state{text-align:center;padding:80px 20px;color:var(--text-dim);grid-column:1/-1;}
+.empty-state{text-align:center;padding:80px 20px;color:var(--text-dim);}
 .empty-state svg{width:34px;height:34px;margin-bottom:12px;}
+
+@media(max-width:720px){
+  .pkg-card{flex-direction:column;}
+  .pkg-media{flex-basis:auto;aspect-ratio:16/10;}
+  .pkg-badge{top:10px;left:10px;}
+}
 
 /* Modal de editar/crear paquete (admin) */
 .pkg-modal{position:fixed;inset:0;z-index:220;background:#020c10ee;display:none;align-items:center;justify-content:center;padding:20px;}
@@ -116,9 +140,11 @@ body.admin-mode .admin-toolbar{display:flex;}
 .pkg-modal-box h2{font-size:1.2rem;margin-top:6px;}
 .field{margin-top:16px;}
 .field label{display:block;font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);margin-bottom:6px;}
-.field input[type=text],.field input[type=url],.field textarea{
+.field input[type=text],.field input[type=url],.field input[type=number],.field textarea{
   width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-size:.9rem;
 }
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
 .field textarea{resize:vertical;min-height:90px;}
 .field input:focus,.field textarea:focus{outline:none;border-color:var(--primary);}
 .img-drop{
@@ -218,7 +244,7 @@ body.admin-mode .admin-toolbar{display:flex;}
     </button>
   </div>
 
-  <div class="pkg-grid" id="pkgGrid">
+  <div class="pkg-list" id="pkgGrid">
     <div class="empty-state">Cargando paquetes…</div>
   </div>
 </div>
@@ -246,13 +272,23 @@ body.admin-mode .admin-toolbar{display:flex;}
         <label>Descripción</label>
         <textarea id="pkgDesc" required maxlength="500" placeholder="Qué incluye este paquete..."></textarea>
       </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Precio (texto libre)</label>
+          <input type="text" id="pkgPrice" maxlength="40" placeholder="Ej: $59 USD">
+        </div>
+        <div class="field">
+          <label>Clientes satisfechos</label>
+          <input type="number" id="pkgClientes" min="0" placeholder="Ej: 214">
+        </div>
+      </div>
       <div class="field">
-        <label>Link del botón "Descubrir"</label>
-        <input type="url" id="pkgUrl" required placeholder="https://pay.hotmart.com/...">
+        <label>Link del botón de compra</label>
+        <input type="url" id="pkgUrl" required placeholder="https://pay.hotmart.com/... o link de Wompi">
       </div>
       <div class="field">
         <label>Texto del botón (opcional)</label>
-        <input type="text" id="pkgBtnLabel" maxlength="30" placeholder="Descubrir">
+        <input type="text" id="pkgBtnLabel" maxlength="30" placeholder="Comprar ahora">
       </div>
       <div class="modal-actions">
         <button type="button" class="cancel-btn" id="cancelPkgModal">Cancelar</button>
@@ -395,6 +431,7 @@ function renderPackages(){
   }
   grid.innerHTML = packages.map(p => `
     <article class="pkg-card">
+      <div class="pkg-badge">🔥 <b>${p.clientes_satisfechos ?? 0}</b> clientes satisfechos</div>
       ${isAdmin ? `
         <div class="pkg-admin-actions">
           <button class="edit-btn" data-id="${p.id}" title="Editar">
@@ -412,10 +449,13 @@ function renderPackages(){
       <div class="pkg-body">
         <h3>${escapeHtml(p.title)}</h3>
         <p>${escapeHtml(p.description)}</p>
-        <a class="pkg-cta" href="${p.button_url}" target="_blank" rel="noopener">
-          ${escapeHtml(p.button_label || 'Descubrir')}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
+        <div class="pkg-footer">
+          ${p.price ? `<div class="pkg-price"><span class="price-tag">Inversión</span>${escapeHtml(p.price)}</div>` : `<span></span>`}
+          <a class="pkg-cta" href="${p.button_url}" target="_blank" rel="noopener">
+            ${escapeHtml(p.button_label || 'Comprar ahora')}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
       </div>
     </article>
   `).join("");
@@ -449,6 +489,8 @@ function openPkgModal(pkg){
   document.getElementById('pkgModalTitle').textContent = pkg ? "Editar paquete" : "Crear paquete";
   document.getElementById('pkgTitle').value = pkg ? pkg.title : '';
   document.getElementById('pkgDesc').value = pkg ? pkg.description : '';
+  document.getElementById('pkgPrice').value = pkg ? (pkg.price || '') : '';
+  document.getElementById('pkgClientes').value = pkg ? (pkg.clientes_satisfechos ?? '') : Math.floor(Math.random() * (420 - 120 + 1)) + 120;
   document.getElementById('pkgUrl').value = pkg ? pkg.button_url : '';
   document.getElementById('pkgBtnLabel').value = pkg ? (pkg.button_label || '') : '';
   pkgImageInput.value = '';
@@ -476,8 +518,10 @@ pkgForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const title = document.getElementById('pkgTitle').value.trim();
   const description = document.getElementById('pkgDesc').value.trim();
+  const price = document.getElementById('pkgPrice').value.trim();
+  const clientes_satisfechos = parseInt(document.getElementById('pkgClientes').value, 10) || 0;
   const button_url = document.getElementById('pkgUrl').value.trim();
-  const button_label = document.getElementById('pkgBtnLabel').value.trim() || 'Descubrir';
+  const button_label = document.getElementById('pkgBtnLabel').value.trim() || 'Comprar ahora';
   if(!title || !description || !button_url) return;
 
   const saveBtn = document.getElementById('savePkgBtn');
@@ -496,11 +540,11 @@ pkgForm.addEventListener('submit', async (e) => {
     }
 
     if(editingId){
-      const { error } = await sb.from('packages').update({ title, description, button_url, button_label, image_url }).eq('id', editingId);
+      const { error } = await sb.from('packages').update({ title, description, price, clientes_satisfechos, button_url, button_label, image_url }).eq('id', editingId);
       if(error) throw error;
       showToast("✅ Paquete actualizado");
     } else {
-      const { error } = await sb.from('packages').insert({ title, description, button_url, button_label, image_url, sort_order: packages.length });
+      const { error } = await sb.from('packages').insert({ title, description, price, clientes_satisfechos, button_url, button_label, image_url, sort_order: packages.length });
       if(error) throw error;
       showToast("✅ Paquete creado");
     }
