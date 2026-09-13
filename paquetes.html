@@ -326,10 +326,13 @@ body.admin-mode .panel-solicitudes{display:block;}
           <input type="number" id="pkgClientes" min="0" placeholder="Ej: 214">
         </div>
       </div>
-      <div class="field">
-        <label>Link del botón de compra</label>
-        <input type="url" id="pkgUrl" required placeholder="https://pay.hotmart.com/... o link de Wompi">
-      </div>
+     <div class="field">
+  <label>Link del botón de compra</label>
+  <input type="url" id="pkgUrl" required placeholder="https://pay.hotmart.com/... o link de Wompi">
+  <p style="font-family:var(--ff-mono);font-size:.68rem;color:var(--text-dim);margin-top:6px;">
+    También puedes pegar un link de WhatsApp (ej: https://wa.me/573001234567) — el botón abrirá el chat en vez del flujo de pago.
+  </p>
+</div>
       <div class="field">
         <label>Texto del botón (opcional)</label>
         <input type="text" id="pkgBtnLabel" maxlength="30" placeholder="Comprar ahora">
