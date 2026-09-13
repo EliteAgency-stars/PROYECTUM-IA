@@ -8,12 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
-<!-- Supabase JS -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<!-- PDF.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.min.js"></script>
-<!-- Page-flip (efecto de libro) -->
-<script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+<!-- Supabase JS y Page-flip vía CDN (unpkg) -->
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://unpkg.com/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
 
 <style>
   :root{
@@ -307,9 +304,12 @@
 
 </main>
 
-<script>
+<script type="module">
+// pdf.js se distribuye como módulo ES desde la versión 4; se importa desde unpkg.
+import * as pdfjsLib from "https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.min.mjs";
+
 // =========================================================================
-// CONFIGURACIÓN — reemplaza estos valores con los de tu proyecto Supabase
+// CONFIGURACIÓN
 // =========================================================================
 const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
@@ -318,7 +318,7 @@ const NOMBRE_BUCKET = "ebooks";
 const RUTA_PDF_ACTUAL = "ebook-principal/volumen.pdf"; // ruta fija: cada actualización reemplaza este archivo
 const ID_EBOOK = "ebook-principal"; // fila fija en ebook_content
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.0.379/pdf.worker.min.js";
+pdfjsLib.GlobalWorkerOptions.workerSrc = "https://unpkg.com/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs";
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
