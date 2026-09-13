@@ -539,8 +539,16 @@ function renderPackages(){
     btn.addEventListener('click', () => deletePackage(btn.dataset.id, btn.dataset.image));
   });
   grid.querySelectorAll('.btn-comprar').forEach(btn => {
-    btn.addEventListener('click', () => abrirCompra(btn.dataset.id, btn.dataset.titulo, btn.dataset.url));
+  btn.addEventListener('click', () => {
+    const url = btn.dataset.url;
+    const esWhatsapp = /wa\.me|api\.whatsapp\.com/i.test(url);
+    if (esWhatsapp) {
+      window.open(url, '_blank', 'noopener');
+    } else {
+      abrirCompra(btn.dataset.id, btn.dataset.titulo, url);
+    }
   });
+});
 }
 
 /* ---------- Modal crear/editar ---------- */
