@@ -210,6 +210,42 @@ body.admin-mode .admin-toolbar{display:flex;}
   body{padding-bottom:64px;}
   .site-nav .nav-links{display:none;}
 }
+
+/* Bandeja de solicitudes de compra (admin) */
+.panel-solicitudes{display:none;max-width:720px;margin:0 auto 10px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 24px;}
+body.admin-mode .panel-solicitudes{display:block;}
+.panel-solicitudes h2{font-size:1.05rem;}
+.panel-solicitudes .sub{color:var(--text-dim);font-size:.82rem;margin-top:4px;margin-bottom:16px;}
+.fila-solicitud{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:12px 14px;background:var(--bg-alt);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;font-size:.85rem;
+}
+.fila-solicitud .detalle{color:var(--text-dim);font-size:.76rem;}
+.acciones-solicitud{display:flex;gap:8px;flex-shrink:0;}
+.btn-confirmar{
+  font-family:var(--ff-display);font-weight:600;background:var(--primary);color:#03181c;border:none;
+  padding:8px 14px;border-radius:8px;font-size:.78rem;cursor:pointer;
+}
+.btn-rechazar{
+  font-family:var(--ff-display);font-weight:600;background:transparent;color:#ff8a8a;border:1px solid #ff8a8a;
+  padding:8px 14px;border-radius:8px;font-size:.78rem;cursor:pointer;
+}
+
+/* Modal de aviso de compra (comprador) */
+.compra-modal{position:fixed;inset:0;z-index:230;background:#020c10ee;display:none;align-items:center;justify-content:center;padding:20px;}
+.compra-modal.open{display:flex;}
+.compra-modal-box{width:100%;max-width:420px;background:var(--bg-alt);border:1px solid var(--line);border-radius:20px;padding:28px 26px;position:relative;}
+.compra-modal-box .close-btn{position:absolute;top:14px;right:14px;background:var(--panel);border:1px solid var(--line);color:var(--text-dim);width:28px;height:28px;border-radius:9px;cursor:pointer;}
+.compra-modal-box h2{font-size:1.1rem;margin-top:6px;}
+.compra-modal-box .sub{color:var(--text-dim);font-size:.82rem;margin-top:6px;margin-bottom:16px;}
+.compra-field{margin-top:14px;}
+.compra-field label{display:block;font-family:var(--ff-mono);font-size:.66rem;color:var(--text-dim);margin-bottom:6px;}
+.compra-field input{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:11px 13px;color:var(--text);font-size:.86rem;}
+.compra-field input:focus{outline:none;border-color:var(--primary);}
+.compra-submit{width:100%;margin-top:18px;font-family:var(--ff-display);font-weight:600;background:linear-gradient(100deg,var(--primary),#7ff5f2);color:#03181c;border:none;padding:13px;border-radius:10px;cursor:pointer;}
+.compra-estado{font-size:.76rem;margin-top:10px;min-height:14px;text-align:center;}
+.compra-estado.ok{color:var(--primary);}
+.compra-estado.error{color:#ff8a8a;}
 </style>
 </head>
 <body>
@@ -242,6 +278,12 @@ body.admin-mode .admin-toolbar{display:flex;}
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
       Agregar paquete
     </button>
+  </div>
+
+  <div class="panel-solicitudes" id="panelSolicitudes">
+    <h2>Solicitudes de compra pendientes</h2>
+    <div class="sub">Confirma solo cuando verifiques el pago. Al confirmar se notifica al cliente automáticamente.</div>
+    <div id="listaSolicitudes">Cargando…</div>
   </div>
 
   <div class="pkg-list" id="pkgGrid">
@@ -319,6 +361,32 @@ body.admin-mode .admin-toolbar{display:flex;}
   </div>
 </div>
 
+<!-- Aviso de compra (comprador) -->
+<div class="compra-modal" id="compraModal">
+  <div class="compra-modal-box">
+    <button class="close-btn" id="closeCompraModal">✕</button>
+    <p class="eyebrow">Confirmar mi pago</p>
+    <h2 id="compraModalTitulo">Ya pagué</h2>
+    <p class="sub">Se abrió la página de pago en otra pestaña. Cuando termines, cuéntanos aquí a nombre de quién quedó el pago para activar tu acceso.</p>
+    <form id="compraForm">
+      <div class="compra-field">
+        <label>Nombre de quien hizo el pago</label>
+        <input type="text" id="compraNombre" required>
+      </div>
+      <div class="compra-field">
+        <label>Tu correo (aquí te llega la confirmación)</label>
+        <input type="email" id="compraCorreo" required>
+      </div>
+      <div class="compra-field">
+        <label>Referencia o comprobante (opcional)</label>
+        <input type="text" id="compraReferencia">
+      </div>
+      <button type="submit" class="compra-submit" id="compraSubmitBtn">Ya pagué, avisar a ProyectumIA</button>
+      <div class="compra-estado" id="compraEstado"></div>
+    </form>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <nav class="mobile-hotbar" id="mobileHotbar">
@@ -352,6 +420,7 @@ body.admin-mode .admin-toolbar{display:flex;}
 const SUPABASE_URL = "https://opagblruzwsrxsggkjsa.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_O30dPx3jfAA3m2CUnw7nCQ_jsuZiwRj";
 const ADMIN_EMAIL = "contact@proyectumia.com";
+const N8N_CONFIRMAR_PAQUETE_URL = "https://TU-INSTANCIA-N8N.com/webhook/confirmar-pago-paquete"; // reemplaza con tu URL real de n8n
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 let toastTimer = null;
@@ -382,6 +451,7 @@ async function refreshSession(){
   navLoginBtn.textContent = currentSession ? "Cerrar sesión" : "Iniciar sesión";
   navLoginBtn.classList.toggle('in', isAdmin);
   renderPackages();
+  if(isAdmin) cargarSolicitudesPendientes();
 }
 navLoginBtn.addEventListener('click', async () => {
   if(currentSession){
@@ -451,10 +521,10 @@ function renderPackages(){
         <p>${escapeHtml(p.description)}</p>
         <div class="pkg-footer">
           ${p.price ? `<div class="pkg-price"><span class="price-tag">Inversión</span>${escapeHtml(p.price)}</div>` : `<span></span>`}
-          <a class="pkg-cta" href="${p.button_url}" target="_blank" rel="noopener">
+          <button type="button" class="pkg-cta btn-comprar" data-id="${p.id}" data-titulo="${escapeHtml(p.title)}" data-url="${p.button_url}">
             ${escapeHtml(p.button_label || 'Comprar ahora')}
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-          </a>
+          </button>
         </div>
       </div>
     </article>
@@ -465,6 +535,9 @@ function renderPackages(){
   });
   grid.querySelectorAll('.del-btn').forEach(btn => {
     btn.addEventListener('click', () => deletePackage(btn.dataset.id, btn.dataset.image));
+  });
+  grid.querySelectorAll('.btn-comprar').forEach(btn => {
+    btn.addEventListener('click', () => abrirCompra(btn.dataset.id, btn.dataset.titulo, btn.dataset.url));
   });
 }
 
@@ -573,6 +646,128 @@ async function deletePackage(id, imageUrl){
   }catch(err){
     showToast("❌ No se pudo borrar: " + err.message);
   }
+}
+
+/* ---------- Comprar: abrir link + modal de aviso ---------- */
+const compraModal = document.getElementById('compraModal');
+const compraForm = document.getElementById('compraForm');
+let paqueteEnCompra = null;
+
+function abrirCompra(id, titulo, url){
+  paqueteEnCompra = { id, titulo };
+  window.open(url, '_blank', 'noopener');
+  document.getElementById('compraModalTitulo').textContent = "Ya pagué: " + titulo;
+  document.getElementById('compraEstado').textContent = '';
+  document.getElementById('compraEstado').className = 'compra-estado';
+  compraForm.reset();
+  compraModal.classList.add('open');
+}
+document.getElementById('closeCompraModal').addEventListener('click', () => compraModal.classList.remove('open'));
+compraModal.addEventListener('click', (e) => { if(e.target === compraModal) compraModal.classList.remove('open'); });
+
+compraForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nombre_pagador = document.getElementById('compraNombre').value.trim();
+  const correo = document.getElementById('compraCorreo').value.trim();
+  const referencia = document.getElementById('compraReferencia').value.trim();
+  const estadoEl = document.getElementById('compraEstado');
+  const submitBtn = document.getElementById('compraSubmitBtn');
+
+  submitBtn.disabled = true;
+  const { error } = await sb.from('solicitudes_pago_paquetes').insert({
+    paquete_id: paqueteEnCompra.id,
+    paquete_titulo: paqueteEnCompra.titulo,
+    nombre_pagador,
+    correo,
+    referencia: referencia || null
+  });
+  submitBtn.disabled = false;
+
+  if(error){
+    estadoEl.className = 'compra-estado error';
+    estadoEl.textContent = 'No se pudo enviar tu aviso: ' + error.message;
+    return;
+  }
+  estadoEl.className = 'compra-estado ok';
+  estadoEl.textContent = '¡Listo! En cuanto confirmemos tu pago, te llega la confirmación a tu correo.';
+  setTimeout(() => compraModal.classList.remove('open'), 1800);
+});
+
+/* ---------- Admin: bandeja de solicitudes de compra pendientes ---------- */
+async function cargarSolicitudesPendientes(){
+  const contenedor = document.getElementById('listaSolicitudes');
+  contenedor.textContent = 'Cargando…';
+
+  const { data, error } = await sb
+    .from('solicitudes_pago_paquetes')
+    .select('*')
+    .eq('estado', 'pendiente')
+    .order('creado_en', { ascending: true });
+
+  if(error){
+    contenedor.textContent = 'No se pudieron cargar las solicitudes: ' + error.message;
+    return;
+  }
+  if(!data || data.length === 0){
+    contenedor.textContent = 'No hay solicitudes pendientes.';
+    return;
+  }
+
+  contenedor.innerHTML = data.map(s => `
+    <div class="fila-solicitud">
+      <div>
+        <strong>${escapeHtml(s.nombre_pagador)}</strong> — ${escapeHtml(s.paquete_titulo || '')}<br>
+        <span class="detalle">${escapeHtml(s.correo)}${s.referencia ? ' · Ref: ' + escapeHtml(s.referencia) : ''}</span>
+      </div>
+      <div class="acciones-solicitud">
+        <button class="btn-confirmar" data-id="${s.id}" data-correo="${s.correo}" data-nombre="${s.nombre_pagador}">Confirmar</button>
+        <button class="btn-rechazar" data-id="${s.id}">Rechazar</button>
+      </div>
+    </div>
+  `).join('');
+
+  contenedor.querySelectorAll('.btn-confirmar').forEach(btn => {
+    btn.addEventListener('click', () => confirmarSolicitudPaquete(btn));
+  });
+  contenedor.querySelectorAll('.btn-rechazar').forEach(btn => {
+    btn.addEventListener('click', () => rechazarSolicitudPaquete(btn.dataset.id));
+  });
+}
+
+async function confirmarSolicitudPaquete(btn){
+  const { id, correo, nombre } = btn.dataset;
+  btn.disabled = true;
+  btn.textContent = 'Confirmando…';
+
+  try{
+    const { data: { session } } = await sb.auth.getSession();
+    const respuesta = await fetch(N8N_CONFIRMAR_PAQUETE_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token
+      },
+      body: JSON.stringify({ solicitud_id: id, correo, nombre_pagador: nombre })
+    });
+    if(!respuesta.ok) throw new Error('El flujo de confirmación respondió con error ' + respuesta.status);
+    showToast('✅ Compra confirmada y cliente notificado');
+    cargarSolicitudesPendientes();
+  }catch(err){
+    showToast('❌ No se pudo confirmar: ' + err.message);
+    btn.disabled = false;
+    btn.textContent = 'Confirmar';
+  }
+}
+
+async function rechazarSolicitudPaquete(id){
+  if(!confirm('¿Rechazar esta solicitud de compra?')) return;
+  const { error } = await sb.from('solicitudes_pago_paquetes').update({ estado: 'rechazado' }).eq('id', id);
+  if(error){
+    showToast('❌ No se pudo rechazar: ' + error.message);
+    return;
+  }
+  showToast('Solicitud rechazada');
+  cargarSolicitudesPendientes();
 }
 
 /* ---------- Init ---------- */
